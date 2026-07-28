@@ -19,6 +19,37 @@ interface BuyNowModalProps {
   data: Product;
 }
 
+type FieldErrors = {
+  customerName?: string;
+  phone?: string;
+  address?: string;
+};
+
+const validateName = (value: string): string | undefined =>
+  !value.trim() ? "Please enter your full name" : undefined;
+
+const validatePhone = (value: string): string | undefined => {
+  if (!value.trim()) return "Please enter your phone number";
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 8) return "Phone number must have at least 8 digits";
+  return undefined;
+};
+
+const validateAddress = (value: string): string | undefined =>
+  !value.trim() ? "Please enter your shipping address" : undefined;
+
+const validateField = (
+  field: keyof FieldErrors,
+  value: string
+): string | undefined => {
+  switch (field) {
+    case "customerName": return validateName(value);
+    case "phone": return validatePhone(value);
+    case "address": return validateAddress(value);
+    default: return undefined;
+  }
+};
+
 const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
   const dispatch = useAppDispatch();
   const { sizeSelection, colorSelection } = useAppSelector(
@@ -29,9 +60,28 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const errors: FieldErrors = {
+    customerName: touched.customerName ? validateName(customerName) : undefined,
+    phone: touched.phone ? validatePhone(phone) : undefined,
+    address: touched.address ? validateAddress(address) : undefined,
+  };
+
+  const hasErrors = !!errors.customerName || !!errors.phone || !!errors.address;
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
 
   const handleConfirm = () => {
-    if (!customerName.trim() || !phone.trim() || !address.trim()) return;
+    const allTouched = { customerName: true, phone: true, address: true };
+    setTouched(allTouched);
+
+    const nameErr = validateName(customerName);
+    const phoneErr = validatePhone(phone);
+    const addrErr = validateAddress(address);
+    if (nameErr || phoneErr || addrErr) return;
 
     dispatch(
       addToCart({
@@ -127,9 +177,18 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
+                onBlur={() => handleBlur("customerName")}
                 placeholder="Your full name"
-                className="w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none focus:border-black/30 transition-all"
+                className={cn(
+                  "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all",
+                  errors.customerName
+                    ? "border-red-400 focus:border-red-500"
+                    : "border-black/10 focus:border-black/30"
+                )}
               />
+              {errors.customerName && (
+                <p className="text-xs text-red-500 mt-1">{errors.customerName}</p>
+              )}
             </div>
 
             <div>
@@ -138,9 +197,18 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                onBlur={() => handleBlur("phone")}
                 placeholder="+213 5XX XX XX XX"
-                className="w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none focus:border-black/30 transition-all"
+                className={cn(
+                  "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all",
+                  errors.phone
+                    ? "border-red-400 focus:border-red-500"
+                    : "border-black/10 focus:border-black/30"
+                )}
               />
+              {errors.phone && (
+                <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
+              )}
             </div>
 
             <div>
@@ -148,10 +216,19 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
+                onBlur={() => handleBlur("address")}
                 placeholder="Street, city, state"
                 rows={2}
-                className="w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none focus:border-black/30 transition-all resize-none"
+                className={cn(
+                  "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all resize-none",
+                  errors.address
+                    ? "border-red-400 focus:border-red-500"
+                    : "border-black/10 focus:border-black/30"
+                )}
               />
+              {errors.address && (
+                <p className="text-xs text-red-500 mt-1">{errors.address}</p>
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-2">
@@ -162,7 +239,6 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={!customerName.trim() || !phone.trim() || !address.trim()}
               className="w-full py-3 rounded-full bg-brand-accent text-white text-sm font-medium hover:bg-brand-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirm Purchase

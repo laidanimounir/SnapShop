@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +63,22 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  useEffect(() => {
+    if (open) {
+      try {
+        const saved = localStorage.getItem("snapshop_customer_info");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.customerName) setCustomerName(parsed.customerName);
+          if (parsed.phone) setPhone(parsed.phone);
+          if (parsed.address) setAddress(parsed.address);
+          if (parsed.quantity) setQuantity(parsed.quantity);
+        }
+      } catch {
+      }
+    }
+  }, [open]);
+
   const errors: FieldErrors = {
     customerName: touched.customerName ? validateName(customerName) : undefined,
     phone: touched.phone ? validatePhone(phone) : undefined,
@@ -85,6 +101,14 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
     if (nameErr || phoneErr || addrErr) return;
 
     setIsSubmitting(true);
+
+    try {
+      localStorage.setItem(
+        "snapshop_customer_info",
+        JSON.stringify({ customerName: customerName.trim(), phone: phone.trim(), address: address.trim(), quantity })
+      );
+    } catch {
+    }
 
     dispatch(
       addToCart({

@@ -62,22 +62,34 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [savedInfo, setSavedInfo] = useState<{ customerName: string; phone: string; address: string; quantity: number } | null>(null);
+  const [applied, setApplied] = useState(false);
 
   useEffect(() => {
     if (open) {
       try {
         const saved = localStorage.getItem("snapshop_customer_info");
         if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.customerName) setCustomerName(parsed.customerName);
-          if (parsed.phone) setPhone(parsed.phone);
-          if (parsed.address) setAddress(parsed.address);
-          if (parsed.quantity) setQuantity(parsed.quantity);
+          setSavedInfo(JSON.parse(saved));
+        } else {
+          setSavedInfo(null);
         }
+        setApplied(false);
       } catch {
+        setSavedInfo(null);
       }
     }
   }, [open]);
+
+  const applySavedInfo = () => {
+    if (savedInfo) {
+      setCustomerName(savedInfo.customerName);
+      setPhone(savedInfo.phone);
+      setAddress(savedInfo.address);
+      setQuantity(savedInfo.quantity);
+      setApplied(true);
+    }
+  };
 
   const errors: FieldErrors = {
     customerName: touched.customerName ? validateName(customerName) : undefined,
@@ -179,6 +191,33 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
                 <p className="text-sm font-bold text-black">DA {finalPrice}</p>
               </div>
             </div>
+
+            {savedInfo && !applied && (
+              <div className="flex items-center gap-2 p-3 bg-brand-accent/5 border border-brand-accent/20 rounded-lg">
+                <svg className="w-4 h-4 shrink-0 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs text-black/70 flex-1">
+                  Details found from a previous order.
+                  <button
+                    type="button"
+                    onClick={applySavedInfo}
+                    className="ml-1 text-brand-accent font-medium underline underline-offset-2 hover:no-underline"
+                  >
+                    Apply
+                  </button>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSavedInfo(null)}
+                  className="text-black/30 hover:text-black/60 transition-all"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-medium text-black mb-1">Quantity</label>

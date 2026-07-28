@@ -122,17 +122,19 @@ const BuyNowModal = ({ open, onOpenChange, data }: BuyNowModalProps) => {
       })
     );
 
-    setSubmitted(true);
-    setCustomerName("");
-    setPhone("");
-    setAddress("");
-    setQuantity(1);
-
     setTimeout(() => {
-      setSubmitted(false);
-      setIsSubmitting(false);
-      onOpenChange(false);
-    }, 1500);
+      setSubmitted(true);
+      setCustomerName("");
+      setPhone("");
+      setAddress("");
+      setQuantity(1);
+
+      setTimeout(() => {
+        setSubmitted(false);
+        setIsSubmitting(false);
+        onOpenChange(false);
+      }, 1500);
+    }, 600);
   };
 
   const finalPrice = data.discount.percentage > 0

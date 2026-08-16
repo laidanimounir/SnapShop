@@ -98,3 +98,67 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
     variant_count: countMap.get(p.id) ?? 0,
   }));
 }
+
+export type AdminVariant = {
+  id: string;
+  color: string;
+  size: string;
+  stock_quantity: number;
+  sku: string | null;
+  price: number | null;
+};
+
+export type AdminImage = {
+  id: string;
+  url: string;
+  position: number;
+  is_primary: boolean;
+};
+
+export type AdminProductDetail = {
+  id: string;
+  name: string;
+  description: string;
+  category: string | null;
+  brand: string | null;
+  base_price: number;
+  discount_percentage: number;
+  discount_amount: number;
+  rating: number;
+  is_active: boolean;
+  variants: AdminVariant[];
+  images: AdminImage[];
+};
+
+export async function getAdminProductById(
+  id: string
+): Promise<AdminProductDetail | null> {
+  const supabase = createAdminClient();
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!product) return null;
+
+  const [{ data: variants }, { data: images }] = await Promise.all([
+    supabase
+      .from("product_variants")
+      .select("id, color, size, stock_quantity, sku, price")
+      .eq("product_id", id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("product_images")
+      .select("id, url, position, is_primary")
+      .eq("product_id", id)
+      .order("position", { ascending: true }),
+  ]);
+
+  return {
+    ...(product as AdminProductDetail),
+    variants: (variants ?? []) as AdminVariant[],
+    images: (images ?? []) as AdminImage[],
+  };
+}

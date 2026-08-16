@@ -200,3 +200,38 @@ export async function getAdminReviews(
     product_name: r.products?.name ?? "-",
   }));
 }
+
+export type DashboardStats = {
+  totalOrders: number;
+  pendingOrders: number;
+  totalProducts: number;
+  pendingReviews: number;
+};
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const supabase = createAdminClient();
+  const [
+    { count: totalOrders },
+    { count: pendingOrders },
+    { count: totalProducts },
+    { count: pendingReviews },
+  ] = await Promise.all([
+    supabase.from("orders").select("id", { count: "exact", head: true }),
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    supabase.from("products").select("id", { count: "exact", head: true }),
+    supabase
+      .from("reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("is_approved", false),
+  ]);
+
+  return {
+    totalOrders: totalOrders ?? 0,
+    pendingOrders: pendingOrders ?? 0,
+    totalProducts: totalProducts ?? 0,
+    pendingReviews: pendingReviews ?? 0,
+  };
+}

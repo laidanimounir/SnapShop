@@ -24,3 +24,16 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);
 }
+
+export async function setProductActive(id: string, formData: FormData) {
+  const isActive = formData.get("is_active") === "true";
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("products")
+    .update({ is_active: isActive })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/products");
+}

@@ -67,3 +67,34 @@ export async function getOrderById(id: string): Promise<AdminOrderDetail | null>
     items: (items ?? []) as AdminOrderItem[],
   };
 }
+
+export type AdminProduct = {
+  id: string;
+  name: string;
+  category: string | null;
+  base_price: number;
+  is_active: boolean;
+  rating: number;
+  variant_count: number;
+};
+
+export async function getAdminProducts(): Promise<AdminProduct[]> {
+  const supabase = createAdminClient();
+  const [{ data: products }, { data: variants }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, name, category, base_price, is_active, rating")
+      .order("created_at", { ascending: false }),
+    supabase.from("product_variants").select("product_id"),
+  ]);
+
+  const countMap = new Map<string, number>();
+  (variants ?? []).forEach((v: { product_id: string }) =>
+    countMap.set(v.product_id, (countMap.get(v.product_id) ?? 0) + 1)
+  );
+
+  return ((products ?? []) as AdminProduct[]).map((p) => ({
+    ...p,
+    variant_count: countMap.get(p.id) ?? 0,
+  }));
+}

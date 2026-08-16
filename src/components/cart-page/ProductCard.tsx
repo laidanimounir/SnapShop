@@ -4,27 +4,24 @@ import React from "react";
 import { PiTrashFill } from "react-icons/pi";
 import Image from "next/image";
 import Link from "next/link";
-import CartCounter from "@/components/ui/CartCounter";
 import { Button } from "../ui/button";
 import {
-  addToCart,
   CartItem,
-  remove,
-  removeCartItem,
+  incrementItem,
+  decrementItem,
+  removeItem,
 } from "@/lib/features/carts/cartsSlice";
 import { useAppDispatch } from "@/lib/hooks/redux";
+import { formatPrice } from "@/lib/pricing";
 
-type ProductCardProps = {
-  data: CartItem;
-};
-
-const ProductCard = ({ data }: ProductCardProps) => {
+const ProductCard = ({ data }: { data: CartItem }) => {
   const dispatch = useAppDispatch();
+  const slug = data.name.toLowerCase().split(" ").join("-");
 
   return (
     <div className="flex items-start space-x-4">
       <Link
-        href={`/shop/product/${data.id}/${data.name.split(" ").join("-")}`}
+        href={`/shop/product/${data.product_id}/${slug}`}
         className="bg-[#F0EEED] rounded-lg w-full min-w-[100px] max-w-[100px] sm:max-w-[124px] aspect-square overflow-hidden"
       >
         <Image
@@ -33,13 +30,12 @@ const ProductCard = ({ data }: ProductCardProps) => {
           height={124}
           className="rounded-md w-full h-full object-cover hover:scale-110 transition-all duration-500"
           alt={data.name}
-          priority
         />
       </Link>
       <div className="flex w-full self-stretch flex-col">
         <div className="flex items-center justify-between">
           <Link
-            href={`/shop/product/${data.id}/${data.name.split(" ").join("-")}`}
+            href={`/shop/product/${data.product_id}/${slug}`}
             className="text-black font-bold text-base xl:text-xl"
           >
             {data.name}
@@ -48,89 +44,47 @@ const ProductCard = ({ data }: ProductCardProps) => {
             variant="ghost"
             size="icon"
             className="h-5 w-5 md:h-9 md:w-9"
-            onClick={() =>
-              dispatch(
-                remove({
-                  id: data.id,
-                  attributes: data.attributes,
-                  quantity: data.quantity,
-                })
-              )
-            }
+            onClick={() => dispatch(removeItem({ variant_id: data.variant_id }))}
           >
             <PiTrashFill className="text-xl md:text-2xl text-red-600" />
           </Button>
         </div>
         <div className="-mt-1">
           <span className="text-black text-xs md:text-sm mr-1">Size:</span>
-          <span className="text-black/60 text-xs md:text-sm">
-            {data.attributes[0]}
-          </span>
+          <span className="text-black/60 text-xs md:text-sm">{data.size}</span>
         </div>
         <div className="mb-auto -mt-1.5">
           <span className="text-black text-xs md:text-sm mr-1">Color:</span>
-          <span className="text-black/60 text-xs md:text-sm">
-            {data.attributes[1]}
-          </span>
+          <span className="text-black/60 text-xs md:text-sm">{data.color}</span>
         </div>
         <div className="flex items-center flex-wrap justify-between">
           <div className="flex items-center space-x-[5px] xl:space-x-2.5">
-            {data.discount.percentage > 0 ? (
-              <span className="font-bold text-black text-xl xl:text-2xl">
-                {`DA ${Math.round(
-                  data.price - (data.price * data.discount.percentage) / 100
-                )}`}
-              </span>
-            ) : data.discount.amount > 0 ? (
-              <span className="font-bold text-black text-xl xl:text-2xl">
-                {`DA ${data.price - data.discount.amount}`}
-              </span>
-            ) : (
-              <span className="font-bold text-black text-xl xl:text-2xl">
-                DA {data.price}
-              </span>
-            )}
-            {data.discount.percentage > 0 && (
+            <span className="font-bold text-black text-xl xl:text-2xl">
+              {formatPrice(data.price)}
+            </span>
+            {data.price < data.originalPrice && (
               <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-                DA {data.price}
+                {formatPrice(data.originalPrice)}
               </span>
-            )}
-            {data.discount.amount > 0 && (
-              <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-                DA {data.price}
-              </span>
-            )}
-            {data.discount.percentage > 0 ? (
-              <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-                {`-${data.discount.percentage}%`}
-              </span>
-            ) : (
-              data.discount.amount > 0 && (
-                <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-                  {`-DA ${data.discount.amount}`}
-                </span>
-              )
             )}
           </div>
-          <CartCounter
-            initialValue={data.quantity}
-            onAdd={() => dispatch(addToCart({ ...data, quantity: 1 }))}
-            onRemove={() =>
-              data.quantity === 1
-                ? dispatch(
-                    remove({
-                      id: data.id,
-                      attributes: data.attributes,
-                      quantity: data.quantity,
-                    })
-                  )
-                : dispatch(
-                    removeCartItem({ id: data.id, attributes: data.attributes })
-                  )
-            }
-            isZeroDelete
-            className="px-5 py-3 max-h-8 md:max-h-10 min-w-[105px] max-w-[105px] sm:max-w-32"
-          />
+          <div className="bg-[#F0F0F0] rounded-full flex items-center justify-between px-4 py-2.5 min-w-[105px] max-w-[105px] sm:max-w-32">
+            <button
+              type="button"
+              className="h-6 w-6 text-xl"
+              onClick={() => dispatch(decrementItem({ variant_id: data.variant_id }))}
+            >
+              -
+            </button>
+            <span className="font-medium text-sm sm:text-base">{data.quantity}</span>
+            <button
+              type="button"
+              className="h-6 w-6 text-xl"
+              onClick={() => dispatch(incrementItem({ variant_id: data.variant_id }))}
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
     </div>

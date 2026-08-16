@@ -102,24 +102,26 @@ const TopNavbar = () => {
             ))}
           </NavigationMenuList>
         </NavigationMenu>
-        <InputGroup className="hidden md:flex bg-[#F0F0F0] mr-3 lg:mr-10">
-          <InputGroup.Text>
-            <Image
-              priority
-              src="/icons/search.svg"
-              height={20}
-              width={20}
-              alt="search"
-              className="min-w-5 min-h-5"
+        <form action="/search" method="get" className="hidden md:flex bg-[#F0F0F0] mr-3 lg:mr-10 rounded-full">
+          <InputGroup className="bg-[#F0F0F0]">
+            <InputGroup.Text>
+              <Image
+                priority
+                src="/icons/search.svg"
+                height={20}
+                width={20}
+                alt="search"
+                className="min-w-5 min-h-5"
+              />
+            </InputGroup.Text>
+            <InputGroup.Input
+              type="search"
+              name="q"
+              placeholder="Search for products..."
+              className="bg-transparent placeholder:text-black/40"
             />
-          </InputGroup.Text>
-          <InputGroup.Input
-            type="search"
-            name="search"
-            placeholder="Search for products..."
-            className="bg-transparent placeholder:text-black/40"
-          />
-        </InputGroup>
+          </InputGroup>
+        </form>
         <div className="flex items-center">
           <Link href="/search" className="block md:hidden mr-[14px] p-1">
             <Image

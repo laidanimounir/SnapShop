@@ -3,21 +3,33 @@
 import BreadcrumbCart from "@/components/cart-page/BreadcrumbCart";
 import ProductCard from "@/components/cart-page/ProductCard";
 import { Button } from "@/components/ui/button";
-import InputGroup from "@/components/ui/input-group";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import GuestCheckoutForm from "@/components/checkout/GuestCheckoutForm";
 import { cn } from "@/lib/utils";
 import { integralCF } from "@/styles/fonts";
 import { FaArrowRight } from "react-icons/fa6";
-import { MdOutlineLocalOffer } from "react-icons/md";
 import { TbBasketExclamation } from "react-icons/tb";
-import React from "react";
+import React, { useState } from "react";
 import { RootState } from "@/lib/store";
-import { useAppSelector } from "@/lib/hooks/redux";
+import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
+import { clearCart } from "@/lib/features/carts/cartsSlice";
+import { formatPrice } from "@/lib/pricing";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const { cart, totalPrice, adjustedTotalPrice } = useAppSelector(
+  const { cart, subtotal, total } = useAppSelector(
     (state: RootState) => state.carts
   );
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const discount = subtotal - total;
+  const items = (cart?.items ?? []).map((i) => ({
+    variant_id: i.variant_id,
+    quantity: i.quantity,
+  }));
 
   return (
     <main className="pb-20">
@@ -36,11 +48,9 @@ export default function CartPage() {
             <div className="flex flex-col lg:flex-row space-y-5 lg:space-y-0 lg:space-x-5 items-start">
               <div className="w-full p-3.5 md:px-6 flex-col space-y-4 md:space-y-6 rounded-[20px] border border-black/10">
                 {cart?.items.map((product, idx, arr) => (
-                  <React.Fragment key={idx}>
+                  <React.Fragment key={product.variant_id}>
                     <ProductCard data={product} />
-                    {arr.length - 1 !== idx && (
-                      <hr className="border-t-black/10" />
-                    )}
+                    {arr.length - 1 !== idx && <hr className="border-t-black/10" />}
                   </React.Fragment>
                 ))}
               </div>
@@ -51,56 +61,30 @@ export default function CartPage() {
                 <div className="flex flex-col space-y-5">
                   <div className="flex items-center justify-between">
                     <span className="md:text-xl text-black/60">Subtotal</span>
-                    <span className="md:text-xl font-bold">DA {totalPrice}</span>
+                    <span className="md:text-xl font-bold">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="md:text-xl text-black/60">
-                      Discount (-
-                      {Math.round(
-                        ((totalPrice - adjustedTotalPrice) / totalPrice) * 100
-                      )}
-                      %)
-                    </span>
+                    <span className="md:text-xl text-black/60">Discount</span>
                     <span className="md:text-xl font-bold text-red-600">
-                      -DA {Math.round(totalPrice - adjustedTotalPrice)}
+                      -{formatPrice(discount)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="md:text-xl text-black/60">
-                      Delivery Fee
-                    </span>
+                    <span className="md:text-xl text-black/60">Delivery Fee</span>
                     <span className="md:text-xl font-bold">Free</span>
                   </div>
                   <hr className="border-t-black/10" />
                   <div className="flex items-center justify-between">
                     <span className="md:text-xl text-black">Total</span>
                     <span className="text-xl md:text-2xl font-bold">
-                      DA {Math.round(adjustedTotalPrice)}
+                      {formatPrice(total)}
                     </span>
                   </div>
-                </div>
-                <div className="flex space-x-3">
-                  <InputGroup className="bg-[#F0F0F0]">
-                    <InputGroup.Text>
-                      <MdOutlineLocalOffer className="text-black/40 text-2xl" />
-                    </InputGroup.Text>
-                    <InputGroup.Input
-                      type="text"
-                      name="code"
-                      placeholder="Add promo code"
-                      className="bg-transparent placeholder:text-black/40"
-                    />
-                  </InputGroup>
-                  <Button
-                    type="button"
-                    className="bg-black rounded-full w-full max-w-[119px] h-[48px]"
-                  >
-                    Apply
-                  </Button>
                 </div>
                 <Button
                   type="button"
                   className="text-sm md:text-base font-medium bg-brand-primary rounded-full w-full py-4 h-[54px] md:h-[60px] group"
+                  onClick={() => setCheckoutOpen(true)}
                 >
                   Go to Checkout{" "}
                   <FaArrowRight className="text-xl ml-2 group-hover:translate-x-1 transition-all" />
@@ -118,6 +102,27 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="sm:max-w-md bg-white max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className={cn([integralCF.className, "text-xl"])}>
+              Checkout
+            </DialogTitle>
+            <DialogDescription className="text-sm text-black/60">
+              Confirm your details to place the order
+            </DialogDescription>
+          </DialogHeader>
+          <GuestCheckoutForm
+            items={items}
+            onSuccess={(token) => {
+              dispatch(clearCart());
+              setCheckoutOpen(false);
+              router.push(`/order-confirmation/${token}`);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

@@ -1,7 +1,9 @@
 export type Review = {
-  id: number;
-  user: string;
-  content: string;
+  id: string;
+  product_id: string;
+  reviewer_name: string;
   rating: number;
-  date: string;
+  comment: string | null;
+  is_approved: boolean;
+  created_at: string;
 };

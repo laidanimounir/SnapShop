@@ -28,6 +28,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# opencode config (contains Supabase access token)
+opencode.json
+
 # vercel
 .vercel
 

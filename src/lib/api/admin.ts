@@ -162,3 +162,41 @@ export async function getAdminProductById(
     images: (images ?? []) as AdminImage[],
   };
 }
+
+export type AdminReview = {
+  id: string;
+  product_id: string;
+  reviewer_name: string;
+  rating: number;
+  comment: string | null;
+  is_approved: boolean;
+  created_at: string;
+  product_name: string;
+};
+
+export async function getAdminReviews(
+  filter?: "pending" | "approved"
+): Promise<AdminReview[]> {
+  const supabase = createAdminClient();
+  let query: any = supabase
+    .from("reviews")
+    .select("id, product_id, reviewer_name, rating, comment, is_approved, created_at, products(name)")
+    .order("created_at", { ascending: false });
+
+  if (filter === "pending") query = query.eq("is_approved", false);
+  if (filter === "approved") query = query.eq("is_approved", true);
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  return ((data ?? []) as any[]).map((r) => ({
+    id: r.id,
+    product_id: r.product_id,
+    reviewer_name: r.reviewer_name,
+    rating: r.rating,
+    comment: r.comment,
+    is_approved: r.is_approved,
+    created_at: r.created_at,
+    product_name: r.products?.name ?? "-",
+  }));
+}

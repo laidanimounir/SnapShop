@@ -37,3 +37,16 @@ export async function setProductActive(id: string, formData: FormData) {
 
   revalidatePath("/admin/products");
 }
+
+export async function setReviewApproved(id: string, formData: FormData) {
+  const isApproved = formData.get("is_approved") === "true";
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("reviews")
+    .update({ is_approved: isApproved })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/reviews");
+}

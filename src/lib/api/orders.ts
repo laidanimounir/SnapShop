@@ -57,7 +57,7 @@ export async function placeGuestOrder(input: {
 
 // Maps raw Postgres/RPC errors to text that is safe to show shoppers.
 export function toUserFacingOrderError(message: string): string {
-  if (/is not available|not found/i.test(message)) {
+  if (/is not available|not found|invalid product variant id/i.test(message)) {
     return "Sorry, one of the items in your order is no longer available. Please review your cart and try again.";
   }
   if (/insufficient stock/i.test(message)) {

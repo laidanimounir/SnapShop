@@ -19,7 +19,21 @@
 --         orders.idempotency_key + a unique partial index.
 --   5. Cancelling an order never restored stock
 --      -> restore_stock_on_cancel() trigger adds quantities back
---         exactly once per order (OLD.status guard).
+--         exactly once per order. Reopening a cancelled order is
+--         rejected ('Cancelled orders cannot be reopened').
+--         Stock is restored only from stock-holding states
+--         ('pending','confirmed','shipped'); cancelling from
+--         'delivered' restores nothing (goods already received).
+--   7. Discount could exceed price (negative unit price)
+--      -> v_unit_discount capped at v_effective_price; unit price
+--         floored at 0 via greatest().
+--   8. Duplicate variant lines could bypass the per-variant cap;
+--      malformed variant_id raised a raw cast error; concurrent
+--      checkouts could deadlock
+--      -> per-variant SUM(quantity) > 10 rejected before the loop;
+--         non-uuid variant_id rejected with 'Invalid product variant
+--         id'; all requested variants locked up-front in
+--         deterministic ORDER BY id FOR UPDATE order.
 --   6. submit_review accepted ratings/products blindly
 --      -> validates rating 1-5, product existence + is_active,
 --         reviewer_name length, comment length (<= 2000, also a
@@ -225,6 +239,46 @@ begin
     raise;
   end;
 
+  -- ---- pre-validate items: uuid format, per-variant aggregate cap ----
+  if exists (
+    select 1
+    from jsonb_array_elements(p_items) e
+    where e.value->>'variant_id' is null
+       or e.value->>'variant_id' !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+  ) then
+    raise exception 'Invalid product variant id';
+  end if;
+
+  if exists (
+    select 1
+    from (
+      select
+        e.value->>'variant_id' as vid,
+        sum(
+          case
+            when e.value->>'quantity' ~ '^[0-9]+$'
+            then (e.value->>'quantity')::integer
+            else -1
+          end
+        ) as total_qty
+      from jsonb_array_elements(p_items) e
+      group by e.value->>'variant_id'
+    ) s
+    where s.total_qty <= 0 or s.total_qty > 10
+  ) then
+    raise exception 'Invalid quantity: max 10 units per variant (allowed 1-10 in total)';
+  end if;
+
+  -- ---- lock all requested variants up-front in deterministic order ----
+  perform 1
+  from public.product_variants
+  where id in (
+    select distinct (e.value->>'variant_id')::uuid
+    from jsonb_array_elements(p_items) e
+  )
+  order by id
+  for update;
+
   for v_item in select value from jsonb_array_elements(p_items)
   loop
     v_variant_id := (v_item->>'variant_id')::uuid;
@@ -277,7 +331,9 @@ begin
       v_unit_discount := 0;
     end if;
 
-    v_unit_price := v_effective_price - v_unit_discount;
+    -- cap discount at the effective price so unit price never goes negative
+    v_unit_discount := least(v_unit_discount, v_effective_price);
+    v_unit_price := greatest(0, v_effective_price - v_unit_discount);
 
     insert into public.order_items
       (order_id, product_variant_id, product_id, product_name, color, size, quantity, unit_price_at_purchase, discount_amount_at_purchase)
@@ -372,9 +428,17 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  -- Only on a transition INTO cancelled from a stock-holding state.
-  -- Re-updating an already-cancelled order is a no-op (idempotent).
-  if (NEW.status = 'cancelled' and OLD.status <> 'cancelled') then
+  -- Reopening a cancelled order is forbidden (stock was restored).
+  if (OLD.status = 'cancelled' and NEW.status <> 'cancelled') then
+    raise exception 'Cancelled orders cannot be reopened';
+  end if;
+
+  -- Restore stock only from stock-holding states
+  -- (0001 CHECK: pending, confirmed, shipped, delivered, cancelled).
+  -- Cancelling from delivered restores nothing; re-cancelling an
+  -- already-cancelled order is a no-op (idempotent).
+  if (NEW.status = 'cancelled'
+      and OLD.status in ('pending', 'confirmed', 'shipped')) then
     update public.product_variants pv
     set stock_quantity = pv.stock_quantity + oi.quantity
     from public.order_items oi

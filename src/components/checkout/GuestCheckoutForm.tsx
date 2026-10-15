@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { placeGuestOrder } from "@/lib/api/orders";
 import type { OrderItemPayload } from "@/lib/api/orders";
+import { createIdempotencyKey } from "@/lib/idempotency";
 import { cn } from "@/lib/utils";
 
 type FieldErrors = {
@@ -39,6 +40,9 @@ export default function GuestCheckoutForm({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // One key per checkout attempt: reused across retries so a retry
+  // returns the existing order instead of creating a duplicate.
+  const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
   const [savedInfo, setSavedInfo] = useState<{
     customerName: string;
     phone: string;
@@ -91,14 +95,19 @@ export default function GuestCheckoutForm({
           address: address.trim(),
         })
       );
+      const attemptKey = idempotencyKey ?? createIdempotencyKey();
+      setIdempotencyKey(attemptKey);
       const result = await placeGuestOrder({
         guest_name: customerName.trim(),
         guest_phone: phone.trim(),
         guest_address: address.trim(),
         items,
+        idempotency_key: attemptKey,
       });
+      setIdempotencyKey(null);
       onSuccess(result.confirmation_token);
     } catch (e) {
+      // placeGuestOrder already maps server errors to user-facing text.
       setError(
         e instanceof Error
           ? e.message

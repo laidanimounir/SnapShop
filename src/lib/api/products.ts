@@ -1,4 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
+import { sanitizeSearchTerm } from "@/lib/search";
 import type { Product, ProductImage, ProductVariant } from "@/types/product.types";
 import type { Review } from "@/types/review.types";
 
@@ -62,7 +63,7 @@ export async function getProducts(
   if (filters.maxPrice != null) query = query.lte("base_price", filters.maxPrice);
 
   if (filters.search) {
-    const q = filters.search.replace(/[%,_]/g, "").trim();
+    const q = sanitizeSearchTerm(filters.search);
     if (q) query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`);
   }
 

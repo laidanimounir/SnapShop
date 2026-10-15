@@ -1,0 +1,46 @@
+import { describe, expect, it } from "vitest";
+import {
+  formatPrice,
+  getDiscountAmount,
+  getDiscountedPrice,
+  getEffectivePrice,
+  round2,
+} from "../pricing";
+
+describe("round2", () => {
+  it("rounds to 2 decimals (not integers)", () => {
+    expect(round2(10.05)).toBe(10.05);
+    expect(round2(9.999)).toBe(10);
+    expect(round2(19.998)).toBe(20);
+  });
+});
+
+describe("discount helpers (2-decimal truth, server parity)", () => {
+  it("percentage discount matches Postgres round(..., 2)", () => {
+    // server: round((99.99 * 20 / 100)::numeric, 2) = 20.00
+    expect(getDiscountAmount(99.99, 20, 0)).toBe(20);
+    expect(getDiscountedPrice(99.99, 20, 0)).toBe(79.99);
+  });
+
+  it("fixed-amount discount keeps decimals", () => {
+    expect(getDiscountAmount(99.99, 0, 10.5)).toBe(10.5);
+    expect(getDiscountedPrice(99.99, 0, 10.5)).toBe(89.49);
+  });
+
+  it("no discount returns the rounded price", () => {
+    expect(getDiscountedPrice(49.995, 0, 0)).toBe(50);
+    expect(getDiscountAmount(49.99, 0, 0)).toBe(0);
+  });
+
+  it("effective price prefers the variant price", () => {
+    expect(getEffectivePrice(100, 89.995)).toBe(90);
+    expect(getEffectivePrice(100, null)).toBe(100);
+  });
+});
+
+describe("formatPrice", () => {
+  it("displays consistently with 2 decimals", () => {
+    expect(formatPrice(89.99)).toBe("DA 89.99");
+    expect(formatPrice(100)).toBe("DA 100.00");
+  });
+});

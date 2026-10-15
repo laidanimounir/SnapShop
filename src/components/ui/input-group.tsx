@@ -22,7 +22,7 @@ const InputGroup = ({ className, children }: InputGroupProps) => {
 };
 
 const Input = React.forwardRef<HTMLInputElement, InputTextProps>(
-  (props: InputTextProps, ref: any) => {
+  function Input(props: InputTextProps, ref: any) {
     const { className, ...rest } = props;
 
     return (

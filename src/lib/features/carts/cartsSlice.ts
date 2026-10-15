@@ -6,8 +6,8 @@ export type CartItem = {
   product_id: string;
   name: string;
   srcUrl: string;
-  color: string;
-  size: string;
+  color: string | null;
+  size: string | null;
   price: number;
   originalPrice: number;
   quantity: number;

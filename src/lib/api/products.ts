@@ -30,11 +30,14 @@ async function attachVariantsAndImages(products: Product[]): Promise<Product[]> 
   const [{ data: variants }, { data: images }] = await Promise.all([
     supabase
       .from("product_variants")
-      .select("id, product_id, color, color_hex, size, price, stock_quantity, sku")
-      .in("product_id", ids),
+      .select(
+        "id, product_id, color, color_hex, size, price, stock_quantity, sku, is_active"
+      )
+      .in("product_id", ids)
+      .eq("is_active", true),
     supabase
       .from("product_images")
-      .select("id, product_id, url, alt_text, position, is_primary")
+      .select("id, product_id, url, alt_text, position, is_primary, color")
       .in("product_id", ids)
       .order("position", { ascending: true }),
   ]);
@@ -42,8 +45,9 @@ async function attachVariantsAndImages(products: Product[]): Promise<Product[]> 
   return products.map((p) => ({
     ...p,
     images: ((images ?? []) as ProductImage[]).filter((i) => i.product_id === p.id),
+    // Storefront only ever sees active variants.
     variants: ((variants ?? []) as ProductVariant[]).filter(
-      (v) => v.product_id === p.id
+      (v) => v.product_id === p.id && v.is_active
     ),
   }));
 }
@@ -58,7 +62,7 @@ export async function getProducts(
   let query: any = supabase
     .from("products")
     .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, created_at",
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at",
       { count: "exact" }
     )
     .eq("is_active", true);
@@ -74,7 +78,12 @@ export async function getProducts(
   }
 
   if (filters.color || filters.size) {
-    let vq: any = supabase.from("product_variants").select("product_id");
+    // Only active variants of active products count for filtering.
+    let vq: any = supabase
+      .from("product_variants")
+      .select("product_id, products!inner(is_active)")
+      .eq("is_active", true)
+      .eq("products.is_active", true);
     if (filters.color) vq = vq.eq("color", filters.color);
     if (filters.size) vq = vq.eq("size", filters.size);
     const { data: matching } = await vq;
@@ -117,7 +126,7 @@ export async function getProductById(id: string): Promise<Product | null> {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, created_at"
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at"
     )
     .eq("id", id)
     .eq("is_active", true)

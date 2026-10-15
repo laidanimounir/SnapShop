@@ -16,28 +16,58 @@ import {
   getEffectivePrice,
   formatPrice,
 } from "@/lib/pricing";
+import { sortSizes } from "@/lib/sizes";
 import { IoMdCheckmark } from "react-icons/io";
 
 const Header = ({ product }: { product: Product }) => {
   const dispatch = useAppDispatch();
 
+  // Only active variants reach the storefront (filtered server-side),
+  // but guard again so a stale prop never shows a dead variant.
+  const activeVariants = useMemo(
+    () => product.variants.filter((v) => v.is_active !== false),
+    [product.variants]
+  );
+
   const colors = useMemo(() => {
     const map = new Map<string, string>();
-    product.variants.forEach((v) => {
-      if (!map.has(v.color)) map.set(v.color, v.color_hex ?? "");
+    activeVariants.forEach((v) => {
+      if (v.color != null && v.color !== "" && !map.has(v.color)) {
+        map.set(v.color, v.color_hex ?? "");
+      }
     });
     return Array.from(map.entries()).map(([name, hex]) => ({ name, hex }));
-  }, [product.variants]);
+  }, [activeVariants]);
+  const hasColors = colors.length > 0;
 
   const [selectedColor, setSelectedColor] = useState<string | null>(
     colors[0]?.name ?? null
   );
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [buyNowOpen, setBuyNowOpen] = useState(false);
+
+  useEffect(() => {
+    setSelectedColor((prev) => {
+      if (!hasColors) return null;
+      if (prev && colors.some((c) => c.name === prev)) return prev;
+      return colors[0]?.name ?? null;
+    });
+  }, [colors, hasColors]);
+
+  // Images linked to the selected color win when any exist; else all.
+  // Primary image always comes first.
+  const displayedImages = useMemo(() => {
+    const imgs = product.images;
+    const linked =
+      selectedColor != null
+        ? imgs.filter((i) => i.color === selectedColor)
+        : [];
+    const base = linked.length > 0 ? linked : imgs;
+    return [...base].sort(
+      (a, b) => Number(b.is_primary) - Number(a.is_primary)
+    );
+  }, [product.images, selectedColor]);
 
   const primaryImage =
-    product.images.find((i) => i.is_primary)?.url ?? product.images[0]?.url ?? "";
+    displayedImages[0]?.url ?? product.images[0]?.url ?? "";
   const [selectedImage, setSelectedImage] = useState<string>(primaryImage);
 
   useEffect(() => {
@@ -46,27 +76,40 @@ const Header = ({ product }: { product: Product }) => {
 
   const sizes = useMemo(() => {
     const set = new Set<string>();
-    product.variants
-      .filter((v) => v.color === selectedColor)
-      .forEach((v) => set.add(v.size));
-    return Array.from(set);
-  }, [product.variants, selectedColor]);
+    activeVariants
+      .filter((v) =>
+        hasColors ? v.color === selectedColor : v.color == null
+      )
+      .forEach((v) => {
+        if (v.size != null && v.size !== "") set.add(v.size);
+      });
+    return sortSizes(Array.from(set), product.size_type);
+  }, [activeVariants, hasColors, selectedColor, product.size_type]);
+  const hasSizes = sizes.length > 0;
+
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   useEffect(() => {
-    if (sizes.length === 0) {
+    if (!hasSizes) {
       setSelectedSize(null);
-    } else if (!selectedSize || !sizes.includes(selectedSize)) {
-      setSelectedSize(sizes[0]);
+    } else {
+      setSelectedSize((prev) =>
+        prev && sizes.includes(prev) ? prev : sizes[0] ?? null
+      );
     }
-  }, [sizes, selectedSize]);
+  }, [sizes, hasSizes]);
 
-  const selectedVariant = useMemo(
-    () =>
-      product.variants.find(
-        (v) => v.color === selectedColor && v.size === selectedSize
-      ) ?? null,
-    [product.variants, selectedColor, selectedSize]
-  );
+  const selectedVariant = useMemo(() => {
+    const found =
+      activeVariants.find(
+        (v) =>
+          (hasColors ? v.color === selectedColor : v.color == null) &&
+          (hasSizes ? v.size === selectedSize : v.size == null)
+      ) ?? null;
+    // Single-variant products (no color, no size) resolve directly.
+    if (!found && activeVariants.length === 1) return activeVariants[0];
+    return found;
+  }, [activeVariants, hasColors, hasSizes, selectedColor, selectedSize]);
 
   const basePrice = selectedVariant
     ? getEffectivePrice(product.base_price, selectedVariant.price)
@@ -101,12 +144,15 @@ const Header = ({ product }: { product: Product }) => {
     );
   };
 
+  const [quantity, setQuantity] = useState(1);
+  const [buyNowOpen, setBuyNowOpen] = useState(false);
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <PhotoSection
-            images={product.images.map((i) => i.url)}
+            images={displayedImages.map((i) => i.url)}
             title={product.name}
             selected={selectedImage}
             onSelect={setSelectedImage}
@@ -158,61 +204,70 @@ const Header = ({ product }: { product: Product }) => {
           <p className="text-sm sm:text-base text-black/60 mb-5">
             {product.description}
           </p>
-          <hr className="h-[1px] border-t-black/10 mb-5" />
-
-          <div className="flex flex-col">
-            <span className="text-sm sm:text-base text-black/60 mb-4">
-              Select Colors
-            </span>
-            <div className="flex items-center flex-wrap space-x-3 sm:space-x-4">
-              {colors.map((color) => (
-                <button
-                  key={color.name}
-                  type="button"
-                  aria-label={color.name}
-                  className="rounded-full w-9 sm:w-10 h-9 sm:h-10 flex items-center justify-center border border-black/10"
-                  style={{
-                    backgroundColor: color.hex || "#d1d5db",
-                  }}
-                  onClick={() => setSelectedColor(color.name)}
-                >
-                  {selectedColor === color.name && (
-                    <IoMdCheckmark className="text-base text-white" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-          <hr className="h-[1px] border-t-black/10 my-5" />
-
-          <div className="flex flex-col">
-            <span className="text-sm sm:text-base text-black/60 mb-4">
-              Choose Size
-            </span>
-            <div className="flex items-center flex-wrap lg:space-x-3">
-              {sizes.map((size) => {
-                const variant = product.variants.find(
-                  (v) => v.color === selectedColor && v.size === size
-                );
-                const outOfStock = variant && variant.stock_quantity <= 0;
-                return (
-                  <button
-                    key={size}
-                    type="button"
-                    disabled={!!outOfStock}
-                    className={cn([
-                      "bg-[#F0F0F0] flex items-center justify-center px-5 lg:px-6 py-2.5 lg:py-3 text-sm lg:text-base rounded-full m-1 lg:m-0 max-h-[46px]",
-                      selectedSize === size && "bg-black font-medium text-white",
-                      outOfStock && "opacity-40 cursor-not-allowed line-through",
-                    ])}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    {size}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {hasColors && (
+            <>
+              <hr className="h-[1px] border-t-black/10 mb-5" />
+              <div className="flex flex-col">
+                <span className="text-sm sm:text-base text-black/60 mb-4">
+                  Select Colors
+                </span>
+                <div className="flex items-center flex-wrap space-x-3 sm:space-x-4">
+                  {colors.map((color) => (
+                    <button
+                      key={color.name}
+                      type="button"
+                      aria-label={color.name}
+                      className="rounded-full w-9 sm:w-10 h-9 sm:h-10 flex items-center justify-center border border-black/10"
+                      style={{
+                        backgroundColor: color.hex || "#d1d5db",
+                      }}
+                      onClick={() => setSelectedColor(color.name)}
+                    >
+                      {selectedColor === color.name && (
+                        <IoMdCheckmark className="text-base text-white" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          {hasSizes && (
+            <>
+              <hr className="h-[1px] border-t-black/10 my-5" />
+              <div className="flex flex-col">
+                <span className="text-sm sm:text-base text-black/60 mb-4">
+                  Choose Size
+                </span>
+                <div className="flex items-center flex-wrap lg:space-x-3">
+                  {sizes.map((size) => {
+                    const variant = activeVariants.find(
+                      (v) =>
+                        (hasColors
+                          ? v.color === selectedColor
+                          : v.color == null) && v.size === size
+                    );
+                    const outOfStock = variant && variant.stock_quantity <= 0;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        disabled={!!outOfStock}
+                        className={cn([
+                          "bg-[#F0F0F0] flex items-center justify-center px-5 lg:px-6 py-2.5 lg:py-3 text-sm lg:text-base rounded-full m-1 lg:m-0 max-h-[46px]",
+                          selectedSize === size && "bg-black font-medium text-white",
+                          outOfStock && "opacity-40 cursor-not-allowed line-through",
+                        ])}
+                        onClick={() => setSelectedSize(size)}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
           <hr className="hidden md:block h-[1px] border-t-black/10 my-5" />
 
           <div className="flex items-center justify-between sm:justify-start gap-3 mt-5">
@@ -228,7 +283,9 @@ const Header = ({ product }: { product: Product }) => {
               <button
                 type="button"
                 className="h-6 w-6 text-xl"
-                onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                onClick={() =>
+                  setQuantity((q) => Math.min(10, Math.max(1, stock), q + 1))
+                }
               >
                 +
               </button>
@@ -253,7 +310,7 @@ const Header = ({ product }: { product: Product }) => {
 
           {!selectedVariant && (
             <p className="text-xs text-black/50 mt-3">
-              No size/color combination available.
+              This product is currently unavailable.
             </p>
           )}
         </div>
@@ -266,8 +323,8 @@ const Header = ({ product }: { product: Product }) => {
         quantity={quantity}
         title={product.name}
         image={selectedImage || primaryImage}
-        color={selectedVariant?.color ?? ""}
-        size={selectedVariant?.size ?? ""}
+        color={selectedVariant?.color ?? null}
+        size={selectedVariant?.size ?? null}
         price={price}
       />
     </>

@@ -21,8 +21,8 @@ type BuyNowModalProps = {
   quantity: number;
   title: string;
   image: string;
-  color: string;
-  size: string;
+  color: string | null;
+  size: string | null;
   price: number;
 };
 
@@ -64,9 +64,11 @@ const BuyNowModal = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-black truncate">{title}</p>
-                <p className="text-xs text-black/60">
-                  {size} / {color}
-                </p>
+                {[color, size].filter(Boolean).join(" / ") && (
+                  <p className="text-xs text-black/60">
+                    {[color, size].filter(Boolean).join(" / ")}
+                  </p>
+                )}
                 <p className="text-sm font-bold text-black">
                   {formatPrice(price * quantity)}
                 </p>

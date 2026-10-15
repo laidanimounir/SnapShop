@@ -49,14 +49,22 @@ const ProductCard = ({ data }: { data: CartItem }) => {
             <PiTrashFill className="text-xl md:text-2xl text-red-600" />
           </Button>
         </div>
-        <div className="-mt-1">
-          <span className="text-black text-xs md:text-sm mr-1">Size:</span>
-          <span className="text-black/60 text-xs md:text-sm">{data.size}</span>
-        </div>
-        <div className="mb-auto -mt-1.5">
-          <span className="text-black text-xs md:text-sm mr-1">Color:</span>
-          <span className="text-black/60 text-xs md:text-sm">{data.color}</span>
-        </div>
+        {(data.size || data.color) && (
+          <div className="mb-auto -mt-1">
+            {data.size && (
+              <div>
+                <span className="text-black text-xs md:text-sm mr-1">Size:</span>
+                <span className="text-black/60 text-xs md:text-sm">{data.size}</span>
+              </div>
+            )}
+            {data.color && (
+              <div className="-mt-1.5">
+                <span className="text-black text-xs md:text-sm mr-1">Color:</span>
+                <span className="text-black/60 text-xs md:text-sm">{data.color}</span>
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex items-center flex-wrap justify-between">
           <div className="flex items-center space-x-[5px] xl:space-x-2.5">
             <span className="font-bold text-black text-xl xl:text-2xl">

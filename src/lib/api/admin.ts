@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/supabase/admin";
+import { storagePathFromPublicUrl } from "@/lib/admin/product-validation";
 
 export type AdminOrder = {
   id: string;
@@ -103,11 +104,13 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
 
 export type AdminVariant = {
   id: string;
-  color: string;
-  size: string;
+  color: string | null;
+  color_hex: string | null;
+  size: string | null;
   stock_quantity: number;
   sku: string | null;
   price: number | null;
+  is_active: boolean;
 };
 
 export type AdminImage = {
@@ -115,7 +118,10 @@ export type AdminImage = {
   url: string;
   position: number;
   is_primary: boolean;
+  color: string | null;
 };
+
+export type SizeType = "none" | "clothing" | "shoes" | "custom";
 
 export type AdminProductDetail = {
   id: string;
@@ -128,6 +134,7 @@ export type AdminProductDetail = {
   discount_amount: number;
   rating: number;
   is_active: boolean;
+  size_type: SizeType;
   variants: AdminVariant[];
   images: AdminImage[];
 };
@@ -139,7 +146,7 @@ export async function getAdminProductById(
   const { data: product, error } = await supabase
     .from("products")
     .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active"
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type"
     )
     .eq("id", id)
     .maybeSingle();
@@ -150,12 +157,12 @@ export async function getAdminProductById(
   const [{ data: variants }, { data: images }] = await Promise.all([
     supabase
       .from("product_variants")
-      .select("id, color, size, stock_quantity, sku, price")
+      .select("id, color, color_hex, size, stock_quantity, sku, price, is_active")
       .eq("product_id", id)
       .order("created_at", { ascending: true }),
     supabase
       .from("product_images")
-      .select("id, url, position, is_primary")
+      .select("id, url, position, is_primary, color")
       .eq("product_id", id)
       .order("position", { ascending: true }),
   ]);
@@ -203,6 +210,308 @@ export async function getAdminReviews(
     created_at: r.created_at,
     product_name: r.products?.name ?? "-",
   }));
+}
+
+export type ProductWriteInput = {
+  name: string;
+  description: string;
+  category?: string | null;
+  brand?: string | null;
+  base_price: number;
+  discount_percentage?: number;
+  discount_amount?: number;
+  is_active?: boolean;
+  size_type?: SizeType;
+};
+
+export type VariantWriteRow = {
+  color: string | null;
+  color_hex: string | null;
+  size: string | null;
+  stock_quantity: number;
+  price?: number | null;
+  sku?: string | null;
+  is_active?: boolean;
+};
+
+export type SaveVariantsResult = {
+  created: number;
+  deleted: number;
+  deactivated: number;
+  updated: number;
+};
+
+/** Create a product (draft-inactive unless is_active is passed). */
+export async function createProduct(input: ProductWriteInput): Promise<{ id: string }> {
+  const { supabase } = await requireAdmin();
+  const {
+    name,
+    description,
+    category = null,
+    brand = null,
+    base_price,
+    discount_percentage = 0,
+    discount_amount = 0,
+    is_active = false,
+    size_type = "none",
+  } = input;
+  const { data, error } = await supabase
+    .from("products")
+    .insert({
+      name,
+      description,
+      category,
+      brand,
+      base_price,
+      discount_percentage,
+      discount_amount,
+      is_active,
+      size_type,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return { id: (data as { id: string }).id };
+}
+
+export async function updateProduct(
+  id: string,
+  input: Partial<ProductWriteInput>
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("products").update(input).eq("id", id);
+  if (error) throw error;
+}
+
+/**
+ * Reconcile a product's variants with the desired matrix.
+ * - Missing combinations are inserted.
+ * - Removed combinations never ordered are deleted.
+ * - Removed combinations referenced by order_items are deactivated
+ *   (is_active = false) with stock zeroed — order history stays intact.
+ * - Rows that still exist get stock/price/sku/is_active updated.
+ */
+export async function saveVariants(
+  productId: string,
+  rows: VariantWriteRow[]
+): Promise<SaveVariantsResult> {
+  const { supabase } = await requireAdmin();
+
+  const { data: existing } = await supabase
+    .from("product_variants")
+    .select("id, color, size")
+    .eq("product_id", productId);
+
+  const existingIds = ((existing ?? []) as { id: string }[]).map((v) => v.id);
+  let orderedIds = new Set<string>();
+  if (existingIds.length > 0) {
+    const { data: refs } = await supabase
+      .from("order_items")
+      .select("product_variant_id")
+      .in("product_variant_id", existingIds);
+    orderedIds = new Set(
+      ((refs ?? []) as { product_variant_id: string | null }[])
+        .map((r) => r.product_variant_id)
+        .filter((x): x is string => x != null)
+    );
+  }
+
+  const keyOf = (c: string | null, s: string | null) => `${c ?? ""}\n${s ?? ""}`;
+  const wanted = new Map(rows.map((r) => [keyOf(r.color, r.size), r]));
+
+  const list = ((existing ?? []) as { id: string; color: string | null; size: string | null }[]);
+  const toCreate = rows.filter(
+    (r) => !list.some((e) => keyOf(e.color, e.size) === keyOf(r.color, r.size))
+  );
+  const toRemove = list.filter((e) => !wanted.has(keyOf(e.color, e.size)));
+
+  let created = 0;
+  let deleted = 0;
+  let deactivated = 0;
+  let updated = 0;
+
+  for (const row of toCreate) {
+    const { error } = await supabase.from("product_variants").insert({
+      product_id: productId,
+      color: row.color,
+      color_hex: row.color_hex,
+      size: row.size,
+      stock_quantity: row.stock_quantity,
+      price: row.price ?? null,
+      sku: row.sku?.trim() ? row.sku.trim() : null,
+      is_active: row.is_active ?? true,
+    });
+    if (error) throw error;
+    created += 1;
+  }
+
+  for (const old of toRemove) {
+    if (orderedIds.has(old.id)) {
+      const { error } = await supabase
+        .from("product_variants")
+        .update({ is_active: false, stock_quantity: 0 })
+        .eq("id", old.id);
+      if (error) throw error;
+      deactivated += 1;
+    } else {
+      const { error } = await supabase
+        .from("product_variants")
+        .delete()
+        .eq("id", old.id);
+      if (error) throw error;
+      deleted += 1;
+    }
+  }
+
+  for (const row of rows) {
+    const match = list.find(
+      (e) => keyOf(e.color, e.size) === keyOf(row.color, row.size)
+    );
+    if (!match || toRemove.some((r) => r.id === match.id)) continue;
+    const { error } = await supabase
+      .from("product_variants")
+      .update({
+        stock_quantity: row.stock_quantity,
+        price: row.price ?? null,
+        sku: row.sku?.trim() ? row.sku.trim() : null,
+        is_active: row.is_active ?? true,
+        ...(row.color_hex !== undefined ? { color_hex: row.color_hex } : {}),
+      })
+      .eq("id", match.id);
+    if (error) throw error;
+    updated += 1;
+  }
+
+  return { created, deleted, deactivated, updated };
+}
+
+export type DeleteProductResult = { deleted: boolean; deactivated: boolean };
+
+/**
+ * Delete a product, or deactivate it when it has order history.
+ * On hard delete, storage objects under products/<id>/ are removed too.
+ */
+export async function deleteProduct(id: string): Promise<DeleteProductResult> {
+  const { supabase } = await requireAdmin();
+
+  const { count } = await supabase
+    .from("order_items")
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", id);
+
+  if ((count ?? 0) > 0) {
+    const { error } = await supabase
+      .from("products")
+      .update({ is_active: false })
+      .eq("id", id);
+    if (error) throw error;
+    return { deleted: false, deactivated: true };
+  }
+
+  const { data: objects } = await supabase.storage
+    .from("product-images")
+    .list(`products/${id}`);
+  if (objects && objects.length > 0) {
+    const paths = objects.map((o) => `products/${id}/${o.name}`);
+    const { error } = await supabase.storage.from("product-images").remove(paths);
+    if (error) throw error;
+  }
+
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) throw error;
+  return { deleted: true, deactivated: false };
+}
+
+export async function deleteProductImage(imageId: string): Promise<{ productId: string }> {
+  const { supabase } = await requireAdmin();
+  const { data: row, error: fetchError } = await supabase
+    .from("product_images")
+    .select("id, product_id, url, position, is_primary")
+    .eq("id", imageId)
+    .maybeSingle();
+  if (fetchError) throw fetchError;
+  if (!row) throw new Error("Image not found.");
+
+  const path = storagePathFromPublicUrl((row as { url: string }).url);
+  if (path) {
+    const { error } = await supabase.storage.from("product-images").remove([path]);
+    if (error) throw new Error(error.message);
+  }
+
+  const { error: delError } = await supabase
+    .from("product_images")
+    .delete()
+    .eq("id", imageId);
+  if (delError) throw delError;
+
+  if ((row as { is_primary: boolean }).is_primary) {
+    const { data: next } = await supabase
+      .from("product_images")
+      .select("id")
+      .eq("product_id", (row as { product_id: string }).product_id)
+      .order("position", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (next) {
+      await supabase
+        .from("product_images")
+        .update({ is_primary: true })
+        .eq("id", (next as { id: string }).id);
+    }
+  }
+
+  return { productId: (row as { product_id: string }).product_id };
+}
+
+export async function setPrimaryImage(imageId: string): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const { data: row, error: fetchError } = await supabase
+    .from("product_images")
+    .select("id, product_id")
+    .eq("id", imageId)
+    .maybeSingle();
+  if (fetchError) throw fetchError;
+  if (!row) throw new Error("Image not found.");
+  const productId = (row as { product_id: string }).product_id;
+
+  const { error: clearError } = await supabase
+    .from("product_images")
+    .update({ is_primary: false })
+    .eq("product_id", productId);
+  if (clearError) throw clearError;
+
+  const { error } = await supabase
+    .from("product_images")
+    .update({ is_primary: true })
+    .eq("id", imageId);
+  if (error) throw error;
+}
+
+export async function reorderProductImages(
+  productId: string,
+  orderedIds: string[]
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  for (let i = 0; i < orderedIds.length; i += 1) {
+    const { error } = await supabase
+      .from("product_images")
+      .update({ position: i })
+      .eq("id", orderedIds[i])
+      .eq("product_id", productId);
+    if (error) throw error;
+  }
+}
+
+export async function setImageColor(
+  imageId: string,
+  color: string | null
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase
+    .from("product_images")
+    .update({ color })
+    .eq("id", imageId);
+  if (error) throw error;
 }
 
 export type DashboardStats = {

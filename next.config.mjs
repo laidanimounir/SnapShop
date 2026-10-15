@@ -28,6 +28,12 @@ const nextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
   },
+  // Image uploads go through server actions (admin only, max 5 MB files).
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
+  },
   async headers() {
     return [
       {

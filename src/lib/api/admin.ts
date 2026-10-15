@@ -49,7 +49,9 @@ export async function getOrderById(id: string): Promise<AdminOrderDetail | null>
   const { supabase } = await requireAdmin();
   const { data: order, error } = await supabase
     .from("orders")
-    .select("*")
+    .select(
+      "id, guest_name, guest_phone, guest_email, guest_address, status, payment_method, subtotal, discount_total, total, confirmation_token, created_at"
+    )
     .eq("id", id)
     .maybeSingle();
 
@@ -136,7 +138,9 @@ export async function getAdminProductById(
   const { supabase } = await requireAdmin();
   const { data: product, error } = await supabase
     .from("products")
-    .select("*")
+    .select(
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active"
+    )
     .eq("id", id)
     .maybeSingle();
 

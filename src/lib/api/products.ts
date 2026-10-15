@@ -28,10 +28,13 @@ async function attachVariantsAndImages(products: Product[]): Promise<Product[]> 
   const ids = products.map((p) => p.id);
 
   const [{ data: variants }, { data: images }] = await Promise.all([
-    supabase.from("product_variants").select("*").in("product_id", ids),
+    supabase
+      .from("product_variants")
+      .select("id, product_id, color, color_hex, size, price, stock_quantity, sku")
+      .in("product_id", ids),
     supabase
       .from("product_images")
-      .select("*")
+      .select("id, product_id, url, alt_text, position, is_primary")
       .in("product_id", ids)
       .order("position", { ascending: true }),
   ]);
@@ -54,7 +57,10 @@ export async function getProducts(
 
   let query: any = supabase
     .from("products")
-    .select("*", { count: "exact" })
+    .select(
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, created_at",
+      { count: "exact" }
+    )
     .eq("is_active", true);
 
   if (filters.category) query = query.eq("category", filters.category);
@@ -110,7 +116,9 @@ export async function getProductById(id: string): Promise<Product | null> {
   const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, created_at"
+    )
     .eq("id", id)
     .eq("is_active", true)
     .maybeSingle();
@@ -126,7 +134,9 @@ export async function getApprovedReviews(productId: string): Promise<Review[]> {
   const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("reviews")
-    .select("*")
+    .select(
+      "id, product_id, reviewer_name, rating, comment, is_approved, created_at"
+    )
     .eq("product_id", productId)
     .eq("is_approved", true)
     .order("created_at", { ascending: false });
@@ -139,7 +149,9 @@ export async function getFeaturedReviews(limit = 6): Promise<Review[]> {
   const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("reviews")
-    .select("*")
+    .select(
+      "id, product_id, reviewer_name, rating, comment, is_approved, created_at"
+    )
     .eq("is_approved", true)
     .order("created_at", { ascending: false })
     .limit(limit);

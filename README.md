@@ -172,6 +172,16 @@ This backend uses a **guest-checkout, COD-only** model. Shoppers provide name/ph
 - `reviews`: public `SELECT` where `is_approved = true`.
 - `orders` / `order_items`: **no direct access** — reads/writes go only through the RPCs above.
 
+### Abuse protection
+
+- Admin server actions are rate-limited in memory (30/min per admin per
+  action) and the checkout/review forms carry a honeypot field.
+- The guest RPCs (`place_guest_order`, `get_order_by_token`,
+  `submit_review`) are called from the browser, so real rate limiting
+  and bot protection need an edge layer in front of Supabase —
+  Cloudflare / Turnstile or a Supabase Edge Function — before
+  production.
+
 ### Guest checkout flow
 
 1. Client sends guest name/phone/address + `{ variant_id, quantity }` items to `place_guest_order`.

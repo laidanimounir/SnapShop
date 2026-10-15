@@ -2,8 +2,15 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+function enforceAdminRateLimit(userId: string, action: string) {
+  if (!checkRateLimit(`admin:${action}:${userId}`, 30)) {
+    throw new Error("Too many requests. Please wait a minute and try again.");
+  }
+}
 
 const validStatuses = [
   "pending",
@@ -19,7 +26,8 @@ export async function updateOrderStatus(id: string, formData: FormData) {
     throw new Error("Invalid order status");
   }
 
-  const { supabase } = await requireAdmin();
+  const { userId, supabase } = await requireAdmin();
+  enforceAdminRateLimit(userId, "updateOrderStatus");
   const { error } = await supabase.from("orders").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
 
@@ -30,7 +38,8 @@ export async function updateOrderStatus(id: string, formData: FormData) {
 export async function setProductActive(id: string, formData: FormData) {
   const isActive = formData.get("is_active") === "true";
 
-  const { supabase } = await requireAdmin();
+  const { userId, supabase } = await requireAdmin();
+  enforceAdminRateLimit(userId, "setProductActive");
   const { error } = await supabase
     .from("products")
     .update({ is_active: isActive })
@@ -43,7 +52,8 @@ export async function setProductActive(id: string, formData: FormData) {
 export async function setReviewApproved(id: string, formData: FormData) {
   const isApproved = formData.get("is_approved") === "true";
 
-  const { supabase } = await requireAdmin();
+  const { userId, supabase } = await requireAdmin();
+  enforceAdminRateLimit(userId, "setReviewApproved");
   const { error } = await supabase
     .from("reviews")
     .update({ is_approved: isApproved })

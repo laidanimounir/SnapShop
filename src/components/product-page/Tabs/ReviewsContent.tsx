@@ -71,10 +71,16 @@ function ReviewForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  // Honeypot: hidden from humans; bots that fill it are rejected.
+  const [company, setCompany] = useState("");
 
   const handleSubmit = async () => {
     if (!name.trim()) {
       setError("Please enter your name");
+      return;
+    }
+    if (company.trim() !== "") {
+      setError("Something went wrong submitting your review.");
       return;
     }
     setSubmitting(true);
@@ -165,6 +171,21 @@ function ReviewForm({
                   "w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none resize-none focus:border-black/30"
                 )}
               />
+            </div>
+
+            {/* Honeypot field: hidden from humans. */}
+            <div className="hidden" aria-hidden="true">
+              <label>
+                Company
+                <input
+                  type="text"
+                  name="company"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </label>
             </div>
 
             {error && <p className="text-red-500 text-sm">{error}</p>}

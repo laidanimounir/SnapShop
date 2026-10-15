@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { placeGuestOrder } from "@/lib/api/orders";
 import type { OrderItemPayload } from "@/lib/api/orders";
 import { createIdempotencyKey } from "@/lib/idempotency";
@@ -43,30 +43,8 @@ export default function GuestCheckoutForm({
   // One key per checkout attempt: reused across retries so a retry
   // returns the existing order instead of creating a duplicate.
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
-  const [savedInfo, setSavedInfo] = useState<{
-    customerName: string;
-    phone: string;
-    address: string;
-  } | null>(null);
-  const [applied, setApplied] = useState(false);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("snapshop_customer_info");
-      if (saved) setSavedInfo(JSON.parse(saved));
-    } catch {
-      setSavedInfo(null);
-    }
-  }, []);
-
-  const applySavedInfo = () => {
-    if (savedInfo) {
-      setCustomerName(savedInfo.customerName);
-      setPhone(savedInfo.phone);
-      setAddress(savedInfo.address);
-      setApplied(true);
-    }
-  };
+  // Honeypot: hidden from humans; bots that fill it are rejected.
+  const [company, setCompany] = useState("");
 
   const errors: FieldErrors = {
     customerName: touched.customerName ? validateName(customerName) : undefined,
@@ -84,17 +62,14 @@ export default function GuestCheckoutForm({
     const addrErr = validateAddress(address);
     if (nameErr || phoneErr || addrErr) return;
 
+    if (company.trim() !== "") {
+      setError("Something went wrong placing your order. Please try again.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
-      localStorage.setItem(
-        "snapshop_customer_info",
-        JSON.stringify({
-          customerName: customerName.trim(),
-          phone: phone.trim(),
-          address: address.trim(),
-        })
-      );
       const attemptKey = idempotencyKey ?? createIdempotencyKey();
       setIdempotencyKey(attemptKey);
       const result = await placeGuestOrder({
@@ -120,34 +95,6 @@ export default function GuestCheckoutForm({
   return (
     <div className="space-y-4">
       {summary}
-
-      {savedInfo && !applied && (
-        <div className="flex items-center gap-2 p-3 bg-brand-accent/5 border border-brand-accent/20 rounded-lg">
-          <svg className="w-4 h-4 shrink-0 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-xs text-black/70 flex-1">
-            Details found from a previous order.
-            <button
-              type="button"
-              onClick={applySavedInfo}
-              className="ml-1 text-brand-accent font-medium underline underline-offset-2 hover:no-underline"
-            >
-              Apply
-            </button>
-          </p>
-          <button
-            type="button"
-            onClick={() => setSavedInfo(null)}
-            className="text-black/30 hover:text-black/60 transition-all"
-            aria-label="Dismiss saved details"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
 
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
@@ -201,6 +148,21 @@ export default function GuestCheckoutForm({
           )}
         />
         {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
+      </div>
+
+      {/* Honeypot field: hidden from humans, bots that fill it are rejected. */}
+      <div className="hidden" aria-hidden="true">
+        <label>
+          Company
+          <input
+            type="text"
+            name="company"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </label>
       </div>
 
       <button

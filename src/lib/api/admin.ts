@@ -79,26 +79,53 @@ export type AdminProduct = {
   is_active: boolean;
   rating: number;
   variant_count: number;
+  total_stock: number;
+  thumbnail_url: string | null;
 };
 
 export async function getAdminProducts(): Promise<AdminProduct[]> {
   const { supabase } = await requireAdmin();
-  const [{ data: products }, { data: variants }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("id, name, category, base_price, is_active, rating")
-      .order("created_at", { ascending: false }),
-    supabase.from("product_variants").select("product_id"),
-  ]);
+  const [{ data: products }, { data: variants }, { data: images }] =
+    await Promise.all([
+      supabase
+        .from("products")
+        .select("id, name, category, base_price, is_active, rating")
+        .order("created_at", { ascending: false }),
+      supabase.from("product_variants").select("product_id, stock_quantity"),
+      supabase
+        .from("product_images")
+        .select("product_id, url, is_primary, position")
+        .order("position", { ascending: true }),
+    ]);
 
   const countMap = new Map<string, number>();
-  (variants ?? []).forEach((v: { product_id: string }) =>
-    countMap.set(v.product_id, (countMap.get(v.product_id) ?? 0) + 1)
+  const stockMap = new Map<string, number>();
+  ((variants ?? []) as { product_id: string; stock_quantity: number }[]).forEach(
+    (v) => {
+      countMap.set(v.product_id, (countMap.get(v.product_id) ?? 0) + 1);
+      stockMap.set(
+        v.product_id,
+        (stockMap.get(v.product_id) ?? 0) + (v.stock_quantity ?? 0)
+      );
+    }
   );
+
+  const thumbMap = new Map<string, string>();
+  ((images ?? []) as {
+    product_id: string;
+    url: string;
+    is_primary: boolean;
+  }[]).forEach((img) => {
+    if (!thumbMap.has(img.product_id) || img.is_primary) {
+      thumbMap.set(img.product_id, img.url);
+    }
+  });
 
   return ((products ?? []) as AdminProduct[]).map((p) => ({
     ...p,
     variant_count: countMap.get(p.id) ?? 0,
+    total_stock: stockMap.get(p.id) ?? 0,
+    thumbnail_url: thumbMap.get(p.id) ?? null,
   }));
 }
 

@@ -27,6 +27,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.admin-credentials.local
 
 # opencode config (contains Supabase access token)
 opencode.json

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { signOutAdmin } from "@/app/admin/actions";
 
 export const metadata: Metadata = {
   title: "SnapShop Admin",
@@ -12,15 +14,40 @@ const navItems = [
   { href: "/admin/reviews", label: "Reviews" },
 ];
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let email: string | null = null;
+  try {
+    const supabase = createServerSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    email = user?.email ?? null;
+  } catch {
+    email = null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-amber-500 text-amber-950 text-center text-sm font-medium py-2 px-4">
-        Internal testing only — not secured
+      <div className="bg-emerald-600 text-white text-center text-sm font-medium py-2 px-4 flex items-center justify-center gap-3">
+        {email ? (
+          <>
+            <span>Signed in as {email}</span>
+            <form action={signOutAdmin}>
+              <button
+                type="submit"
+                className="underline underline-offset-2 hover:no-underline"
+              >
+                Sign out
+              </button>
+            </form>
+          </>
+        ) : (
+          <span>SnapShop Admin — sign in required</span>
+        )}
       </div>
       <div className="flex">
         <aside className="w-56 bg-white border-r border-black/10 min-h-[calc(100vh-2.5rem)] p-4 shrink-0">

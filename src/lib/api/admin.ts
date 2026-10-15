@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/admin";
 
 export type AdminOrder = {
   id: string;
@@ -10,7 +10,7 @@ export type AdminOrder = {
 };
 
 export async function getOrders(): Promise<AdminOrder[]> {
-  const supabase = createAdminClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("orders")
     .select("id, guest_name, guest_phone, status, total, created_at")
@@ -46,7 +46,7 @@ export type AdminOrderDetail = {
 };
 
 export async function getOrderById(id: string): Promise<AdminOrderDetail | null> {
-  const supabase = createAdminClient();
+  const { supabase } = await requireAdmin();
   const { data: order, error } = await supabase
     .from("orders")
     .select("*")
@@ -79,7 +79,7 @@ export type AdminProduct = {
 };
 
 export async function getAdminProducts(): Promise<AdminProduct[]> {
-  const supabase = createAdminClient();
+  const { supabase } = await requireAdmin();
   const [{ data: products }, { data: variants }] = await Promise.all([
     supabase
       .from("products")
@@ -133,7 +133,7 @@ export type AdminProductDetail = {
 export async function getAdminProductById(
   id: string
 ): Promise<AdminProductDetail | null> {
-  const supabase = createAdminClient();
+  const { supabase } = await requireAdmin();
   const { data: product, error } = await supabase
     .from("products")
     .select("*")
@@ -177,7 +177,7 @@ export type AdminReview = {
 export async function getAdminReviews(
   filter?: "pending" | "approved"
 ): Promise<AdminReview[]> {
-  const supabase = createAdminClient();
+  const { supabase } = await requireAdmin();
   let query: any = supabase
     .from("reviews")
     .select("id, product_id, reviewer_name, rating, comment, is_approved, created_at, products(name)")
@@ -209,7 +209,7 @@ export type DashboardStats = {
 };
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const supabase = createAdminClient();
+  const { supabase } = await requireAdmin();
   const [
     { count: totalOrders },
     { count: pendingOrders },

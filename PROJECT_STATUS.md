@@ -11,7 +11,7 @@ This file documents the current state of the SnapShop e-commerce project for fut
 SnapShop is a clothing e-commerce **storefront** with a small internal **admin dashboard**, backed by a **Supabase** Postgres database.
 
 - **Storefront (customer-facing):** browse products, filter/search, product detail with color/size variants and stock, client-side cart, guest (cash-on-delivery) checkout with order tracking, and product reviews.
-- **Admin dashboard (internal/testing):** a simple `/admin` section in the same Next.js app to view and manage orders, products, and reviews. It is intentionally NOT secured (no auth) — see Security Notes.
+- **Admin dashboard (internal):** a simple `/admin` section in the same Next.js app to view and manage orders, products, and reviews. It requires Supabase Auth sign-in (`/admin/login`) plus membership in `public.admin_users` — see Security Notes.
 
 **Stack**
 
@@ -22,7 +22,7 @@ SnapShop is a clothing e-commerce **storefront** with a small internal **admin d
 | Styling | Tailwind CSS 3.4 + shadcn/ui (new-york) |
 | State | Redux Toolkit + redux-persist (cart only, persisted to localStorage) |
 | Animation / icons | Framer Motion, react-icons, react-simple-star-rating |
-| Backend | Supabase (Postgres + RLS). Supabase Auth is **not** used yet |
+| Backend | Supabase (Postgres + RLS). Supabase Auth is used for `/admin` sign-in (guest checkout stays account-free) |
 | DB client | `@supabase/supabase-js` 2.112.3 |
 
 Supabase project: `fvvretvbeiovjozpqbyk` (project URL `https://fvvretvbeiovjozpqbyk.supabase.co`).
@@ -36,6 +36,8 @@ Supabase project: `fvvretvbeiovjozpqbyk` (project URL `https://fvvretvbeiovjozpq
 - **Migration 1** `supabase/migrations/0001_initial_schema.sql` — 6 tables (`products`, `product_images`, `product_variants`, `orders`, `order_items`, `reviews`), RLS enabled on all, `place_guest_order()` and `submit_review()` functions, indexes, `set_updated_at()` trigger helper.
 - **Migration 2** `supabase/migrations/0002_order_tracking_and_rating.sql` — `orders.confirmation_token` column, updated `place_guest_order()` (returns token), `get_order_by_token()` function, `recalculate_product_rating()` trigger function + `reviews_rating_trigger` (AFTER INSERT/UPDATE/DELETE on `reviews`).
 - **Migration 3** `supabase/migrations/0003_grant_read_privileges.sql` — table-level `SELECT` grants to `anon`/`authenticated` (RLS alone was insufficient; `orders`/`order_items` intentionally omitted).
+- **Migration 4** `supabase/migrations/0004_order_hardening.sql` — hardened `place_guest_order()` (active-only, caps, phone/email/`cod` validation, idempotency key + `orders.idempotency_key`), `submit_review()` guards, `reviews` length CHECKs, `restore_stock_on_cancel()` trigger.
+- **Migration 5** `supabase/migrations/0005_admin_users.sql` — `admin_users` table (RLS on, no public policies) + `is_admin()` helper for the `/admin` Auth gate.
 
 See section 7 for the full schema summary.
 
@@ -58,12 +60,12 @@ Commit `ae8064f` "Wire storefront to Supabase backend" (plus the earlier mock-da
 Commits `8b311db`–`5661b77`.
 
 - `/admin` — dashboard with live counts (total orders, pending orders, total products, pending reviews).
-- `/admin/orders` — table of all orders (bypasses RLS via service role, server-side only).
+- `/admin/orders` — table of all orders (service role, server-side only, after `requireAdmin()` verifies the session user is in `admin_users`).
 - `/admin/orders/[id]` — full order detail (guest info, items, totals, confirmation token) + status change via server action.
 - `/admin/products` — table (name, category, base price, rating, variant count) with inline active/inactive toggle.
 - `/admin/products/[id]` — read-only detail (variants with stock/SKU/price, image grid).
 - `/admin/reviews` — list all reviews, filterable All/Pending/Approved, with Approve/Reject actions (approve triggers the existing rating-recalculation trigger — verified).
-- Every admin page shows an amber banner: "Internal testing only — not secured".
+- Every admin page shows a signed-in indicator ("Signed in as …" + sign-out); `/admin/login` handles email+password sign-in, `src/middleware.ts` redirects signed-out visitors to it.
 
 ### Verified
 
@@ -76,7 +78,7 @@ Commits `8b311db`–`5661b77`.
 ## 3. WHAT'S NOT DONE / KNOWN GAPS
 
 - **Authentication** — none. Storefront is guest-only by design; no customer accounts/login/signup.
-- **Admin security** — the `/admin` section has **no auth at all** (open to anyone who knows the URL). Explicitly for local testing only.
+- **Admin security** — the `/admin` section requires Supabase Auth sign-in + `admin_users` membership (middleware redirect + `requireAdmin()` on every admin read/action). Keep the service-role key server-side; review `admin_users` membership periodically.
 - **Payments** — cash-on-delivery only. No payment gateway integration.
 - **Real admin app** — the planned separate admin dashboard (a different frontend project, likely Flutter) that will connect to this same Supabase backend has **not** been built. The current `/admin` is a temporary internal tool.
 - **Hardcoded storefront content** — hero stats ("200+ brands", "2000+ products", "3000+ customers" via `AnimatedCounter`), the brand-logo marquee (Versace/Zara/Gucci/Prada/Calvin Klein — placeholder, `TODO`-flagged in `src/components/homepage/Brands/index.tsx`), generic FAQs (`Tabs/FaqContent.tsx`), and footer links (all `"#"`).
@@ -135,6 +137,7 @@ Commits `8b311db`–`5661b77`.
 - `products`, `product_images`, `product_variants`: public `SELECT` (anon/authenticated) where the parent product `is_active = true`.
 - `reviews`: public `SELECT` where `is_approved = true`; inserts go only through `submit_review`.
 - `orders`, `order_items`: **no RLS policies and no direct table grants to anon** — all access is via the `SECURITY DEFINER` functions (`place_guest_order`, `get_order_by_token`), so guests cannot browse or read other guests' orders.
+- `admin_users`: RLS on with **no policies** (default-deny via PostgREST); `is_admin()` helper (`SECURITY DEFINER`, `EXECUTE` to `authenticated`). Admin reads go through the service role only after `requireAdmin()`.
 - The admin dashboard bypasses RLS entirely using the **service role key, server-side only** (`src/lib/supabase/admin.ts`). The service role key lives in `.env.local` (gitignored) as `SUPABASE_SERVICE_ROLE_KEY` and is never referenced in a client component.
 
 ---
@@ -157,7 +160,7 @@ Prerequisites: Node.js 18+, npm.
    npm run dev
    ```
 4. Storefront: open `http://localhost:3000`.
-5. Admin dashboard: open `http://localhost:3000/admin` (no login required).
+5. Admin dashboard: open `http://localhost:3000/admin` and sign in at `/admin/login` (requires a user in `public.admin_users` — see README "Admin Dashboard").
 
 Production build: `npm run build` then `npm start`.
 
@@ -233,7 +236,7 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 In rough order of priority:
 
 1. **Build the real admin app** — the separate admin frontend (different project/repo, likely Flutter) that connects to this same Supabase backend (same tables + Storage), superseding the temporary `/admin` dashboard.
-2. **Add real auth** — decide the auth model: keep guest checkout and add admin authentication (Supabase Auth + an `admin_users` table with RLS), or add customer accounts later.
+2. **Auth follow-ups** — admin authentication is done (Supabase Auth + `admin_users`); customer accounts (order history, etc.) remain a later decision.
 3. **Payments** — integrate a payment gateway (currently COD only).
 4. **Deploy** — set up hosting for the storefront and configure the Supabase project for production (remove/secure the `/admin` section or move it to the real admin app).
 5. **Polish hardcoded content** — replace hero stats, brand logos, FAQs, and wire footer links.

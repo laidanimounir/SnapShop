@@ -1,6 +1,6 @@
 # SnapShop — Project Status
 
-Last updated: 2026-08-16
+Last updated: 2026-10-15
 
 This file documents the current state of the SnapShop e-commerce project for future reference. It is based entirely on the actual codebase, git history, and migration files — no planned/future features are described as if they already exist.
 
@@ -25,13 +25,13 @@ SnapShop is a clothing e-commerce **storefront** with a small internal **admin d
 | Backend | Supabase (Postgres + RLS). Supabase Auth is **not** used yet |
 | DB client | `@supabase/supabase-js` 2.112.3 |
 
-Supabase project: `kaxdpjmsxsikuizlsjdk` (project URL `https://kaxdpjmsxsikuizlsjdk.supabase.co`).
+Supabase project: `fvvretvbeiovjozpqbyk` (project URL `https://fvvretvbeiovjozpqbyk.supabase.co`).
 
 ---
 
 ## 2. WHAT'S DONE
 
-### Backend schema (applied to Supabase via MCP, tracked as migrations)
+### Backend schema (tracked as migration files — apply 0001 → 0002 → 0003 in order to `fvvretvbeiovjozpqbyk`)
 
 - **Migration 1** `supabase/migrations/0001_initial_schema.sql` — 6 tables (`products`, `product_images`, `product_variants`, `orders`, `order_items`, `reviews`), RLS enabled on all, `place_guest_order()` and `submit_review()` functions, indexes, `set_updated_at()` trigger helper.
 - **Migration 2** `supabase/migrations/0002_order_tracking_and_rating.sql` — `orders.confirmation_token` column, updated `place_guest_order()` (returns token), `get_order_by_token()` function, `recalculate_product_rating()` trigger function + `reviews_rating_trigger` (AFTER INSERT/UPDATE/DELETE on `reviews`).

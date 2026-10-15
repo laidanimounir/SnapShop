@@ -1,5 +1,4 @@
 import ProductListSec from "@/components/common/ProductListSec";
-import Brands from "@/components/homepage/Brands";
 import DressStyle from "@/components/homepage/DressStyle";
 import Header from "@/components/homepage/Header";
 import Reviews from "@/components/homepage/Reviews";
@@ -18,7 +17,6 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <Brands />
       <main className="my-[50px] sm:my-[72px]">
         <ProductListSec
           title="NEW ARRIVALS"

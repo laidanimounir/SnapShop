@@ -4,19 +4,12 @@ import React from "react";
 import { FaGithub } from "react-icons/fa";
 import Link from "next/link";
 import LinksSection from "./LinksSection";
-import NewsLetterSection from "./NewsLetterSection";
 import LayoutSpacing from "./LayoutSpacing";
 import { BRAND_NAME, CONTACT_PHONE, CONTACT_EMAIL, GITHUB_URL } from "@/lib/config";
 
 const Footer = () => {
   return (
     <footer className="mt-10">
-      <div className="relative">
-        <div className="absolute bottom-0 w-full h-1/2 bg-[#F0F0F0]" />
-        <div className="px-4">
-          <NewsLetterSection />
-        </div>
-      </div>
       <div className="pt-8 md:pt-[50px] bg-[#F0F0F0] px-4 pb-4">
         <div className="max-w-frame mx-auto">
           <nav className="lg:grid lg:grid-cols-12 mb-8">

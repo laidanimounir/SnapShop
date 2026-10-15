@@ -1,46 +1,33 @@
 import React from "react";
 import { FooterLinks } from "./footer.types";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 const footerLinksData: FooterLinks[] = [
   {
     id: 1,
     title: "company",
     children: [
-      { id: 11, label: "about us", url: "#" },
-      { id: 12, label: "contact us", url: "#" },
-      { id: 13, label: "careers", url: "#" },
+      { id: 11, label: "about us", url: "/about" },
+      { id: 12, label: "contact us", url: "/contact" },
     ],
   },
   {
     id: 2,
     title: "help",
     children: [
-      { id: 21, label: "customer support", url: "#" },
-      { id: 22, label: "delivery details", url: "#" },
-      { id: 23, label: "terms & conditions", url: "#" },
-      { id: 24, label: "privacy policy", url: "#" },
+      { id: 21, label: "shipping info", url: "/shipping" },
+      { id: 22, label: "returns & exchanges", url: "/returns" },
+      { id: 23, label: "terms & conditions", url: "/terms" },
+      { id: 24, label: "privacy policy", url: "/privacy" },
     ],
   },
   {
     id: 3,
-    title: "faq",
+    title: "shop",
     children: [
-      { id: 31, label: "account", url: "#" },
-      { id: 32, label: "manage deliveries", url: "#" },
-      { id: 33, label: "orders", url: "#" },
-      { id: 34, label: "payment methods", url: "#" },
-    ],
-  },
-  {
-    id: 4,
-    title: "quick links",
-    children: [
-      { id: 41, label: "size guide", url: "#" },
-      { id: 42, label: "shipping info", url: "#" },
-      { id: 43, label: "returns & exchanges", url: "#" },
-      { id: 44, label: "gift cards", url: "#" },
+      { id: 31, label: "all products", url: "/shop" },
+      { id: 32, label: "track your order", url: "/track-order" },
+      { id: 33, label: "your cart", url: "/cart" },
     ],
   },
 ];

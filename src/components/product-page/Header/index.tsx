@@ -17,6 +17,7 @@ import {
   formatPrice,
 } from "@/lib/pricing";
 import { sortSizes } from "@/lib/sizes";
+import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
 import { IoMdCheckmark } from "react-icons/io";
 
 const Header = ({ product }: { product: Product }) => {
@@ -61,9 +62,10 @@ const Header = ({ product }: { product: Product }) => {
         ? imgs.filter((i) => i.color === selectedColor)
         : [];
     const base = linked.length > 0 ? linked : imgs;
-    return [...base].sort(
-      (a, b) => Number(b.is_primary) - Number(a.is_primary)
-    );
+    // Cap to 1 main + 3 extras; extra legacy images are hidden, not deleted.
+    return [...base]
+      .sort((a, b) => Number(b.is_primary) - Number(a.is_primary))
+      .slice(0, MAX_PRODUCT_IMAGES);
   }, [product.images, selectedColor]);
 
   const primaryImage =

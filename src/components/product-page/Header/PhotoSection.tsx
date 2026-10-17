@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import React from "react";
+import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
 
 const PhotoSection = ({
   images,
@@ -14,15 +15,18 @@ const PhotoSection = ({
   selected: string;
   onSelect: (url: string) => void;
 }) => {
-  const gallery = images.length > 1 ? images : [];
+  // Storefront shows 1 main image + up to 3 extras. Extra images on a
+  // legacy product are hidden here, never deleted.
+  const capped = images.slice(0, MAX_PRODUCT_IMAGES);
+  const gallery = capped.filter((url) => url !== selected).slice(0, MAX_PRODUCT_IMAGES - 1);
 
   return (
     <div className="flex flex-col-reverse lg:flex-row lg:space-x-3.5">
       {gallery.length > 0 && (
         <div className="flex lg:flex-col space-x-3 lg:space-x-0 lg:space-y-3.5 w-full lg:w-fit items-center lg:justify-start justify-center">
-          {gallery.map((photo, index) => (
+          {gallery.map((photo) => (
             <button
-              key={index}
+              key={photo}
               type="button"
               className="bg-[#F0EEED] rounded-[13px] xl:rounded-[20px] w-full max-w-[111px] xl:max-w-[152px] max-h-[106px] xl:max-h-[167px] xl:min-h-[167px] aspect-square overflow-hidden"
               onClick={() => onSelect(photo)}

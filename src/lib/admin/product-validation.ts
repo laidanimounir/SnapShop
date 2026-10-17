@@ -2,7 +2,9 @@ import type { SizeType } from "../../types/product.types";
 import { CLOTHING_SIZES, SHOE_SIZES } from "../sizes";
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-export const MAX_IMAGES_PER_PRODUCT = 10;
+// Hard limit: 1 primary + up to 3 secondary images per product.
+// Kept in sync with MAX_PRODUCT_IMAGES in ./images.
+export const MAX_IMAGES_PER_PRODUCT = 4;
 export const MAX_COLORS_PER_PRODUCT = 20;
 export const MAX_SIZES_PER_PRODUCT = 40;
 export const MAX_VARIANT_STOCK = 100000;

@@ -10,8 +10,11 @@ type ProductCardProps = {
 };
 
 const ProductCard = ({ data }: ProductCardProps) => {
-  const image =
-    data.images.find((i) => i.is_primary)?.url ?? data.images[0]?.url ?? "/images/pic1.png";
+  const ordered = [...data.images].sort(
+    (a, b) => Number(b.is_primary) - Number(a.is_primary)
+  );
+  const image = ordered[0]?.url ?? "/images/pic1.png";
+  const secondaryImage = ordered[1]?.url ?? null;
   const price = getDiscountedPrice(
     data.base_price,
     data.discount_percentage,
@@ -25,14 +28,23 @@ const ProductCard = ({ data }: ProductCardProps) => {
       href={`/shop/product/${data.id}/${slug}`}
       className="flex flex-col items-start aspect-auto"
     >
-      <div className="bg-[#F0EEED] rounded-[13px] lg:rounded-[20px] w-full lg:max-w-[295px] aspect-square mb-2.5 xl:mb-4 overflow-hidden">
+      <div className="group relative bg-[#F0EEED] rounded-[13px] lg:rounded-[20px] w-full lg:max-w-[295px] aspect-square mb-2.5 xl:mb-4 overflow-hidden">
         <Image
           src={image}
           width={295}
           height={298}
-          className="rounded-md w-full h-full object-contain hover:scale-110 transition-all duration-500"
+          className="rounded-md w-full h-full object-contain transition-all duration-500 group-hover:scale-110 group-hover:opacity-0"
           alt={data.name}
         />
+        {secondaryImage && (
+          <Image
+            src={secondaryImage}
+            width={295}
+            height={298}
+            className="absolute inset-0 rounded-md w-full h-full object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            alt={`${data.name} alternate`}
+          />
+        )}
       </div>
       <strong className="text-black xl:text-xl">{data.name}</strong>
       <div className="flex items-end mb-1 xl:mb-2">

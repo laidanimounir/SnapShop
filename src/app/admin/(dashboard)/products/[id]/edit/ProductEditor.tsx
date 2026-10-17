@@ -17,6 +17,13 @@ import {
   uploadProductImageAction,
 } from "@/app/admin/actions";
 import { buildVariantMatrix } from "@/lib/admin/variant-matrix";
+import { COMMON_COLORS, isValidHex, normalizeHex } from "@/lib/admin/colors";
+import {
+  MAX_PRODUCT_IMAGES,
+  hasTooManyImages,
+  moveImage,
+  sortImages,
+} from "@/lib/admin/images";
 import { presetSizesFor } from "@/lib/sizes";
 
 const inputCls =
@@ -106,6 +113,10 @@ export default function ProductEditor({
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Position-ordered view; position 0 is the primary image.
+  const orderedImages = useMemo(() => sortImages(images), [images]);
+  const imagesFull = orderedImages.length >= MAX_PRODUCT_IMAGES;
+
   // ---- misc ----
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -124,6 +135,42 @@ export default function ProductEditor({
   const showToast = (message: string, isError = false) => {
     setToast(message);
     setToastError(isError);
+  };
+
+  // ---- color helpers ----
+  const addColor = (name: string, hex: string) => {
+    const cname = name.trim();
+    if (!cname) return;
+    if (colors.some((c) => c.name.toLowerCase() === cname.toLowerCase())) {
+      showToast(`Color "${cname}" already exists.`, true);
+      return;
+    }
+    const norm = normalizeHex(hex);
+    if (!norm) {
+      showToast(`Color "${cname}" needs a valid hex value.`, true);
+      return;
+    }
+    setColors((prev) => [...prev, { name: cname, hex: norm }]);
+    setDirty(true);
+  };
+
+  const addCustomColor = () => {
+    const norm = normalizeHex(newColorHex);
+    if (!newColorName.trim() || !norm) return;
+    addColor(newColorName, norm);
+    setNewColorName("");
+  };
+
+  const renameColorAt = (index: number, newName: string) => {
+    setColors((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, name: newName } : c))
+    );
+    setDirty(true);
+  };
+
+  const removeColorAt = (index: number) => {
+    setColors((prev) => prev.filter((_, i) => i !== index));
+    setDirty(true);
   };
 
   const effectiveColors = useMemo(
@@ -160,6 +207,14 @@ export default function ProductEditor({
   };
 
   const saveAll = async () => {
+    const colorNames = effectiveColors.map((c) => c.name.trim());
+    if (
+      colorNames.some((n) => n === "") ||
+      new Set(colorNames.map((n) => n.toLowerCase())).size !== colorNames.length
+    ) {
+      showToast("Color names must be unique and non-empty.", true);
+      return;
+    }
     setSaving(true);
     setToast(null);
     const basic = await updateProductAction(product.id, {
@@ -216,10 +271,22 @@ export default function ProductEditor({
 
   const uploadFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    const room = MAX_PRODUCT_IMAGES - orderedImages.length;
+    if (room <= 0) {
+      showToast(`At most ${MAX_PRODUCT_IMAGES} images per product.`, true);
+      return;
+    }
+    const selected = Array.from(files).slice(0, room);
+    if (selected.length < files.length) {
+      showToast(
+        `Only ${room} more image(s) allowed; extra files were skipped.`,
+        true
+      );
+    }
     setUploading(true);
     setToast(null);
     let failed = 0;
-    for (const file of Array.from(files)) {
+    for (const file of selected) {
       const form = new FormData();
       form.set("image", file);
       const result = await uploadProductImageAction(product.id, form);
@@ -239,6 +306,7 @@ export default function ProductEditor({
   };
 
   const removeImage = async (id: string) => {
+    if (!window.confirm("Delete this image? This cannot be undone.")) return;
     setDeletingId(id);
     const result = await deleteProductImageAction(id);
     setDeletingId(null);
@@ -250,28 +318,37 @@ export default function ProductEditor({
     router.refresh();
   };
 
-  const moveImage = async (index: number, dir: -1 | 1) => {
-    const next = [...images];
-    const j = index + dir;
-    if (j < 0 || j >= next.length) return;
-    [next[index], next[j]] = [next[j], next[index]];
+  // Persist a new order and keep is_primary consistent (index 0 is primary).
+  const persistOrder = async (next: typeof images) => {
     setImages(next);
-    const result = await reorderImagesAction(
+    const reordered = await reorderImagesAction(
       product.id,
       next.map((i) => i.id)
     );
-    if (!result.ok) showToast(result.error, true);
-    else router.refresh();
+    if (!reordered.ok) {
+      showToast(reordered.error, true);
+      return;
+    }
+    if (next[0]) {
+      const primary = await setPrimaryImageAction(next[0].id);
+      if (!primary.ok) {
+        showToast(primary.error, true);
+        return;
+      }
+    }
+    router.refresh();
+  };
+
+  const reorderImage = async (index: number, dir: -1 | 1) => {
+    const j = index + dir;
+    if (j < 0 || j >= orderedImages.length) return;
+    await persistOrder(moveImage(orderedImages, index, j));
   };
 
   const makePrimary = async (id: string) => {
-    const result = await setPrimaryImageAction(id);
-    if (!result.ok) {
-      showToast(result.error, true);
-      return;
-    }
-    setImages((prev) => prev.map((i) => ({ ...i, is_primary: i.id === id })));
-    router.refresh();
+    const index = orderedImages.findIndex((i) => i.id === id);
+    if (index <= 0) return; // already primary
+    await persistOrder(moveImage(orderedImages, index, 0));
   };
 
   const linkColor = async (id: string, color: string) => {
@@ -444,26 +521,43 @@ export default function ProductEditor({
 
       {/* 2. Images */}
       <section className={sectionCls}>
-        <h2 className="font-semibold mb-1">2. Images ({images.length}/10)</h2>
+        <h2 className="font-semibold mb-1">
+          2. Images ({orderedImages.length}/{MAX_PRODUCT_IMAGES})
+        </h2>
         <p className="text-xs text-black/50 mb-3">
-          JPEG, PNG or WebP, max 5 MB each. Uploads apply immediately.
+          JPEG, PNG or WebP, max 5 MB each. 1 main image + up to{" "}
+          {MAX_PRODUCT_IMAGES - 1} extra. The first image is the main one.
+          Uploads apply immediately.
         </p>
-        <label className="inline-block px-4 py-2 rounded-lg border border-black/15 text-sm font-medium cursor-pointer hover:bg-gray-100 mb-3">
-          {uploading ? "Uploading…" : "Choose images"}
+        {hasTooManyImages(orderedImages.length) && (
+          <div className="mb-3 px-3 py-2 rounded-lg bg-amber-50 text-amber-800 text-sm">
+            This product has {orderedImages.length} images (max{" "}
+            {MAX_PRODUCT_IMAGES}). Please remove the extras — the storefront
+            only shows the first {MAX_PRODUCT_IMAGES}.
+          </div>
+        )}
+        <label
+          className={`inline-block px-4 py-2 rounded-lg border border-black/15 text-sm font-medium mb-3 ${
+            uploading || imagesFull
+              ? "opacity-50 cursor-not-allowed"
+              : "cursor-pointer hover:bg-gray-100"
+          }`}
+        >
+          {uploading ? "Uploading…" : imagesFull ? "Image limit reached" : "Choose images"}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
             className="hidden"
-            disabled={uploading}
+            disabled={uploading || imagesFull}
             onChange={(e) => uploadFiles(e.target.files)}
           />
         </label>
-        {images.length === 0 && (
+        {orderedImages.length === 0 && (
           <p className="text-sm text-black/50">No images yet.</p>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {images.map((img, idx) => (
+          {orderedImages.map((img, idx) => (
             <div key={img.id} className="border border-black/10 rounded-lg p-2">
               <div className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -472,11 +566,15 @@ export default function ProductEditor({
                   alt=""
                   className="w-full aspect-square object-cover rounded-lg"
                 />
-                {img.is_primary && (
-                  <span className="absolute top-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
-                    primary
-                  </span>
-                )}
+                <span
+                  className={`absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded ${
+                    idx === 0
+                      ? "bg-black/80 text-white"
+                      : "bg-white/85 text-black border border-black/10"
+                  }`}
+                >
+                  {idx === 0 ? "Main" : idx + 1}
+                </span>
               </div>
               <select
                 className="w-full mt-2 px-2 py-1 border border-black/15 rounded text-xs"
@@ -494,22 +592,27 @@ export default function ProductEditor({
               <div className="flex flex-wrap gap-1 mt-2">
                 <button
                   type="button"
+                  disabled={idx === 0}
                   onClick={() => makePrimary(img.id)}
-                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100"
+                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100 disabled:opacity-40"
                 >
-                  Primary
+                  Make main
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveImage(idx, -1)}
-                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100"
+                  disabled={idx === 0}
+                  onClick={() => reorderImage(idx, -1)}
+                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100 disabled:opacity-40"
+                  aria-label="Move up"
                 >
                   ↑
                 </button>
                 <button
                   type="button"
-                  onClick={() => moveImage(idx, 1)}
-                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100"
+                  disabled={idx === orderedImages.length - 1}
+                  onClick={() => reorderImage(idx, 1)}
+                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100 disabled:opacity-40"
+                  aria-label="Move down"
                 >
                   ↓
                 </button>
@@ -543,25 +646,28 @@ export default function ProductEditor({
         </label>
         {useColors && (
           <>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {colors.map((c) => (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {colors.map((c, idx) => (
                 <span
-                  key={c.name}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 border border-black/15 rounded-full text-sm"
+                  key={idx}
+                  className="inline-flex items-center gap-2 pl-2 pr-1 py-1 border border-black/15 rounded-full text-sm"
                 >
                   <span
-                    className="w-4 h-4 rounded-full border border-black/20"
+                    className="w-4 h-4 rounded-full border border-black/20 shrink-0"
                     style={{ backgroundColor: c.hex }}
                   />
-                  {c.name}
+                  <input
+                    value={c.name}
+                    maxLength={60}
+                    aria-label={`Color name ${idx + 1}`}
+                    onChange={(e) => renameColorAt(idx, e.target.value)}
+                    className="w-24 bg-transparent outline-none"
+                  />
                   <button
                     type="button"
-                    aria-label={`Remove ${c.name}`}
-                    onClick={() => {
-                      setColors((prev) => prev.filter((x) => x.name !== c.name));
-                      setDirty(true);
-                    }}
-                    className="text-black/50 hover:text-red-600"
+                    aria-label={`Remove color ${idx + 1}`}
+                    onClick={() => removeColorAt(idx)}
+                    className="px-1 text-black/50 hover:text-red-600"
                   >
                     ×
                   </button>
@@ -571,7 +677,32 @@ export default function ProductEditor({
                 <span className="text-sm text-black/50">No colors yet.</span>
               )}
             </div>
-            <div className="flex flex-wrap items-end gap-2">
+
+            <p className="text-xs font-medium mb-2">Quick palette</p>
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {COMMON_COLORS.map((c) => {
+                const exists = colors.some(
+                  (x) => x.name.toLowerCase() === c.en.toLowerCase()
+                );
+                return (
+                  <button
+                    key={c.en}
+                    type="button"
+                    title={`${c.en} / ${c.ar}`}
+                    aria-label={`Add ${c.en} (${c.ar})`}
+                    onClick={() => addColor(c.en, c.hex)}
+                    className={`h-7 w-7 rounded-full border ${
+                      exists
+                        ? "border-black ring-2 ring-black/30"
+                        : "border-black/20 hover:scale-110 transition-transform"
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="flex flex-wrap items-end gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1">Name</label>
                 <input
@@ -584,30 +715,50 @@ export default function ProductEditor({
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1">Hex</label>
-                <input
-                  type="color"
-                  className="h-10 w-16 border border-black/15 rounded-lg"
-                  value={newColorHex}
-                  onChange={(e) => setNewColorHex(e.target.value)}
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    className={`px-3 py-2 border rounded-lg text-sm w-28 font-mono ${
+                      isValidHex(newColorHex)
+                        ? "border-black/15"
+                        : "border-red-400"
+                    }`}
+                    value={newColorHex}
+                    maxLength={7}
+                    onChange={(e) => setNewColorHex(e.target.value)}
+                    placeholder="#RRGGBB"
+                  />
+                  <input
+                    type="color"
+                    aria-label="Pick color"
+                    className="h-10 w-12 border border-black/15 rounded-lg"
+                    value={
+                      isValidHex(newColorHex)
+                        ? normalizeHex(newColorHex) ?? "#000000"
+                        : "#000000"
+                    }
+                    onChange={(e) => setNewColorHex(e.target.value.toUpperCase())}
+                  />
+                  <span
+                    className="w-9 h-9 rounded-full border border-black/20 shrink-0"
+                    style={{
+                      backgroundColor: isValidHex(newColorHex)
+                        ? normalizeHex(newColorHex) ?? "#FFFFFF"
+                        : "#FFFFFF",
+                    }}
+                    aria-hidden="true"
+                  />
+                </div>
+                {!isValidHex(newColorHex) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Enter a hex value like #RRGGBB.
+                  </p>
+                )}
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const cname = newColorName.trim();
-                  if (!cname) return;
-                  if (colors.some((c) => c.name === cname)) {
-                    showToast(`Color "${cname}" already exists.`, true);
-                    return;
-                  }
-                  setColors((prev) => [
-                    ...prev,
-                    { name: cname, hex: newColorHex.toUpperCase() },
-                  ]);
-                  setNewColorName("");
-                  setDirty(true);
-                }}
-                className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
+                disabled={!newColorName.trim() || !isValidHex(newColorHex)}
+                onClick={addCustomColor}
+                className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add color
               </button>
@@ -637,45 +788,93 @@ export default function ProductEditor({
               This product has sizes ({sizeType})
             </label>
             {useSizes && preset.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {preset.map((s) => {
-                  const on = sizes.includes(s);
-                  return (
+              <>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-xs text-black/50">
+                    Tap to select the sizes in stock (a shoe can have only some
+                    sizes).
+                  </span>
+                  <div className="flex gap-2 shrink-0">
                     <button
-                      key={s}
                       type="button"
                       onClick={() => {
                         setSizes((prev) =>
-                          on ? prev.filter((x) => x !== s) : [...prev, s]
+                          Array.from(new Set([...prev, ...preset]))
                         );
                         setDirty(true);
                       }}
-                      className={`px-3 py-1.5 rounded-full text-sm border ${
-                        on
-                          ? "bg-black text-white border-black"
-                          : "border-black/15 hover:bg-gray-100"
-                      }`}
+                      className="text-xs px-2.5 py-1 border border-black/15 rounded-full hover:bg-gray-100"
                     >
-                      {s}
+                      Select all
                     </button>
-                  );
-                })}
-              </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSizes((prev) =>
+                          prev.filter((s) => !preset.includes(s))
+                        );
+                        setDirty(true);
+                      }}
+                      className="text-xs px-2.5 py-1 border border-black/15 rounded-full hover:bg-gray-100"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {preset.map((s) => {
+                    const on = sizes.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => {
+                          setSizes((prev) =>
+                            on ? prev.filter((x) => x !== s) : [...prev, s]
+                          );
+                          setDirty(true);
+                        }}
+                        className={`min-w-[3rem] px-3 py-1.5 rounded-full text-sm border font-medium transition-colors ${
+                          on
+                            ? "bg-black text-white border-black"
+                            : "bg-white border-black/15 text-black/70 hover:bg-gray-100"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             )}
             {useSizes && sizeType === "custom" && (
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2 mb-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1">Custom size</label>
+                  <label className="block text-xs font-medium mb-1">
+                    Custom size
+                  </label>
                   <input
-                    className="px-3 py-2 border border-black/15 rounded-lg text-sm w-36"
+                    className="px-3 py-2 border border-black/15 rounded-lg text-sm w-40"
                     value={customSize}
                     maxLength={20}
                     onChange={(e) => setCustomSize(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const s = customSize.trim();
+                        if (!s || sizes.includes(s)) return;
+                        setSizes((prev) => [...prev, s]);
+                        setCustomSize("");
+                        setDirty(true);
+                      }
+                    }}
                     placeholder="e.g. One size"
                   />
                 </div>
                 <button
                   type="button"
+                  disabled={!customSize.trim()}
                   onClick={() => {
                     const s = customSize.trim();
                     if (!s || sizes.includes(s)) return;
@@ -683,7 +882,7 @@ export default function ProductEditor({
                     setCustomSize("");
                     setDirty(true);
                   }}
-                  className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
+                  className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add size
                 </button>
@@ -691,6 +890,9 @@ export default function ProductEditor({
             )}
             {useSizes && sizes.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
+                <span className="text-xs text-black/50 w-full mb-1">
+                  Selected ({sizes.length})
+                </span>
                 {sizes
                   .filter((s) => sizeType === "custom" || !preset.includes(s))
                   .map((s) => (
@@ -711,6 +913,12 @@ export default function ProductEditor({
                       </button>
                     </span>
                   ))}
+                {sizeType !== "custom" && (
+                  <span className="text-xs text-black/50 w-full mt-1">
+                    {sizes.filter((s) => preset.includes(s)).join(", ") ||
+                      "None selected"}
+                  </span>
+                )}
               </div>
             )}
           </>

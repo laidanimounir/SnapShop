@@ -348,9 +348,10 @@ export async function uploadProductImageAction(
       .select("id, position")
       .eq("product_id", productId);
     if ((existing ?? []).length >= MAX_IMAGES_PER_PRODUCT) {
+      const { MAX_IMAGES_MESSAGE } = await import("@/lib/admin/images");
       return {
         ok: false,
-        error: `At most ${MAX_IMAGES_PER_PRODUCT} images per product.`,
+        error: MAX_IMAGES_MESSAGE,
       };
     }
 

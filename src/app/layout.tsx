@@ -26,6 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={satoshi.className}>
+        {/* TODO(tracking): if/when tracking is deliberately enabled, read
+            store_settings.tracking_pixel on the server and inject the script
+            here. Intentionally NOT implemented: no tracking is injected. */}
         <HolyLoader color="#C9A24B" />
         <Providers>
           <StorefrontChrome>{children}</StorefrontChrome>

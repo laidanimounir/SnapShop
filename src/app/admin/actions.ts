@@ -691,3 +691,84 @@ export async function bulkSetDeliveryPricesAction(
     return actionError(error);
   }
 }
+
+// ------------------------------------------------------------
+// Store settings (all requireAdmin + rate limited; secrets never returned)
+// ------------------------------------------------------------
+
+export async function saveTrackingPixelAction(input: {
+  pixel_id: string;
+  enabled: boolean;
+}): Promise<ActionResult> {
+  try {
+    const { userId } = await requireAdmin();
+    enforceAdminRateLimit(userId, "saveTrackingPixel");
+
+    const { validatePixelId } = await import(
+      "@/lib/admin/settings-validation"
+    );
+    const pixelId =
+      typeof input?.pixel_id === "string" ? input.pixel_id.trim() : "";
+    const error = validatePixelId(pixelId);
+    if (error) return { ok: false, error };
+
+    const { upsertStoreSetting, TRACKING_PIXEL_KEY } = await import(
+      "@/lib/api/store-settings"
+    );
+    await upsertStoreSetting(
+      TRACKING_PIXEL_KEY,
+      { pixel_id: pixelId, enabled: input.enabled === true },
+      userId
+    );
+
+    revalidatePath("/admin/settings");
+    return { ok: true };
+  } catch (e) {
+    return actionError(e);
+  }
+}
+
+export async function saveDeliveryProviderAction(input: {
+  api_key?: string;
+  base_url?: string;
+  enabled: boolean;
+}): Promise<ActionResult> {
+  try {
+    const { userId } = await requireAdmin();
+    enforceAdminRateLimit(userId, "saveDeliveryProvider");
+
+    const { validateHttpsUrl } = await import(
+      "@/lib/admin/settings-validation"
+    );
+    const baseUrl = (input?.base_url ?? "").trim();
+    const urlError = validateHttpsUrl(baseUrl);
+    if (urlError) return { ok: false, error: urlError };
+
+    const providedKey = (input?.api_key ?? "").trim();
+    if (providedKey.length > 500) {
+      return { ok: false, error: "API key is too long." };
+    }
+
+    const {
+      getStoreSettings,
+      upsertStoreSetting,
+      DELIVERY_PROVIDER_KEY,
+    } = await import("@/lib/api/store-settings");
+
+    // Empty submit keeps the existing secret; it is never echoed back.
+    const current = await getStoreSettings();
+    const apiKey =
+      providedKey !== "" ? providedKey : current.provider.api_key;
+
+    await upsertStoreSetting(
+      DELIVERY_PROVIDER_KEY,
+      { api_key: apiKey, base_url: baseUrl, enabled: input.enabled === true },
+      userId
+    );
+
+    revalidatePath("/admin/settings");
+    return { ok: true };
+  } catch (e) {
+    return actionError(e);
+  }
+}

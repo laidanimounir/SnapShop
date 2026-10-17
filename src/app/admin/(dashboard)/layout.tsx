@@ -13,6 +13,7 @@ const navItems = [
   { href: "/admin/products", label: "Products" },
   { href: "/admin/delivery", label: "Delivery" },
   { href: "/admin/reviews", label: "Reviews" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export default async function AdminLayout({

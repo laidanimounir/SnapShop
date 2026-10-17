@@ -10,6 +10,7 @@ export type PlaceOrderResult = {
   confirmation_token: string;
   subtotal: number;
   discount_total: number;
+  delivery_price: number;
   total: number;
 };
 
@@ -26,9 +27,14 @@ export type TrackedOrder = {
   status: string;
   subtotal: number;
   discount_total: number;
+  delivery_price: number;
   total: number;
   created_at: string;
   guest_name: string;
+  wilaya_code: number | null;
+  wilaya_name_ar: string | null;
+  wilaya_name_fr: string | null;
+  delivery_type: string | null;
   items: TrackedOrderItem[];
 };
 
@@ -40,6 +46,8 @@ export async function placeGuestOrder(input: {
   payment_method?: string;
   items: OrderItemPayload[];
   idempotency_key?: string;
+  wilaya_code: number;
+  delivery_type: "home" | "office";
 }): Promise<PlaceOrderResult> {
   const { data, error } = await supabase.rpc("place_guest_order", {
     p_guest_name: input.guest_name,
@@ -49,6 +57,8 @@ export async function placeGuestOrder(input: {
     p_payment_method: input.payment_method ?? "cod",
     p_items: input.items,
     p_idempotency_key: input.idempotency_key ?? null,
+    p_wilaya_code: input.wilaya_code,
+    p_delivery_type: input.delivery_type,
   });
 
   if (error) throw new Error(toUserFacingOrderError(error.message));
@@ -74,6 +84,9 @@ export function toUserFacingOrderError(message: string): string {
   }
   if (/unsupported payment method/i.test(message)) {
     return "Cash on delivery is the only payment method available right now.";
+  }
+  if (/wilaya is required|delivery is not available|invalid delivery type/i.test(message)) {
+    return "Please select a valid wilaya and delivery method.";
   }
   if (/guest name|guest phone|guest address|at least one item/i.test(message)) {
     return "Please fill in your name, phone number, and address before placing the order.";

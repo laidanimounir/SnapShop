@@ -17,9 +17,15 @@ export default function ShippingPage() {
           our delivery team calls to confirm before arriving.
         </p>
         <p>
-          Delivery times and fees depend on your area and are confirmed by
-          phone when your order is processed. You can follow your order status
-          anytime with your confirmation token on the tracking page.
+          Delivery price depends on your wilaya and on the method you choose:
+          home delivery or office pickup. The exact price for your wilaya is
+          shown at checkout before you confirm the order — there is no
+          free-delivery threshold.
+        </p>
+        <p>
+          Delivery times depend on your area and are confirmed by phone when
+          your order is processed. You can follow your order status anytime
+          with your confirmation token on the tracking page.
         </p>
       </div>
       <LegalNote />

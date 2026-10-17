@@ -55,11 +55,31 @@ export default function TrackOrderPage() {
           <div className="max-w-2xl mx-auto mt-8 border border-black/10 rounded-[20px] p-6 space-y-4">
             <div className="flex justify-between">
               <span className="text-black/60">Status</span>
-              <span className="font-bold capitalize">{order.status}</span>
+              <span className="font-bold capitalize">
+                {order.status.replace(/_/g, " ")}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-black/60">Customer</span>
               <span>{order.guest_name}</span>
+            </div>
+            {(order.wilaya_name_fr || order.wilaya_name_ar) && (
+              <div className="flex justify-between">
+                <span className="text-black/60">Wilaya</span>
+                <span>
+                  {[order.wilaya_name_fr, order.wilaya_name_ar]
+                    .filter(Boolean)
+                    .join(" — ")}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-black/60">Delivery</span>
+              <span className="capitalize">
+                {order.delivery_type === "office"
+                  ? "Office pickup"
+                  : "Home delivery"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-black/60">Placed</span>
@@ -70,12 +90,29 @@ export default function TrackOrderPage() {
               <div key={i} className="flex justify-between text-sm">
                 <span className="text-black/70">
                   {item.product_name}
-                  {item.color && item.size ? ` (${item.color} / ${item.size})` : ""} × {item.quantity}
+                  {[item.color, item.size].filter(Boolean).length > 0
+                    ? ` (${[item.color, item.size].filter(Boolean).join(" / ")})`
+                    : ""}{" "}
+                  × {item.quantity}
                 </span>
                 <span className="font-medium">{formatPrice(item.unit_price_at_purchase)}</span>
               </div>
             ))}
             <hr className="border-t-black/10" />
+            <div className="flex justify-between text-sm">
+              <span className="text-black/60">Subtotal</span>
+              <span>{formatPrice(order.subtotal)}</span>
+            </div>
+            {order.discount_total > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-black/60">Discount</span>
+                <span className="text-red-600">-{formatPrice(order.discount_total)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm">
+              <span className="text-black/60">Delivery</span>
+              <span>{formatPrice(order.delivery_price ?? 0)}</span>
+            </div>
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
               <span>{formatPrice(order.total)}</span>

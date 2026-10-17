@@ -71,11 +71,15 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="md:text-xl text-black/60">Delivery Fee</span>
-                    <span className="md:text-xl font-bold">Free</span>
+                    <span className="md:text-xl font-bold text-black/60">
+                      Calculated at checkout
+                    </span>
                   </div>
                   <hr className="border-t-black/10" />
                   <div className="flex items-center justify-between">
-                    <span className="md:text-xl text-black">Total</span>
+                    <span className="md:text-xl text-black">
+                      Total before delivery
+                    </span>
                     <span className="text-xl md:text-2xl font-bold">
                       {formatPrice(total)}
                     </span>
@@ -115,6 +119,8 @@ export default function CartPage() {
           </DialogHeader>
           <GuestCheckoutForm
             items={items}
+            subtotal={subtotal}
+            discountTotal={discount}
             onSuccess={(token) => {
               dispatch(clearCart());
               setCheckoutOpen(false);

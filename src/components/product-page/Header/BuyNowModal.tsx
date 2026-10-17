@@ -53,6 +53,7 @@ const BuyNowModal = ({
 
         <GuestCheckoutForm
           items={[{ variant_id: variantId, quantity }]}
+          subtotal={price * quantity}
           onSuccess={(token) => {
             onOpenChange(false);
             router.push(`/order-confirmation/${token}`);

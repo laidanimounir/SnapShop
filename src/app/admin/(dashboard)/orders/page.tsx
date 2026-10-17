@@ -5,9 +5,9 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import QuickStatusSelect from "@/components/admin/QuickStatusSelect";
 import {
   ORDER_STATUSES,
-  STATUS_LABELS,
   isOrderStatus,
 } from "@/lib/admin/order-transitions";
+import { ar, statusLabelAr } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -83,11 +83,11 @@ export default async function AdminOrdersPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Orders</h1>
+      <h1 className="text-2xl font-bold mb-4">{ar.orders.title}</h1>
 
       <div className="flex flex-wrap gap-2 mb-4">
         <Link href={buildHref(base, {})} className={tabClass(!status)}>
-          All ({total})
+          {ar.common.all} ({total})
         </Link>
         {ORDER_STATUSES.map((s) => (
           <Link
@@ -95,7 +95,7 @@ export default async function AdminOrdersPage({
             href={buildHref(base, { status: s })}
             className={tabClass(status === s)}
           >
-            {STATUS_LABELS[s]} ({counts[s] ?? 0})
+            {statusLabelAr(s)} ({counts[s] ?? 0})
           </Link>
         ))}
       </div>
@@ -107,19 +107,19 @@ export default async function AdminOrdersPage({
         {status && <input type="hidden" name="status" value={status} />}
         <div className="flex-1 min-w-[180px]">
           <label className="block text-xs font-medium mb-1" htmlFor="order-q">
-            Search
+            {ar.common.search}
           </label>
           <input
             id="order-q"
             name="q"
             defaultValue={q}
-            placeholder="Phone, name or order id"
+            placeholder={ar.orders.searchPlaceholder}
             className="w-full px-3 py-2 border border-black/15 rounded-lg text-sm"
           />
         </div>
         <div>
           <label className="block text-xs font-medium mb-1" htmlFor="order-from">
-            From
+            {ar.orders.from}
           </label>
           <input
             id="order-from"
@@ -131,7 +131,7 @@ export default async function AdminOrdersPage({
         </div>
         <div>
           <label className="block text-xs font-medium mb-1" htmlFor="order-to">
-            To
+            {ar.orders.to}
           </label>
           <input
             id="order-to"
@@ -143,7 +143,7 @@ export default async function AdminOrdersPage({
         </div>
         <div>
           <label className="block text-xs font-medium mb-1" htmlFor="order-wilaya">
-            Wilaya
+            {ar.orders.wilaya}
           </label>
           <select
             id="order-wilaya"
@@ -151,7 +151,7 @@ export default async function AdminOrdersPage({
             defaultValue={wilaya ? String(wilaya) : ""}
             className="px-3 py-2 border border-black/15 rounded-lg text-sm bg-white"
           >
-            <option value="">All wilayas</option>
+            <option value="">{ar.orders.allWilayas}</option>
             {zones.map((zone) => (
               <option key={zone.wilaya_code} value={zone.wilaya_code}>
                 {String(zone.wilaya_code).padStart(2, "0")} — {zone.name_fr}
@@ -163,13 +163,13 @@ export default async function AdminOrdersPage({
           type="submit"
           className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80"
         >
-          Filter
+          {ar.common.filter}
         </button>
         <Link
           href={buildHref({}, {})}
           className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
         >
-          Reset
+          {ar.common.reset}
         </Link>
       </form>
 
@@ -177,15 +177,15 @@ export default async function AdminOrdersPage({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-black/10 text-start text-black/60">
-              <th className="px-4 py-3 font-medium text-start">Order</th>
-              <th className="px-4 py-3 font-medium text-start">Guest</th>
-              <th className="px-4 py-3 font-medium text-start">Phone</th>
-              <th className="px-4 py-3 font-medium text-start">Wilaya</th>
-              <th className="px-4 py-3 font-medium text-start">Delivery</th>
-              <th className="px-4 py-3 font-medium text-start">Status</th>
-              <th className="px-4 py-3 font-medium text-start">Total</th>
-              <th className="px-4 py-3 font-medium text-start">Created</th>
-              <th className="px-4 py-3 font-medium text-start">Quick action</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.orders.order}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.orders.guest}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.phone}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.orders.wilaya}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.delivery}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.status}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.total}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.created}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.orders.quickAction}</th>
             </tr>
           </thead>
           <tbody>
@@ -212,15 +212,17 @@ export default async function AdminOrdersPage({
                       ? `${zone.name_fr} (${String(order.wilaya_code).padStart(2, "0")})`
                       : "—"}
                   </td>
-                  <td className="px-4 py-3 capitalize text-black/70">
-                    {order.delivery_type === "office" ? "Office" : "Home"}
+                  <td className="px-4 py-3 text-black/70">
+                    {order.delivery_type === "office"
+                      ? ar.common.office
+                      : ar.common.home}
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={order.status} />
                   </td>
                   <td className="px-4 py-3">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3 text-black/60">
-                    {new Date(order.created_at).toLocaleDateString()}
+                    {new Date(order.created_at).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-4 py-3">
                     <QuickStatusSelect
@@ -234,7 +236,7 @@ export default async function AdminOrdersPage({
             {orders.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-4 py-6 text-center text-black/50">
-                  No orders match these filters.
+                  {ar.orders.noOrders}
                 </td>
               </tr>
             )}
@@ -245,11 +247,11 @@ export default async function AdminOrdersPage({
       <div className="flex items-center justify-between mt-3 text-sm text-black/60">
         <span>
           {total === 0
-            ? "No results"
-            : `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
+            ? ar.common.noResults
+            : `${ar.orders.showing} ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
                 page * PAGE_SIZE,
                 total
-              )} of ${total}`}
+              )} ${ar.common.of} ${total}`}
         </span>
         <div className="flex gap-2">
           {page > 1 ? (
@@ -260,15 +262,15 @@ export default async function AdminOrdersPage({
               })}
               className="px-3 py-1.5 rounded-lg border border-black/15 hover:bg-gray-100"
             >
-              Previous
+              {ar.common.previous}
             </Link>
           ) : (
             <span className="px-3 py-1.5 rounded-lg border border-black/10 text-black/30">
-              Previous
+              {ar.common.previous}
             </span>
           )}
           <span className="px-2 py-1.5">
-            Page {page} / {pageCount}
+            {ar.common.page} {page} {ar.common.of} {pageCount}
           </span>
           {page < pageCount ? (
             <Link
@@ -278,11 +280,11 @@ export default async function AdminOrdersPage({
               })}
               className="px-3 py-1.5 rounded-lg border border-black/15 hover:bg-gray-100"
             >
-              Next
+              {ar.common.next}
             </Link>
           ) : (
             <span className="px-3 py-1.5 rounded-lg border border-black/10 text-black/30">
-              Next
+              {ar.common.next}
             </span>
           )}
         </div>

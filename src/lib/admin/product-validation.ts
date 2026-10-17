@@ -1,5 +1,6 @@
-import type { SizeType } from "../../types/product.types";
+﻿import type { SizeType } from "../../types/product.types";
 import { CLOTHING_SIZES, SHOE_SIZES } from "../sizes";
+import { ar, formatAr } from "./i18n-ar";
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 // Hard limit: 1 primary + up to 3 secondary images per product.
@@ -44,41 +45,41 @@ export function validateProductInput(
 ): { ok: true; value: ValidProduct } | { ok: false; error: string } {
   const name = (input.name ?? "").trim();
   if (name.length < 1 || name.length > 200) {
-    return fail("Product name must be 1-200 characters.");
+    return fail(ar.validation.productName);
   }
   const description = (input.description ?? "").trim();
   if (description.length > 5000) {
-    return fail("Description must be at most 5000 characters.");
+    return fail(ar.validation.description);
   }
   const category = (input.category ?? "").trim() || null;
   if (category && category.length > 120) {
-    return fail("Category must be at most 120 characters.");
+    return fail(ar.validation.category);
   }
   const brand = (input.brand ?? "").trim() || null;
   if (brand && brand.length > 120) {
-    return fail("Brand must be at most 120 characters.");
+    return fail(ar.validation.brand);
   }
   const basePrice = Number(input.base_price);
   if (!Number.isFinite(basePrice) || basePrice < 0) {
-    return fail("Base price must be a number >= 0.");
+    return fail(ar.validation.basePrice);
   }
   const pct = Number(input.discount_percentage ?? 0);
   if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
-    return fail("Discount percentage must be between 0 and 100.");
+    return fail(ar.validation.discountPct);
   }
   const amt = Number(input.discount_amount ?? 0);
   if (!Number.isFinite(amt) || amt < 0) {
-    return fail("Discount amount must be a number >= 0.");
+    return fail(ar.validation.discountAmt);
   }
   if (pct > 0 && amt > 0) {
-    return fail("Only one discount type is allowed (percentage or fixed amount).");
+    return fail(ar.validation.oneDiscount);
   }
   if (amt > basePrice) {
-    return fail("Discount amount cannot exceed the base price.");
+    return fail(ar.validation.discountExceeds);
   }
   const sizeType = input.size_type ?? "none";
   if (!SIZE_TYPES.includes(sizeType)) {
-    return fail("Invalid size type.");
+    return fail(ar.validation.invalidSizeType);
   }
   return {
     ok: true,
@@ -103,10 +104,10 @@ export function validateColor(
 ): { ok: true; value: ColorInput } | { ok: false; error: string } {
   const name = (color.name ?? "").trim();
   if (name.length < 1 || name.length > 60) {
-    return fail("Color name must be 1-60 characters.");
+    return fail(ar.validation.colorName);
   }
   if (!/^#[0-9a-fA-F]{6}$/.test((color.hex ?? "").trim())) {
-    return fail(`Color "${name}" needs a hex value like #RRGGBB.`);
+    return fail(formatAr(ar.validation.colorHex, { name }));
   }
   return { ok: true, value: { name, hex: color.hex.trim().toUpperCase() } };
 }
@@ -117,13 +118,13 @@ export function validateSizeValue(
 ): { ok: true; value: string } | { ok: false; error: string } {
   const value = (size ?? "").trim();
   if (value.length < 1 || value.length > 20) {
-    return fail("Each size must be 1-20 characters.");
+    return fail(ar.validation.sizeLength);
   }
   if (sizeType === "clothing" && !CLOTHING_SIZES.includes(value)) {
-    return fail(`"${value}" is not a clothing size (XS-XXL).`);
+    return fail(formatAr(ar.validation.clothingSize, { value }));
   }
   if (sizeType === "shoes" && !SHOE_SIZES.includes(value)) {
-    return fail(`"${value}" is not a shoe size (35-47).`);
+    return fail(formatAr(ar.validation.shoeSize, { value }));
   }
   return { ok: true, value };
 }
@@ -139,16 +140,16 @@ export function validateVariantRow(
 ): { ok: true } | { ok: false; error: string } {
   const stock = Number(row.stock_quantity);
   if (!Number.isInteger(stock) || stock < 0 || stock > MAX_VARIANT_STOCK) {
-    return fail(`Stock must be an integer 0-${MAX_VARIANT_STOCK}.`);
+    return fail(formatAr(ar.validation.stock, { max: MAX_VARIANT_STOCK }));
   }
   if (row.price != null) {
     const price = Number(row.price);
     if (!Number.isFinite(price) || price < 0) {
-      return fail("Price override must be a number >= 0.");
+      return fail(ar.validation.priceOverride);
     }
   }
   if (row.sku != null && String(row.sku).length > 64) {
-    return fail("SKU must be at most 64 characters.");
+    return fail(ar.validation.sku);
   }
   return { ok: true };
 }
@@ -197,3 +198,4 @@ export function storagePathFromPublicUrl(url: string): string | null {
   if (!path || path.includes("..")) return null;
   return path;
 }
+

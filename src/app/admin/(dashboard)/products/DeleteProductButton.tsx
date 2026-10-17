@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteProductAction } from "@/app/admin/actions";
+import { ar } from "@/lib/admin/i18n-ar";
 
 export default function DeleteProductButton({
   id,
@@ -26,9 +27,7 @@ export default function DeleteProductButton({
       return;
     }
     if (result.deactivated) {
-      alert(
-        `"${name}" has orders, so it was deactivated instead of deleted (order history is kept).`
-      );
+      alert(`"${name}" — ${ar.products.editor.productHasOrders}`);
     }
     router.refresh();
   };
@@ -40,7 +39,7 @@ export default function DeleteProductButton({
         onClick={() => setConfirming(true)}
         className="px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100"
       >
-        Delete
+        {ar.common.delete}
       </button>
     );
   }
@@ -53,7 +52,7 @@ export default function DeleteProductButton({
         onClick={run}
         className="px-3 py-1 rounded-full text-xs font-medium bg-red-600 text-white disabled:opacity-50"
       >
-        {busy ? "…" : "Confirm"}
+        {busy ? "…" : ar.common.confirm}
       </button>
       <button
         type="button"
@@ -64,7 +63,7 @@ export default function DeleteProductButton({
         }}
         className="px-3 py-1 rounded-full text-xs font-medium border border-black/15"
       >
-        Cancel
+        {ar.common.cancel}
       </button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </span>

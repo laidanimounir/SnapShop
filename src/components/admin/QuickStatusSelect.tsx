@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrderStatus } from "@/app/admin/actions";
 import {
-  STATUS_LABELS,
   allowedTransitions,
   transitionRestoresStock,
   type OrderStatus,
 } from "@/lib/admin/order-transitions";
+import { ar, formatAr, statusLabelAr } from "@/lib/admin/i18n-ar";
 
 export default function QuickStatusSelect({
   orderId,
@@ -23,7 +23,7 @@ export default function QuickStatusSelect({
   const options = allowedTransitions(status);
 
   if (options.length === 0) {
-    return <span className="text-xs text-black/40">No actions</span>;
+    return <span className="text-xs text-black/40">{ar.orders.noActions}</span>;
   }
 
   const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -31,10 +31,11 @@ export default function QuickStatusSelect({
     event.target.value = "";
     if (!next) return;
 
+    const label = statusLabelAr(next);
     let note: string | undefined;
     if (next === "cancelled" || next === "returned") {
       const reason = window.prompt(
-        `Reason for marking this order ${next}? (optional)`
+        `${ar.orders.reasonPrompt} (${label})`
       );
       if (reason === null) return;
       note = reason.trim() || undefined;
@@ -43,8 +44,8 @@ export default function QuickStatusSelect({
     const restores = transitionRestoresStock(status, next);
     if (
       !window.confirm(
-        `Change status to ${STATUS_LABELS[next]}?${
-          restores ? "\n\nStock will be restored." : ""
+        `${ar.orders.confirmChange} ${label}؟${
+          restores ? `\n\n${ar.orders.stockWillRestore}` : ""
         }`
       )
     ) {
@@ -68,15 +69,15 @@ export default function QuickStatusSelect({
         onChange={handleChange}
         disabled={busy}
         defaultValue=""
-        aria-label="Change order status"
+        aria-label={ar.orders.changeStatus}
         className="px-2 py-1 border border-black/15 rounded-lg text-xs bg-white disabled:opacity-50"
       >
         <option value="" disabled>
-          {busy ? "Saving…" : "Change status"}
+          {busy ? ar.common.saving : ar.orders.changeStatus}
         </option>
         {options.map((option) => (
           <option key={option} value={option}>
-            {STATUS_LABELS[option]}
+            {statusLabelAr(option)}
           </option>
         ))}
       </select>

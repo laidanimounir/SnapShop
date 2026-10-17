@@ -2,18 +2,20 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { signOutAdmin } from "@/app/admin/actions";
+import { cairo } from "@/styles/fonts";
+import { ar } from "@/lib/admin/i18n-ar";
 
 export const metadata: Metadata = {
   title: "SnapShop Admin",
 };
 
 const navItems = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/products", label: "Products" },
-  { href: "/admin/delivery", label: "Delivery" },
-  { href: "/admin/reviews", label: "Reviews" },
-  { href: "/admin/settings", label: "Settings" },
+  { href: "/admin", label: ar.nav.dashboard },
+  { href: "/admin/orders", label: ar.nav.orders },
+  { href: "/admin/products", label: ar.nav.products },
+  { href: "/admin/delivery", label: ar.nav.delivery },
+  { href: "/admin/reviews", label: ar.nav.reviews },
+  { href: "/admin/settings", label: ar.nav.settings },
 ];
 
 export default async function AdminLayout({
@@ -33,26 +35,28 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div dir="rtl" lang="ar" className={`${cairo.className} min-h-screen bg-gray-50`}>
       <div className="bg-emerald-600 text-white text-center text-sm font-medium py-2 px-4 flex items-center justify-center gap-3 print:hidden">
         {email ? (
           <>
-            <span>Signed in as {email}</span>
+            <span>
+              {ar.nav.signedInAs} {email}
+            </span>
             <form action={signOutAdmin}>
               <button
                 type="submit"
                 className="underline underline-offset-2 hover:no-underline"
               >
-                Sign out
+                {ar.nav.signOut}
               </button>
             </form>
           </>
         ) : (
-          <span>SnapShop Admin — sign in required</span>
+          <span>{ar.nav.loginRequired}</span>
         )}
       </div>
       <div className="flex">
-        <aside className="w-56 bg-white border-r border-black/10 min-h-[calc(100vh-2.5rem)] p-4 shrink-0 print:hidden">
+        <aside className="w-56 bg-white border-e border-black/10 min-h-[calc(100vh-2.5rem)] p-4 shrink-0 print:hidden">
           <nav className="flex flex-col space-y-1">
             {navItems.map((item) => (
               <Link

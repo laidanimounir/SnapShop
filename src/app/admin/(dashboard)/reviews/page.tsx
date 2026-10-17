@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminReviews } from "@/lib/api/admin";
 import { setReviewApproved } from "@/app/admin/actions";
+import { ar } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -21,31 +22,31 @@ export default async function AdminReviewsPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Reviews</h1>
+      <h1 className="text-2xl font-bold mb-4">{ar.reviews.title}</h1>
 
-      <div className="flex space-x-2 mb-4">
+      <div className="flex gap-2 mb-4">
         <Link href="/admin/reviews" className={tabClass(!filter)}>
-          All
+          {ar.reviews.all}
         </Link>
         <Link href="/admin/reviews?filter=pending" className={tabClass(filter === "pending")}>
-          Pending
+          {ar.reviews.pending}
         </Link>
         <Link href="/admin/reviews?filter=approved" className={tabClass(filter === "approved")}>
-          Approved
+          {ar.reviews.approved}
         </Link>
       </div>
 
       <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-left text-black/60">
-              <th className="px-4 py-3 font-medium">Product</th>
-              <th className="px-4 py-3 font-medium">Reviewer</th>
-              <th className="px-4 py-3 font-medium">Rating</th>
-              <th className="px-4 py-3 font-medium">Comment</th>
-              <th className="px-4 py-3 font-medium">Date</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Action</th>
+            <tr className="border-b border-black/10 text-start text-black/60">
+              <th className="px-4 py-3 font-medium text-start">{ar.reviews.product}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.reviews.reviewer}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.reviews.rating}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.reviews.comment}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.reviews.date}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.reviews.status}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.reviews.action}</th>
             </tr>
           </thead>
           <tbody>
@@ -61,9 +62,11 @@ export default async function AdminReviewsPage({
                 </td>
                 <td className="px-4 py-3">{review.reviewer_name}</td>
                 <td className="px-4 py-3">{review.rating}/5</td>
-                <td className="px-4 py-3 max-w-xs truncate text-black/70">{review.comment ?? "-"}</td>
+                <td className="px-4 py-3 max-w-xs truncate text-black/70">
+                  {review.comment ?? "-"}
+                </td>
                 <td className="px-4 py-3 text-black/60">
-                  {new Date(review.created_at).toLocaleDateString()}
+                  {new Date(review.created_at).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4 py-3">
                   <span
@@ -73,7 +76,9 @@ export default async function AdminReviewsPage({
                         : "px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800"
                     }
                   >
-                    {review.is_approved ? "Approved" : "Pending"}
+                    {review.is_approved
+                      ? ar.reviews.approvedLabel
+                      : ar.reviews.pendingLabel}
                   </span>
                 </td>
                 <td className="px-4 py-3">
@@ -91,7 +96,7 @@ export default async function AdminReviewsPage({
                           : "px-3 py-1 rounded-full text-xs font-medium bg-black text-white hover:bg-black/80"
                       }
                     >
-                      {review.is_approved ? "Reject" : "Approve"}
+                      {review.is_approved ? ar.reviews.reject : ar.reviews.approve}
                     </button>
                   </form>
                 </td>
@@ -100,7 +105,7 @@ export default async function AdminReviewsPage({
             {reviews.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-6 text-center text-black/50">
-                  No reviews found.
+                  {ar.reviews.noReviews}
                 </td>
               </tr>
             )}

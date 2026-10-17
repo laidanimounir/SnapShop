@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProductAction } from "@/app/admin/actions";
+import { ar } from "@/lib/admin/i18n-ar";
 
 const inputCls =
   "w-full px-3 py-2 border border-black/15 rounded-lg text-sm";
@@ -42,7 +43,9 @@ export default function NewProductForm() {
   return (
     <form onSubmit={submit} className="bg-white border border-black/10 rounded-lg p-5 space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-1">Name *</label>
+        <label className="block text-sm font-medium mb-1">
+          {ar.products.nameRequired}
+        </label>
         <input
           className={inputCls}
           value={name}
@@ -52,7 +55,9 @@ export default function NewProductForm() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Description</label>
+        <label className="block text-sm font-medium mb-1">
+          {ar.common.description}
+        </label>
         <textarea
           className={inputCls}
           value={description}
@@ -63,7 +68,9 @@ export default function NewProductForm() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Category</label>
+          <label className="block text-sm font-medium mb-1">
+            {ar.common.category}
+          </label>
           <input
             className={inputCls}
             value={category}
@@ -72,7 +79,9 @@ export default function NewProductForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Brand</label>
+          <label className="block text-sm font-medium mb-1">
+            {ar.common.brand}
+          </label>
           <input
             className={inputCls}
             value={brand}
@@ -81,7 +90,9 @@ export default function NewProductForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Base price *</label>
+          <label className="block text-sm font-medium mb-1">
+            {ar.products.basePriceRequired}
+          </label>
           <input
             className={inputCls}
             type="number"
@@ -93,16 +104,18 @@ export default function NewProductForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Size type</label>
+          <label className="block text-sm font-medium mb-1">
+            {ar.products.sizeType}
+          </label>
           <select
             className={inputCls}
             value={sizeType}
             onChange={(e) => setSizeType(e.target.value)}
           >
-            <option value="none">No sizes</option>
-            <option value="clothing">Clothing (XS-XXL)</option>
-            <option value="shoes">Shoes (35-47)</option>
-            <option value="custom">Custom</option>
+            <option value="none">{ar.products.noSizes}</option>
+            <option value="clothing">{ar.products.clothing}</option>
+            <option value="shoes">{ar.products.shoes}</option>
+            <option value="custom">{ar.products.custom}</option>
           </select>
         </div>
       </div>
@@ -112,7 +125,7 @@ export default function NewProductForm() {
         disabled={busy}
         className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
       >
-        {busy ? "Creating…" : "Create draft and continue"}
+        {busy ? ar.products.creating : ar.products.createDraft}
       </button>
     </form>
   );

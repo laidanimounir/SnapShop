@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import {
   maskSecret,
   validateHttpsUrl,
@@ -13,10 +13,10 @@ describe("validatePixelId", () => {
   });
 
   it("rejects wrong lengths and non-digits", () => {
-    expect(validatePixelId("1234")).toMatch(/5-20 digits/);
-    expect(validatePixelId("123456789012345678901")).toMatch(/5-20 digits/);
-    expect(validatePixelId("12a45")).toMatch(/5-20 digits/);
-    expect(validatePixelId("12 345")).toMatch(/5-20 digits/);
+    expect(validatePixelId("1234")).toMatch(/معرّف البكسل/);
+    expect(validatePixelId("123456789012345678901")).toMatch(/معرّف البكسل/);
+    expect(validatePixelId("12a45")).toMatch(/معرّف البكسل/);
+    expect(validatePixelId("12 345")).toMatch(/معرّف البكسل/);
   });
 });
 
@@ -28,7 +28,7 @@ describe("validateHttpsUrl", () => {
 
   it("rejects http and malformed URLs", () => {
     expect(validateHttpsUrl("http://api.example.com")).toMatch(/https/);
-    expect(validateHttpsUrl("not a url")).toMatch(/valid URL/);
+    expect(validateHttpsUrl("not a url")).toMatch(/URL/);
     expect(validateHttpsUrl("ftp://example.com")).toMatch(/https/);
   });
 });
@@ -52,3 +52,4 @@ describe("maskSecret", () => {
     expect(maskSecret(secret)).not.toContain(secret);
   });
 });
+

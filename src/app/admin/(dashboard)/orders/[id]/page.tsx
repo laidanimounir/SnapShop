@@ -5,6 +5,7 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import OrderStatusActions from "@/components/admin/OrderStatusActions";
 import AdminNoteEditor from "@/components/admin/AdminNoteEditor";
 import PrintButton from "@/components/admin/PrintButton";
+import { ar } from "@/lib/admin/i18n-ar";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +19,10 @@ export default async function AdminOrderDetailPage({
   if (!order) {
     return (
       <div>
-        <h1 className="text-2xl font-bold mb-4">Order</h1>
-        <p className="text-black/50">Order not found.</p>
+        <h1 className="text-2xl font-bold mb-4">{ar.orders.detailTitle}</h1>
+        <p className="text-black/50">{ar.messages.orderNotFound}</p>
         <Link href="/admin/orders" className="text-sm underline underline-offset-2">
-          Back to orders
+          {ar.common.back}
         </Link>
       </div>
     );
@@ -34,16 +35,19 @@ export default async function AdminOrderDetailPage({
         }${order.wilaya_code ? ` (${String(order.wilaya_code).padStart(2, "0")})` : ""}`
       : "—";
   const deliveryLabel =
-    order.delivery_type === "office" ? "Office pickup" : "Home delivery";
+    order.delivery_type === "office" ? ar.common.office : ar.common.home;
+  const shortId = order.id.slice(0, 8);
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4 print:hidden">
-        <h1 className="text-2xl font-bold">Order {order.id.slice(0, 8)}</h1>
+        <h1 className="text-2xl font-bold">
+          {ar.orders.detailTitle} {shortId}
+        </h1>
         <div className="flex items-center gap-3">
           <PrintButton />
           <Link href="/admin/orders" className="text-sm underline underline-offset-2">
-            Back to orders
+            {ar.common.back}
           </Link>
         </div>
       </div>
@@ -51,39 +55,43 @@ export default async function AdminOrderDetailPage({
       <div className="print:hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white border border-black/10 rounded-lg p-5 space-y-3">
-            <h2 className="font-semibold">Customer</h2>
+            <h2 className="font-semibold">{ar.orders.customer}</h2>
             <p>
-              <span className="text-black/60">Name:</span> {order.guest_name}
+              <span className="text-black/60">{ar.common.name}:</span>{" "}
+              {order.guest_name}
             </p>
             <p>
-              <span className="text-black/60">Phone:</span> {order.guest_phone}
+              <span className="text-black/60">{ar.common.phone}:</span>{" "}
+              {order.guest_phone}
             </p>
             {order.guest_email && (
               <p>
-                <span className="text-black/60">Email:</span> {order.guest_email}
+                <span className="text-black/60">{ar.common.email}:</span>{" "}
+                {order.guest_email}
               </p>
             )}
             <p>
-              <span className="text-black/60">Address:</span>{" "}
+              <span className="text-black/60">{ar.common.address}:</span>{" "}
               {order.guest_address}
             </p>
             <p>
-              <span className="text-black/60">Wilaya:</span> {wilayaLabel}
+              <span className="text-black/60">{ar.orders.wilaya}:</span>{" "}
+              {wilayaLabel}
             </p>
             <p>
-              <span className="text-black/60">Delivery:</span> {deliveryLabel} —{" "}
-              {formatPrice(order.delivery_price)}
+              <span className="text-black/60">{ar.common.delivery}:</span>{" "}
+              {deliveryLabel} — {formatPrice(order.delivery_price)}
             </p>
             <p>
-              <span className="text-black/60">Payment:</span>{" "}
-              {order.payment_method}
+              <span className="text-black/60">{ar.orders.payment}:</span>{" "}
+              {ar.orders.cod}
             </p>
             <p>
-              <span className="text-black/60">Created:</span>{" "}
-              {new Date(order.created_at).toLocaleString()}
+              <span className="text-black/60">{ar.common.created}:</span>{" "}
+              {new Date(order.created_at).toLocaleString("en-GB")}
             </p>
             <div>
-              <span className="text-black/60">Confirmation token:</span>
+              <span className="text-black/60">{ar.orders.confirmationToken}:</span>
               <p className="font-mono text-xs break-all mt-1">
                 {order.confirmation_token}
               </p>
@@ -91,11 +99,12 @@ export default async function AdminOrderDetailPage({
           </div>
 
           <div className="bg-white border border-black/10 rounded-lg p-5 space-y-3">
-            <h2 className="font-semibold">Status</h2>
+            <h2 className="font-semibold">{ar.common.status}</h2>
             <div className="flex items-center gap-3">
               <StatusBadge status={order.status} />
               <span className="text-xs text-black/50">
-                Updated {new Date(order.status_updated_at).toLocaleString()}
+                {ar.common.updated}{" "}
+                {new Date(order.status_updated_at).toLocaleString("en-GB")}
               </span>
             </div>
             <OrderStatusActions orderId={order.id} status={order.status} />
@@ -103,14 +112,14 @@ export default async function AdminOrderDetailPage({
         </div>
 
         <div className="bg-white border border-black/10 rounded-lg p-5 mt-4">
-          <h2 className="font-semibold mb-3">Items</h2>
+          <h2 className="font-semibold mb-3">{ar.orders.items}</h2>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-black/10 text-start text-black/60">
-                <th className="py-2 font-medium text-start">Product</th>
-                <th className="py-2 font-medium text-start">Variant</th>
-                <th className="py-2 font-medium text-start">Qty</th>
-                <th className="py-2 font-medium text-start">Unit price</th>
+                <th className="py-2 font-medium text-start">{ar.orders.items}</th>
+                <th className="py-2 font-medium text-start">{ar.orders.variant}</th>
+                <th className="py-2 font-medium text-start">{ar.orders.qty}</th>
+                <th className="py-2 font-medium text-start">{ar.orders.unitPrice}</th>
               </tr>
             </thead>
             <tbody>
@@ -131,23 +140,23 @@ export default async function AdminOrderDetailPage({
 
           <div className="mt-4 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-black/60">Subtotal</span>
+              <span className="text-black/60">{ar.common.subtotal}</span>
               <span>{formatPrice(order.subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-black/60">Discount</span>
+              <span className="text-black/60">{ar.common.discount}</span>
               <span className="text-red-600">
                 -{formatPrice(order.discount_total)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-black/60">
-                Delivery ({deliveryLabel.toLowerCase()})
+                {ar.common.delivery} ({deliveryLabel})
               </span>
               <span>{formatPrice(order.delivery_price)}</span>
             </div>
             <div className="flex justify-between font-bold">
-              <span>Total</span>
+              <span>{ar.common.total}</span>
               <span>{formatPrice(order.total)}</span>
             </div>
           </div>
@@ -155,7 +164,7 @@ export default async function AdminOrderDetailPage({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div className="bg-white border border-black/10 rounded-lg p-5">
-            <h2 className="font-semibold mb-3">Admin note</h2>
+            <h2 className="font-semibold mb-3">{ar.orders.adminNote}</h2>
             <AdminNoteEditor
               orderId={order.id}
               initialNote={order.admin_note}
@@ -163,9 +172,11 @@ export default async function AdminOrderDetailPage({
           </div>
 
           <div className="bg-white border border-black/10 rounded-lg p-5">
-            <h2 className="font-semibold mb-3">Status timeline</h2>
+            <h2 className="font-semibold mb-3">{ar.orders.timeline}</h2>
             {order.history.length === 0 ? (
-              <p className="text-sm text-black/50">No status changes yet.</p>
+              <p className="text-sm text-black/50">
+                {ar.orders.noStatusChanges}
+              </p>
             ) : (
               <ol className="space-y-3">
                 {order.history.map((entry) => (
@@ -175,17 +186,21 @@ export default async function AdminOrderDetailPage({
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-black/50">
-                        {entry.old_status ?? "—"}
+                        {entry.old_status
+                          ? ar.statuses[
+                              entry.old_status as keyof typeof ar.statuses
+                            ] ?? entry.old_status
+                          : "—"}
                       </span>
                       <span aria-hidden="true">→</span>
                       <StatusBadge status={entry.new_status} />
                     </div>
                     <p className="text-xs text-black/50 mt-1">
-                      {new Date(entry.changed_at).toLocaleString()}
+                      {new Date(entry.changed_at).toLocaleString("en-GB")}
                     </p>
                     {entry.note && (
                       <p className="text-xs text-black/70 mt-1">
-                        Note: {entry.note}
+                        {ar.orders.noteLabel}: {entry.note}
                       </p>
                     )}
                   </li>
@@ -199,50 +214,52 @@ export default async function AdminOrderDetailPage({
       {/* Print-friendly delivery slip */}
       <div className="hidden print:block text-black">
         <div className="border-b-2 border-black pb-2 mb-4">
-          <h1 className="text-xl font-bold">Delivery slip — SnapShop</h1>
+          <h1 className="text-xl font-bold">{ar.orders.slipTitle}</h1>
           <p className="text-sm">
-            Order {order.id.slice(0, 8).toUpperCase()} ·{" "}
-            {new Date(order.created_at).toLocaleDateString()}
+            {ar.orders.orderNumber} {shortId.toUpperCase()} ·{" "}
+            {new Date(order.created_at).toLocaleDateString("en-GB")}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
           <div>
             <p>
-              <strong>Customer:</strong> {order.guest_name}
+              <strong>{ar.orders.customer}:</strong> {order.guest_name}
             </p>
             <p>
-              <strong>Phone:</strong> {order.guest_phone}
+              <strong>{ar.common.phone}:</strong> {order.guest_phone}
             </p>
             <p>
-              <strong>Address:</strong> {order.guest_address}
+              <strong>{ar.common.address}:</strong> {order.guest_address}
             </p>
             <p>
-              <strong>Wilaya:</strong> {wilayaLabel}
+              <strong>{ar.orders.wilaya}:</strong> {wilayaLabel}
             </p>
             <p>
-              <strong>Delivery:</strong> {deliveryLabel}
+              <strong>{ar.common.delivery}:</strong> {deliveryLabel}
             </p>
           </div>
           <div>
             <p>
-              <strong>Payment:</strong> Cash on delivery (COD)
+              <strong>{ar.orders.payment}:</strong> {ar.orders.cod}
             </p>
             <p>
-              <strong>Items:</strong>{" "}
+              <strong>{ar.orders.items}:</strong>{" "}
               {order.items.reduce((sum, i) => sum + i.quantity, 0)}
             </p>
             <p className="mt-2 text-lg">
-              <strong>Total to collect: {formatPrice(order.total)}</strong>
+              <strong>
+                {ar.orders.totalToCollect}: {formatPrice(order.total)}
+              </strong>
             </p>
           </div>
         </div>
         <table className="w-full text-sm border-t border-black">
           <thead>
             <tr className="border-b border-black text-start">
-              <th className="py-2 text-start">Product</th>
-              <th className="py-2 text-start">Variant</th>
-              <th className="py-2 text-start">Qty</th>
-              <th className="py-2 text-start">Unit</th>
+              <th className="py-2 text-start">{ar.products.product}</th>
+              <th className="py-2 text-start">{ar.orders.variant}</th>
+              <th className="py-2 text-start">{ar.orders.qty}</th>
+              <th className="py-2 text-start">{ar.orders.unitPrice}</th>
             </tr>
           </thead>
           <tbody>
@@ -262,19 +279,19 @@ export default async function AdminOrderDetailPage({
         </table>
         <div className="mt-4 text-sm space-y-1">
           <div className="flex justify-between">
-            <span>Subtotal</span>
+            <span>{ar.common.subtotal}</span>
             <span>{formatPrice(order.subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Discount</span>
+            <span>{ar.common.discount}</span>
             <span>-{formatPrice(order.discount_total)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Delivery</span>
+            <span>{ar.common.delivery}</span>
             <span>{formatPrice(order.delivery_price)}</span>
           </div>
           <div className="flex justify-between font-bold text-base border-t border-black pt-1">
-            <span>Total to collect</span>
+            <span>{ar.orders.totalToCollect}</span>
             <span>{formatPrice(order.total)}</span>
           </div>
         </div>

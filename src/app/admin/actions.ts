@@ -3,12 +3,13 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient, requireAdmin } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { ar, formatAr, statusLabelAr } from "@/lib/admin/i18n-ar";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 function enforceAdminRateLimit(userId: string, action: string) {
   if (!checkRateLimit(`admin:${action}:${userId}`, 30)) {
-    throw new Error("Too many requests. Please wait a minute and try again.");
+    throw new Error(ar.messages.tooManyRequests);
   }
 }
 
@@ -25,7 +26,7 @@ export async function updateOrderStatus(
       "@/lib/admin/order-transitions"
     );
     if (!isOrderStatus(newStatus)) {
-      return { ok: false, error: "Invalid order status." };
+      return { ok: false, error: ar.messages.invalidStatus };
     }
 
     const { data: current, error: fetchError } = await supabase
@@ -34,13 +35,16 @@ export async function updateOrderStatus(
       .eq("id", orderId)
       .maybeSingle();
     if (fetchError) throw new Error(fetchError.message);
-    if (!current) return { ok: false, error: "Order not found." };
+    if (!current) return { ok: false, error: ar.messages.orderNotFound };
 
     const from = (current as { status: string }).status;
     if (!allowedTransitions(from).includes(newStatus)) {
       return {
         ok: false,
-        error: `Cannot change status from ${from} to ${newStatus}.`,
+        error: formatAr(ar.messages.cannotTransition, {
+          from: statusLabelAr(from),
+          to: statusLabelAr(newStatus),
+        }),
       };
     }
 
@@ -60,7 +64,7 @@ export async function updateOrderStatus(
     if (!updated) {
       return {
         ok: false,
-        error: "The order status changed meanwhile. Reload and try again.",
+        error: ar.messages.statusChangedMeanwhile,
       };
     }
 
@@ -152,14 +156,14 @@ export async function signInAdmin(
       password,
     });
     if (error) {
-      return { ok: false, error: "Invalid email or password." };
+      return { ok: false, error: ar.messages.invalidEmailPassword };
     }
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return { ok: false, error: "Sign-in failed. Please try again." };
+      return { ok: false, error: ar.messages.signInFailed };
     }
 
     const admin = createAdminClient();
@@ -176,7 +180,7 @@ export async function signInAdmin(
       await supabase.auth.signOut();
       return {
         ok: false,
-        error: "Access denied: this account is not an administrator",
+        error: ar.messages.notAdmin,
       };
     }
 
@@ -203,7 +207,7 @@ export type ActionResult<T = object> =
 function actionError(error: unknown): { ok: false; error: string } {
   return {
     ok: false,
-    error: error instanceof Error ? error.message : "Something went wrong.",
+    error: error instanceof Error ? error.message : ar.messages.generic,
   };
 }
 
@@ -306,10 +310,16 @@ export async function saveVariantsAction(
     const { buildVariantMatrix } = await import("@/lib/admin/variant-matrix");
 
     if (input.colors.length > MAX_COLORS_PER_PRODUCT) {
-      return { ok: false, error: `At most ${MAX_COLORS_PER_PRODUCT} colors.` };
+      return {
+        ok: false,
+        error: formatAr(ar.messages.colorsMax, { n: MAX_COLORS_PER_PRODUCT }),
+      };
     }
     if (input.sizes.length > MAX_SIZES_PER_PRODUCT) {
-      return { ok: false, error: `At most ${MAX_SIZES_PER_PRODUCT} sizes.` };
+      return {
+        ok: false,
+        error: formatAr(ar.messages.sizesMax, { n: MAX_SIZES_PER_PRODUCT }),
+      };
     }
 
     const colors: { name: string; hex: string }[] = [];
@@ -337,7 +347,7 @@ export async function saveVariantsAction(
       if (!wanted.has(`${row.color ?? ""}\n${row.size ?? ""}`)) {
         return {
           ok: false,
-          error: "A variant row does not match the colors/sizes matrix.",
+          error: ar.messages.variantMismatch,
         };
       }
     }
@@ -395,17 +405,17 @@ export async function uploadProductImageAction(
       .select("id")
       .eq("id", productId)
       .maybeSingle();
-    if (!product) return { ok: false, error: "Product not found." };
+    if (!product) return { ok: false, error: ar.messages.productNotFound };
 
     const file = formData.get("image");
     if (!(file instanceof File) || file.size === 0) {
-      return { ok: false, error: "Choose an image file to upload." };
+      return { ok: false, error: ar.messages.chooseImage };
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      return { ok: false, error: "Image must be at most 5 MB." };
+      return { ok: false, error: ar.messages.imageSize };
     }
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      return { ok: false, error: "Only JPEG, PNG and WebP images are allowed." };
+      return { ok: false, error: ar.messages.imageType };
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -413,7 +423,7 @@ export async function uploadProductImageAction(
     if (!kind) {
       return {
         ok: false,
-        error: "That file is not a real JPEG, PNG or WebP image.",
+        error: ar.messages.imageReal,
       };
     }
 
@@ -422,10 +432,11 @@ export async function uploadProductImageAction(
       .select("id, position")
       .eq("product_id", productId);
     if ((existing ?? []).length >= MAX_IMAGES_PER_PRODUCT) {
-      const { MAX_IMAGES_MESSAGE } = await import("@/lib/admin/images");
       return {
         ok: false,
-        error: MAX_IMAGES_MESSAGE,
+        error: formatAr(ar.messages.maxImages, {
+          n: MAX_IMAGES_PER_PRODUCT,
+        }),
       };
     }
 
@@ -582,10 +593,10 @@ export async function saveDeliveryZoneAction(
       await import("@/lib/admin/delivery-validation");
 
     if (!isValidWilayaCode(input?.wilaya_code)) {
-      return { ok: false, error: "Invalid wilaya code." };
+      return { ok: false, error: ar.messages.invalidWilaya };
     }
     if (typeof input.is_active !== "boolean") {
-      return { ok: false, error: "Invalid active flag." };
+      return { ok: false, error: ar.messages.invalidActiveFlag };
     }
     const homeError = validateDeliveryPrice(input.home_price);
     if (homeError) return { ok: false, error: homeError };
@@ -615,20 +626,20 @@ export async function saveAllDeliveryZonesAction(
       await import("@/lib/admin/delivery-validation");
 
     if (!Array.isArray(rows) || rows.length === 0 || rows.length > 58) {
-      return { ok: false, error: "Invalid delivery zone payload." };
+      return { ok: false, error: ar.messages.invalidPayload };
     }
 
     const seen = new Set<number>();
     for (const row of rows) {
       if (!isValidWilayaCode(row?.wilaya_code)) {
-        return { ok: false, error: "Invalid wilaya code." };
+        return { ok: false, error: ar.messages.invalidWilaya };
       }
       if (seen.has(row.wilaya_code)) {
-        return { ok: false, error: "Duplicate wilaya code." };
+        return { ok: false, error: ar.messages.duplicateWilaya };
       }
       seen.add(row.wilaya_code);
       if (typeof row.is_active !== "boolean") {
-        return { ok: false, error: "Invalid active flag." };
+        return { ok: false, error: ar.messages.invalidActiveFlag };
       }
       const homeError = validateDeliveryPrice(row.home_price);
       if (homeError) return { ok: false, error: homeError };
@@ -657,7 +668,7 @@ export async function bulkSetDeliveryPricesAction(
     enforceAdminRateLimit(userId, "bulkSetDeliveryPrices");
 
     if (field !== "home" && field !== "office") {
-      return { ok: false, error: "Invalid price field." };
+      return { ok: false, error: ar.messages.invalidPriceField };
     }
     const { parseDeliveryPrice, validateDeliveryPrice } = await import(
       "@/lib/admin/delivery-validation"
@@ -672,7 +683,7 @@ export async function bulkSetDeliveryPricesAction(
     if (error) throw new Error(error.message);
 
     const rows = (data ?? []) as DeliveryZoneInput[];
-    if (rows.length === 0) throw new Error("No delivery zones found.");
+    if (rows.length === 0) throw new Error(ar.messages.noZones);
 
     const { updateDeliveryZones } = await import("@/lib/api/admin");
     await updateDeliveryZones(
@@ -746,7 +757,7 @@ export async function saveDeliveryProviderAction(input: {
 
     const providedKey = (input?.api_key ?? "").trim();
     if (providedKey.length > 500) {
-      return { ok: false, error: "API key is too long." };
+      return { ok: false, error: ar.messages.apiKeyTooLong };
     }
 
     const {

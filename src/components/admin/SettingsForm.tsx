@@ -5,6 +5,7 @@ import {
   saveDeliveryProviderAction,
   saveTrackingPixelAction,
 } from "@/app/admin/actions";
+import { ar } from "@/lib/admin/i18n-ar";
 
 type Props = {
   tracking: { pixel_id: string; enabled: boolean };
@@ -36,9 +37,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
       enabled: pixelEnabled,
     });
     setSavingPixel(false);
-    setPixelMessage(
-      result.ok ? "Tracking pixel settings saved." : result.error
-    );
+    setPixelMessage(result.ok ? ar.settings.pixelSaved : result.error);
   };
 
   const saveProvider = async () => {
@@ -52,7 +51,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
     setSavingProvider(false);
     if (result.ok) {
       setApiKey("");
-      setProviderMessage("Delivery provider settings saved.");
+      setProviderMessage(ar.settings.providerSaved);
     } else {
       setProviderMessage(result.error);
     }
@@ -62,16 +61,15 @@ export default function SettingsForm({ tracking, provider }: Props) {
     <div className="space-y-6">
       <section className="bg-white border border-black/10 rounded-lg p-5 space-y-4">
         <div>
-          <h2 className="font-semibold">Tracking Pixel</h2>
+          <h2 className="font-semibold">{ar.settings.trackingTitle}</h2>
           <p className="text-sm text-black/60 mt-1">
-            This form only SAVES the Pixel ID. No tracking script is injected
-            yet.
+            {ar.settings.trackingHelp}
           </p>
         </div>
 
         <div>
           <label className="block text-xs font-medium mb-1" htmlFor="pixel-id">
-            Pixel ID (digits only, 5-20 characters)
+            {ar.settings.pixelId}
           </label>
           <input
             id="pixel-id"
@@ -91,7 +89,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
             checked={pixelEnabled}
             onChange={(e) => setPixelEnabled(e.target.checked)}
           />
-          Enable tracking pixel
+          {ar.settings.enablePixel}
         </label>
 
         <div className="flex items-center gap-3">
@@ -101,7 +99,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
             disabled={savingPixel}
             className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
           >
-            {savingPixel ? "Saving…" : "Save pixel settings"}
+            {savingPixel ? ar.common.saving : ar.settings.savePixel}
           </button>
           {pixelMessage && (
             <span className="text-sm text-black/60">{pixelMessage}</span>
@@ -111,15 +109,16 @@ export default function SettingsForm({ tracking, provider }: Props) {
 
       <section className="bg-white border border-black/10 rounded-lg p-5 space-y-4">
         <div>
-          <h2 className="font-semibold">Delivery providers — EcoTrack</h2>
+          <h2 className="font-semibold">{ar.settings.providerTitle}</h2>
           <p className="text-sm text-black/60 mt-1">
-            Credentials are stored server-side only. Integration is not
-            implemented yet; the API documentation must be added first.
+            {ar.settings.providerHelp}
           </p>
         </div>
 
         <div>
-          <span className="block text-xs font-medium mb-1">Current API key</span>
+          <span className="block text-xs font-medium mb-1">
+            {ar.settings.currentKey}
+          </span>
           <p className="font-mono text-sm text-black/70">
             {provider.masked_api_key}
           </p>
@@ -127,7 +126,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
 
         <div>
           <label className="block text-xs font-medium mb-1" htmlFor="api-key">
-            New API key (leave empty to keep the current one)
+            {ar.settings.newKey}
           </label>
           <input
             id="api-key"
@@ -135,14 +134,14 @@ export default function SettingsForm({ tracking, provider }: Props) {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             autoComplete="new-password"
-            placeholder={provider.has_api_key ? "••••••••" : "Paste API key"}
+            placeholder={provider.has_api_key ? "••••••••" : ar.settings.newKeyPlaceholder}
             className="w-full max-w-sm px-3 py-2 border border-black/15 rounded-lg text-sm"
           />
         </div>
 
         <div>
           <label className="block text-xs font-medium mb-1" htmlFor="base-url">
-            Base URL (optional, https only)
+            {ar.settings.baseUrl}
           </label>
           <input
             id="base-url"
@@ -160,7 +159,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
             checked={providerEnabled}
             onChange={(e) => setProviderEnabled(e.target.checked)}
           />
-          Enable EcoTrack provider
+          {ar.settings.enableProvider}
         </label>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -170,15 +169,15 @@ export default function SettingsForm({ tracking, provider }: Props) {
             disabled={savingProvider}
             className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
           >
-            {savingProvider ? "Saving…" : "Save provider settings"}
+            {savingProvider ? ar.common.saving : ar.settings.saveProvider}
           </button>
           <button
             type="button"
             disabled
-            title="Available after integration is implemented"
+            title={ar.settings.testTooltip}
             className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium opacity-50 cursor-not-allowed"
           >
-            Test connection
+            {ar.settings.testConnection}
           </button>
           {providerMessage && (
             <span className="text-sm text-black/60">{providerMessage}</span>

@@ -37,8 +37,8 @@ describe("validateDeliveryPrice", () => {
   });
 
   it("returns a message otherwise", () => {
-    expect(validateDeliveryPrice("")).toMatch(/Enter a price/);
-    expect(validateDeliveryPrice("100001")).toMatch(/Enter a price/);
+    expect(validateDeliveryPrice("")).toMatch(/سعر/);
+    expect(validateDeliveryPrice("100001")).toMatch(/سعر/);
   });
 });
 

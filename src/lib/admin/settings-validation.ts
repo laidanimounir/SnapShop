@@ -1,5 +1,7 @@
-// Validators and masking helpers for /admin/settings. Pure functions,
+﻿// Validators and masking helpers for /admin/settings. Pure functions,
 // shared by the client form and the server actions.
+
+import { ar } from "./i18n-ar";
 
 export const PIXEL_ID_MIN_LENGTH = 5;
 export const PIXEL_ID_MAX_LENGTH = 20;
@@ -8,8 +10,12 @@ export const PIXEL_ID_MAX_LENGTH = 20;
 export function validatePixelId(value: string): string | null {
   const trimmed = value.trim();
   if (trimmed === "") return null;
-  if (!new RegExp(`^\\d{${PIXEL_ID_MIN_LENGTH},${PIXEL_ID_MAX_LENGTH}}$`).test(trimmed)) {
-    return `Pixel ID must be ${PIXEL_ID_MIN_LENGTH}-${PIXEL_ID_MAX_LENGTH} digits.`;
+  if (
+    !new RegExp(
+      `^\\d{${PIXEL_ID_MIN_LENGTH},${PIXEL_ID_MAX_LENGTH}}$`
+    ).test(trimmed)
+  ) {
+    return ar.validation.pixelId;
   }
   return null;
 }
@@ -22,10 +28,10 @@ export function validateHttpsUrl(value: string): string | null {
   try {
     parsed = new URL(trimmed);
   } catch {
-    return "Enter a valid URL (https://…).";
+    return ar.validation.urlValid;
   }
   if (parsed.protocol !== "https:") {
-    return "Base URL must use https.";
+    return ar.validation.httpsUrl;
   }
   return null;
 }

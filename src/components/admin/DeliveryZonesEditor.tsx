@@ -11,6 +11,7 @@ import {
   parseDeliveryPrice,
   validateDeliveryPrice,
 } from "@/lib/admin/delivery-validation";
+import { ar, formatAr } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 
 type DraftRow = {
@@ -72,9 +73,9 @@ export default function DeliveryZonesEditor({
 
   const validateRow = (row: DraftRow): string | null => {
     const homeError = validateDeliveryPrice(row.home);
-    if (homeError) return `Wilaya ${row.wilaya_code} home: ${homeError}`;
+    if (homeError) return `#${row.wilaya_code} — ${homeError}`;
     const officeError = validateDeliveryPrice(row.office);
-    if (officeError) return `Wilaya ${row.wilaya_code} office: ${officeError}`;
+    if (officeError) return `#${row.wilaya_code} — ${officeError}`;
     return null;
   };
 
@@ -94,8 +95,8 @@ export default function DeliveryZonesEditor({
     setSavingCode(null);
     showToast(
       result.ok
-        ? `Wilaya ${row.wilaya_code} saved.`
-        : result.error ?? "Could not save.",
+        ? formatAr(ar.delivery.savedWilaya, { code: row.wilaya_code })
+        : result.error ?? ar.delivery.couldNotSave,
       !result.ok
     );
   };
@@ -119,7 +120,7 @@ export default function DeliveryZonesEditor({
     );
     setSavingAll(false);
     showToast(
-      result.ok ? "All delivery prices saved." : result.error ?? "Could not save.",
+      result.ok ? ar.delivery.savedAll : result.error ?? ar.delivery.couldNotSave,
       !result.ok
     );
   };
@@ -135,7 +136,7 @@ export default function DeliveryZonesEditor({
     const result = await bulkSetDeliveryPricesAction(field, parsed);
     setBulking(null);
     if (!result.ok) {
-      showToast(result.error ?? "Could not update prices.", true);
+      showToast(result.error ?? ar.delivery.couldNotSave, true);
       return;
     }
     setRows((prev) =>
@@ -146,7 +147,10 @@ export default function DeliveryZonesEditor({
       )
     );
     showToast(
-      `All ${field === "home" ? "home" : "office"} prices set to ${parsed}.`
+      formatAr(
+        field === "home" ? ar.delivery.bulkSetHome : ar.delivery.bulkSetOffice,
+        { price: parsed }
+      )
     );
   };
 
@@ -155,19 +159,19 @@ export default function DeliveryZonesEditor({
       <div className="flex flex-wrap items-end gap-3 bg-white border border-black/10 rounded-lg p-4">
         <div className="flex-1 min-w-[200px]">
           <label className="block text-xs font-medium mb-1" htmlFor="zone-search">
-            Search
+            {ar.delivery.search}
           </label>
           <input
             id="zone-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Wilaya code, Arabic or French name"
+            placeholder={ar.delivery.searchPlaceholder}
             className="w-full px-3 py-2 border border-black/15 rounded-lg text-sm"
           />
         </div>
         <div>
           <label className="block text-xs font-medium mb-1" htmlFor="bulk-price">
-            Bulk price (DA)
+            {ar.delivery.bulkPrice}
           </label>
           <input
             id="bulk-price"
@@ -186,7 +190,7 @@ export default function DeliveryZonesEditor({
           disabled={bulking !== null}
           className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50"
         >
-          {bulking === "home" ? "Setting…" : "Set all home"}
+          {bulking === "home" ? ar.common.saving : ar.delivery.setAllHome}
         </button>
         <button
           type="button"
@@ -194,7 +198,7 @@ export default function DeliveryZonesEditor({
           disabled={bulking !== null}
           className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50"
         >
-          {bulking === "office" ? "Setting…" : "Set all office"}
+          {bulking === "office" ? ar.common.saving : ar.delivery.setAllOffice}
         </button>
         <button
           type="button"
@@ -202,7 +206,7 @@ export default function DeliveryZonesEditor({
           disabled={savingAll || savingCode !== null}
           className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
         >
-          {savingAll ? "Saving…" : "Save all"}
+          {savingAll ? ar.common.saving : ar.delivery.saveAll}
         </button>
       </div>
 
@@ -211,11 +215,21 @@ export default function DeliveryZonesEditor({
           <thead>
             <tr className="border-b border-black/10 text-start text-black/60">
               <th className="px-3 py-3 font-medium text-start">#</th>
-              <th className="px-3 py-3 font-medium text-start">Wilaya</th>
-              <th className="px-3 py-3 font-medium text-start">Home (DA)</th>
-              <th className="px-3 py-3 font-medium text-start">Office (DA)</th>
-              <th className="px-3 py-3 font-medium text-start">Active</th>
-              <th className="px-3 py-3 font-medium text-start">Save</th>
+              <th className="px-3 py-3 font-medium text-start">
+                {ar.orders.wilaya}
+              </th>
+              <th className="px-3 py-3 font-medium text-start">
+                {ar.delivery.homePrice}
+              </th>
+              <th className="px-3 py-3 font-medium text-start">
+                {ar.delivery.officePrice}
+              </th>
+              <th className="px-3 py-3 font-medium text-start">
+                {ar.delivery.active}
+              </th>
+              <th className="px-3 py-3 font-medium text-start">
+                {ar.delivery.save}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -241,7 +255,7 @@ export default function DeliveryZonesEditor({
                     onChange={(e) =>
                       updateRow(row.wilaya_code, { home: e.target.value })
                     }
-                    aria-label={`Home price wilaya ${row.wilaya_code}`}
+                    aria-label={`${ar.delivery.homePrice} ${row.wilaya_code}`}
                     className={cn(
                       "w-28 px-2 py-1.5 border rounded-lg text-sm",
                       validateDeliveryPrice(row.home)
@@ -260,7 +274,7 @@ export default function DeliveryZonesEditor({
                     onChange={(e) =>
                       updateRow(row.wilaya_code, { office: e.target.value })
                     }
-                    aria-label={`Office price wilaya ${row.wilaya_code}`}
+                    aria-label={`${ar.delivery.officePrice} ${row.wilaya_code}`}
                     className={cn(
                       "w-28 px-2 py-1.5 border rounded-lg text-sm",
                       validateDeliveryPrice(row.office)
@@ -276,7 +290,7 @@ export default function DeliveryZonesEditor({
                     onChange={(e) =>
                       updateRow(row.wilaya_code, { is_active: e.target.checked })
                     }
-                    aria-label={`Active wilaya ${row.wilaya_code}`}
+                    aria-label={`${ar.delivery.active} ${row.wilaya_code}`}
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -286,7 +300,9 @@ export default function DeliveryZonesEditor({
                     disabled={savingCode === row.wilaya_code}
                     className="px-3 py-1 rounded-full text-xs font-medium bg-black text-white hover:bg-black/80 disabled:opacity-50"
                   >
-                    {savingCode === row.wilaya_code ? "Saving…" : "Save"}
+                    {savingCode === row.wilaya_code
+                      ? ar.common.saving
+                      : ar.common.save}
                   </button>
                 </td>
               </tr>
@@ -294,7 +310,7 @@ export default function DeliveryZonesEditor({
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-3 py-6 text-center text-black/50">
-                  No wilaya matches your search.
+                  {ar.delivery.noMatch}
                 </td>
               </tr>
             )}

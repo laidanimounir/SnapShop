@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInAdmin } from "@/app/admin/actions";
 import { BRAND_NAME } from "@/lib/config";
+import { ar } from "@/lib/admin/i18n-ar";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError(null);
     if (!email.trim() || !password) {
-      setError("Please enter your email and password.");
+      setError(ar.login.empty);
       return;
     }
     setIsSubmitting(true);
@@ -32,7 +33,7 @@ export default function AdminLoginPage() {
       router.push("/admin");
       router.refresh();
     } catch {
-      setError("Something went wrong signing in. Please try again.");
+      setError(ar.login.genericError);
     } finally {
       setIsSubmitting(false);
     }
@@ -45,8 +46,8 @@ export default function AdminLoginPage() {
         className="w-full max-w-sm bg-white border border-black/10 rounded-xl p-6 space-y-4"
       >
         <div>
-          <h1 className="text-lg font-semibold">{BRAND_NAME} Admin</h1>
-          <p className="text-sm text-black/60">Sign in to continue.</p>
+          <h1 className="text-lg font-semibold">{BRAND_NAME} — لوحة الإدارة</h1>
+          <p className="text-sm text-black/60">{ar.login.subtitle}</p>
         </div>
 
         {error && (
@@ -57,7 +58,7 @@ export default function AdminLoginPage() {
 
         <div>
           <label className="block text-xs font-medium text-black mb-1">
-            Email
+            {ar.login.email}
           </label>
           <input
             type="email"
@@ -70,7 +71,7 @@ export default function AdminLoginPage() {
 
         <div>
           <label className="block text-xs font-medium text-black mb-1">
-            Password
+            {ar.login.password}
           </label>
           <input
             type="password"
@@ -86,7 +87,7 @@ export default function AdminLoginPage() {
           disabled={isSubmitting}
           className="w-full py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-black/80 transition-all disabled:opacity-50"
         >
-          {isSubmitting ? "Signing in..." : "Sign in"}
+          {isSubmitting ? ar.login.signingIn : ar.login.signIn}
         </button>
       </form>
     </div>

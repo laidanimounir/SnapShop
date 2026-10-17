@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrderStatus } from "@/app/admin/actions";
 import {
-  STATUS_LABELS,
   allowedTransitions,
   transitionRestoresStock,
   type OrderStatus,
 } from "@/lib/admin/order-transitions";
+import { ar, statusLabelAr } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 
 export default function OrderStatusActions({
@@ -25,11 +25,10 @@ export default function OrderStatusActions({
   const options = allowedTransitions(status);
 
   const run = async (next: OrderStatus) => {
+    const label = statusLabelAr(next);
     let note: string | undefined;
     if (next === "cancelled" || next === "returned") {
-      const reason = window.prompt(
-        `Reason for marking this order ${next}? (optional)`
-      );
+      const reason = window.prompt(`${ar.orders.reasonPrompt} (${label})`);
       if (reason === null) return;
       note = reason.trim() || undefined;
     }
@@ -37,8 +36,8 @@ export default function OrderStatusActions({
     const restores = transitionRestoresStock(status, next);
     if (
       !window.confirm(
-        `Change status to ${STATUS_LABELS[next]}?${
-          restores ? "\n\nStock will be restored." : ""
+        `${ar.orders.confirmChange} ${label}؟${
+          restores ? `\n\n${ar.orders.stockWillRestore}` : ""
         }`
       )
     ) {
@@ -56,18 +55,14 @@ export default function OrderStatusActions({
     }
     setMessage(
       restores
-        ? `Status updated to ${STATUS_LABELS[next]}. Stock was restored.`
-        : `Status updated to ${STATUS_LABELS[next]}.`
+        ? `${ar.orders.statusUpdatedStock} ${label}.`
+        : `${ar.orders.statusUpdated} ${label}.`
     );
     router.refresh();
   };
 
   if (options.length === 0) {
-    return (
-      <p className="text-sm text-black/50">
-        This order is in a terminal state — no further transitions.
-      </p>
-    );
+    return <p className="text-sm text-black/50">{ar.orders.terminal}</p>;
   }
 
   return (
@@ -89,20 +84,15 @@ export default function OrderStatusActions({
               )}
             >
               {busy === option
-                ? "Saving…"
-                : `Mark ${STATUS_LABELS[option]}`}
+                ? ar.common.saving
+                : `${ar.orders.markStatus} ${statusLabelAr(option)}`}
             </button>
           );
         })}
       </div>
-      {message && (
-        <p className="text-sm text-emerald-700">{message}</p>
-      )}
+      {message && <p className="text-sm text-emerald-700">{message}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <p className="text-xs text-black/50">
-        Transitions are validated on the server; stock is restored only on
-        cancel/return from a stock-holding state.
-      </p>
+      <p className="text-xs text-black/50">{ar.orders.transitionsValidated}</p>
     </div>
   );
 }

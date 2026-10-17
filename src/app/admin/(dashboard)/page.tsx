@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDashboardStats } from "@/lib/api/admin";
-import { ORDER_STATUSES, STATUS_LABELS } from "@/lib/admin/order-transitions";
+import { ORDER_STATUSES } from "@/lib/admin/order-transitions";
+import { ar, statusLabelAr } from "@/lib/admin/i18n-ar";
 
 export const dynamic = "force-dynamic";
 
@@ -8,15 +9,15 @@ export default async function AdminHome() {
   const stats = await getDashboardStats();
 
   const cards = [
-    { label: "Total orders", value: stats.totalOrders, href: "/admin/orders" },
-    { label: "Pending orders", value: stats.pendingOrders, href: "/admin/orders?status=pending" },
-    { label: "Total products", value: stats.totalProducts, href: "/admin/products" },
-    { label: "Pending reviews", value: stats.pendingReviews, href: "/admin/reviews?filter=pending" },
+    { label: ar.dashboard.totalOrders, value: stats.totalOrders, href: "/admin/orders" },
+    { label: ar.dashboard.pendingOrders, value: stats.pendingOrders, href: "/admin/orders?status=pending" },
+    { label: ar.dashboard.totalProducts, value: stats.totalProducts, href: "/admin/products" },
+    { label: ar.dashboard.pendingReviews, value: stats.pendingReviews, href: "/admin/reviews?filter=pending" },
   ];
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-4">{ar.dashboard.title}</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => (
           <Link
@@ -30,7 +31,9 @@ export default async function AdminHome() {
         ))}
       </div>
 
-      <h2 className="text-lg font-semibold mt-6 mb-3">Orders by status</h2>
+      <h2 className="text-lg font-semibold mt-6 mb-3">
+        {ar.dashboard.ordersByStatus}
+      </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
         {ORDER_STATUSES.map((status) => (
           <Link
@@ -42,7 +45,7 @@ export default async function AdminHome() {
               {stats.statusCounts[status] ?? 0}
             </p>
             <p className="text-xs text-black/60 mt-1">
-              {STATUS_LABELS[status]}
+              {statusLabelAr(status)}
             </p>
           </Link>
         ))}

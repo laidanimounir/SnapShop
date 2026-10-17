@@ -1,6 +1,8 @@
 // Pure validation for delivery-zone admin edits. Shared by the client
 // editor and the server actions so both enforce the same limits.
 
+import { ar } from "./i18n-ar";
+
 export const MIN_DELIVERY_PRICE = 0;
 export const MAX_DELIVERY_PRICE = 100000;
 
@@ -26,11 +28,7 @@ export function parseDeliveryPrice(value: unknown): number | null {
 export function validateDeliveryPrice(value: unknown): string | null {
   const n = parseDeliveryPrice(value);
   if (n === null) {
-    return `Enter a price between ${MIN_DELIVERY_PRICE} and ${MAX_DELIVERY_PRICE} (up to 2 decimals).`;
-  }
-  if (n < MIN_DELIVERY_PRICE) return "Price cannot be negative.";
-  if (n > MAX_DELIVERY_PRICE) {
-    return `Price cannot exceed ${MAX_DELIVERY_PRICE}.`;
+    return ar.validation.deliveryPrice;
   }
   return null;
 }

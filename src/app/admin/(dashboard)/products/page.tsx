@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAdminProducts } from "@/lib/api/admin";
 import { setProductActive } from "@/app/admin/actions";
 import { formatPrice } from "@/lib/pricing";
+import { ar } from "@/lib/admin/i18n-ar";
 import DeleteProductButton from "./DeleteProductButton";
 
 export const dynamic = "force-dynamic";
@@ -42,12 +43,14 @@ export default async function AdminProductsPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Products ({filtered.length})</h1>
+        <h1 className="text-2xl font-bold">
+          {ar.products.title} ({filtered.length})
+        </h1>
         <Link
           href="/admin/products/new"
           className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80"
         >
-          New product
+          {ar.products.newProduct}
         </Link>
       </div>
 
@@ -56,7 +59,7 @@ export default async function AdminProductsPage({
           type="text"
           name="q"
           defaultValue={searchParams.q ?? ""}
-          placeholder="Search name or category…"
+          placeholder={ar.products.searchPlaceholder}
           className="px-3 py-2 border border-black/15 rounded-lg text-sm w-64"
         />
         <select
@@ -64,29 +67,29 @@ export default async function AdminProductsPage({
           defaultValue={activeFilter}
           className="px-3 py-2 border border-black/15 rounded-lg text-sm"
         >
-          <option value="all">All</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="all">{ar.common.all}</option>
+          <option value="active">{ar.common.active}</option>
+          <option value="inactive">{ar.common.inactive}</option>
         </select>
         <button
           type="submit"
           className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
         >
-          Filter
+          {ar.common.filter}
         </button>
       </form>
 
       <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
         <table className="w-full text-sm min-w-[760px]">
           <thead>
-            <tr className="border-b border-black/10 text-left text-black/60">
-              <th className="px-4 py-3 font-medium">Product</th>
-              <th className="px-4 py-3 font-medium">Category</th>
-              <th className="px-4 py-3 font-medium">Price</th>
-              <th className="px-4 py-3 font-medium">Stock</th>
-              <th className="px-4 py-3 font-medium">Variants</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Actions</th>
+            <tr className="border-b border-black/10 text-start text-black/60">
+              <th className="px-4 py-3 font-medium text-start">{ar.products.product}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.category}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.price}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.stock}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.variants}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.status}</th>
+              <th className="px-4 py-3 font-medium text-start">{ar.common.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -129,14 +132,14 @@ export default async function AdminProductsPage({
                     />
                     <button
                       type="submit"
-                      title="Toggle active"
+                      title={ar.common.status}
                       className={
                         product.is_active
                           ? "px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
                           : "px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600"
                       }
                     >
-                      {product.is_active ? "Active" : "Inactive"}
+                      {product.is_active ? ar.common.active : ar.common.inactive}
                     </button>
                   </form>
                 </td>
@@ -146,7 +149,7 @@ export default async function AdminProductsPage({
                       href={`/admin/products/${product.id}/edit`}
                       className="px-3 py-1 rounded-full text-xs font-medium border border-black/15 hover:bg-gray-100"
                     >
-                      Edit
+                      {ar.common.edit}
                     </Link>
                     <DeleteProductButton id={product.id} name={product.name} />
                   </div>
@@ -156,7 +159,7 @@ export default async function AdminProductsPage({
             {items.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-6 text-center text-black/50">
-                  No products found.
+                  {ar.products.noProducts}
                 </td>
               </tr>
             )}
@@ -167,14 +170,14 @@ export default async function AdminProductsPage({
       {totalPages > 1 && (
         <div className="flex items-center gap-2 mt-4 text-sm">
           <span className="text-black/60">
-            Page {safePage} of {totalPages}
+            {ar.common.page} {safePage} {ar.common.of} {totalPages}
           </span>
           {safePage > 1 && (
             <Link
               href={hrefFor({ page: String(safePage - 1) })}
               className="px-3 py-1 rounded-lg border border-black/15 hover:bg-gray-100"
             >
-              Previous
+              {ar.common.previous}
             </Link>
           )}
           {safePage < totalPages && (
@@ -182,7 +185,7 @@ export default async function AdminProductsPage({
               href={hrefFor({ page: String(safePage + 1) })}
               className="px-3 py-1 rounded-lg border border-black/15 hover:bg-gray-100"
             >
-              Next
+              {ar.common.next}
             </Link>
           )}
         </div>

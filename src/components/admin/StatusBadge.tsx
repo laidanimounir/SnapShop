@@ -1,13 +1,12 @@
 import {
   STATUS_BADGE_CLASSES,
-  STATUS_LABELS,
   isOrderStatus,
 } from "@/lib/admin/order-transitions";
+import { statusLabelAr } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 
 export default function StatusBadge({ status }: { status: string }) {
   const known = isOrderStatus(status);
-  const label = known ? STATUS_LABELS[status] : status.replace(/_/g, " ");
   const classes = known
     ? STATUS_BADGE_CLASSES[status]
     : "bg-gray-100 text-gray-700";
@@ -19,7 +18,7 @@ export default function StatusBadge({ status }: { status: string }) {
         classes
       )}
     >
-      {label}
+      {statusLabelAr(status)}
     </span>
   );
 }

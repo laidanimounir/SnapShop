@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminProductById } from "@/lib/api/admin";
 import { formatPrice } from "@/lib/pricing";
+import { ar } from "@/lib/admin/i18n-ar";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +15,10 @@ export default async function AdminProductDetailPage({
   if (!product) {
     return (
       <div>
-        <h1 className="text-2xl font-bold mb-4">Product</h1>
-        <p className="text-black/50">Product not found.</p>
+        <h1 className="text-2xl font-bold mb-4">{ar.products.product}</h1>
+        <p className="text-black/50">{ar.products.notFound}</p>
         <Link href="/admin/products" className="text-sm underline underline-offset-2">
-          Back to products
+          {ar.products.backToProducts}
         </Link>
       </div>
     );
@@ -28,48 +29,58 @@ export default async function AdminProductDetailPage({
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">{product.name}</h1>
         <Link href="/admin/products" className="text-sm underline underline-offset-2">
-          Back to products
+          {ar.products.backToProducts}
         </Link>
       </div>
 
       <div className="bg-white border border-black/10 rounded-lg p-5 mb-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
         <p>
-          <span className="text-black/60">Category:</span> {product.category ?? "-"}
+          <span className="text-black/60">{ar.common.category}:</span>{" "}
+          {product.category ?? "-"}
         </p>
         <p>
-          <span className="text-black/60">Brand:</span> {product.brand ?? "-"}
+          <span className="text-black/60">{ar.common.brand}:</span>{" "}
+          {product.brand ?? "-"}
         </p>
         <p>
-          <span className="text-black/60">Base price:</span> {formatPrice(product.base_price)}
+          <span className="text-black/60">{ar.products.basePrice}:</span>{" "}
+          {formatPrice(product.base_price)}
         </p>
         <p>
-          <span className="text-black/60">Rating:</span> {product.rating.toFixed(1)}
+          <span className="text-black/60">{ar.products.rating}:</span>{" "}
+          {product.rating.toFixed(1)}
         </p>
         <p>
-          <span className="text-black/60">Discount %:</span> {product.discount_percentage}
+          <span className="text-black/60">{ar.products.discountPct}:</span>{" "}
+          {product.discount_percentage}
         </p>
         <p>
-          <span className="text-black/60">Discount amount:</span> {formatPrice(product.discount_amount)}
+          <span className="text-black/60">{ar.products.discountAmount}:</span>{" "}
+          {formatPrice(product.discount_amount)}
         </p>
         <p>
-          <span className="text-black/60">Active:</span> {product.is_active ? "Yes" : "No"}
+          <span className="text-black/60">{ar.common.active}:</span>{" "}
+          {product.is_active ? ar.common.yes : ar.common.no}
         </p>
         <p className="md:col-span-2">
-          <span className="text-black/60">Description:</span> {product.description}
+          <span className="text-black/60">{ar.common.description}:</span>{" "}
+          {product.description}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white border border-black/10 rounded-lg p-5">
-          <h2 className="font-semibold mb-3">Variants ({product.variants.length})</h2>
+          <h2 className="font-semibold mb-3">
+            {ar.common.variants} ({product.variants.length})
+          </h2>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 text-left text-black/60">
-                <th className="py-2 font-medium">Color</th>
-                <th className="py-2 font-medium">Size</th>
-                <th className="py-2 font-medium">Stock</th>
-                <th className="py-2 font-medium">SKU</th>
-                <th className="py-2 font-medium">Price</th>
+              <tr className="border-b border-black/10 text-start text-black/60">
+                <th className="py-2 font-medium text-start">{ar.common.color}</th>
+                <th className="py-2 font-medium text-start">{ar.common.size}</th>
+                <th className="py-2 font-medium text-start">{ar.common.stock}</th>
+                <th className="py-2 font-medium text-start">{ar.common.sku}</th>
+                <th className="py-2 font-medium text-start">{ar.common.price}</th>
               </tr>
             </thead>
             <tbody>
@@ -84,7 +95,9 @@ export default async function AdminProductDetailPage({
                   </td>
                   <td className="py-2 font-mono text-xs">{variant.sku ?? "-"}</td>
                   <td className="py-2">
-                    {variant.price != null ? formatPrice(variant.price) : "inherit"}
+                    {variant.price != null
+                      ? formatPrice(variant.price)
+                      : ar.products.inherit}
                   </td>
                 </tr>
               ))}
@@ -93,7 +106,9 @@ export default async function AdminProductDetailPage({
         </div>
 
         <div className="bg-white border border-black/10 rounded-lg p-5">
-          <h2 className="font-semibold mb-3">Images ({product.images.length})</h2>
+          <h2 className="font-semibold mb-3">
+            {ar.common.images} ({product.images.length})
+          </h2>
           <div className="grid grid-cols-3 gap-2">
             {product.images.map((image) => (
               <div key={image.id} className="relative">
@@ -104,14 +119,14 @@ export default async function AdminProductDetailPage({
                   className="w-full aspect-square object-cover rounded-lg border border-black/10"
                 />
                 {image.is_primary && (
-                  <span className="absolute top-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
-                    primary
+                  <span className="absolute top-1 start-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                    {ar.products.primary}
                   </span>
                 )}
               </div>
             ))}
             {product.images.length === 0 && (
-              <p className="text-black/50 col-span-3">No images.</p>
+              <p className="text-black/50 col-span-3">{ar.products.noImages}</p>
             )}
           </div>
         </div>

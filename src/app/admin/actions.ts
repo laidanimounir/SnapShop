@@ -1,7 +1,7 @@
 "use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/supabase/admin";
+import { createAdminClient, requireAdmin } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -61,6 +61,55 @@ export async function setReviewApproved(id: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/admin/reviews");
+}
+
+export async function signInAdmin(
+  email: string,
+  password: string
+): Promise<ActionResult> {
+  try {
+    // Cookie-aware client: signInWithPassword stores the session in
+    // cookies via setAll, so middleware and requireAdmin see it on the
+    // very next request (a plain browser client would only write
+    // localStorage and the server would never observe the session).
+    const supabase = createServerSupabase();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) {
+      return { ok: false, error: "Invalid email or password." };
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { ok: false, error: "Sign-in failed. Please try again." };
+    }
+
+    const admin = createAdminClient();
+    const { data: membership, error: adminError } = await admin
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (adminError) {
+      return { ok: false, error: adminError.message };
+    }
+
+    if (!membership) {
+      await supabase.auth.signOut();
+      return {
+        ok: false,
+        error: "Access denied: this account is not an administrator",
+      };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return actionError(error);
+  }
 }
 
 export async function signOutAdmin() {

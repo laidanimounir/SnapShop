@@ -1,13 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { satoshi } from "@/styles/fonts";
-import TopNavbar from "@/components/layout/Navbar/TopNavbar";
-import Footer from "@/components/layout/Footer";
+import StorefrontChrome from "@/components/layout/StorefrontChrome";
 import HolyLoader from "holy-loader";
 import Providers from "./providers";
 import { BRAND_NAME, TAGLINE } from "@/lib/config";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: `${BRAND_NAME} - Modern E-Commerce`,
   description: TAGLINE,
 };
@@ -26,10 +28,8 @@ export default function RootLayout({
       <body className={satoshi.className}>
         <HolyLoader color="#C9A24B" />
         <Providers>
-          <TopNavbar />
-          {children}
+          <StorefrontChrome>{children}</StorefrontChrome>
         </Providers>
-        <Footer />
       </body>
     </html>
   );

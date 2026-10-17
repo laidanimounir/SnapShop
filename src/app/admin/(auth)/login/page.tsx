@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { signInAdmin } from "@/app/admin/actions";
 import { BRAND_NAME } from "@/lib/config";
 
 export default function AdminLoginPage() {
@@ -21,25 +21,25 @@ export default function AdminLoginPage() {
     }
     setIsSubmitting(true);
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (signInError) {
-        setError("Invalid email or password.");
-        setIsSubmitting(false);
+      // Server action: signs in with the cookie-based Supabase server
+      // client (session persists server-side), verifies admin_users
+      // membership and signs non-admins back out.
+      const result = await signInAdmin(email, password);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
       router.push("/admin");
       router.refresh();
     } catch {
       setError("Something went wrong signing in. Please try again.");
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm bg-white border border-black/10 rounded-xl p-6 space-y-4"

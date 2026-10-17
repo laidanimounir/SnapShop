@@ -575,3 +575,47 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     pendingReviews: pendingReviews ?? 0,
   };
 }
+
+// ------------------------------------------------------------
+// Delivery zones (admin)
+// ------------------------------------------------------------
+
+export type AdminDeliveryZone = {
+  wilaya_code: number;
+  name_ar: string;
+  name_fr: string;
+  home_price: number;
+  office_price: number;
+  is_active: boolean;
+};
+
+export type DeliveryZoneUpdate = {
+  wilaya_code: number;
+  home_price: number;
+  office_price: number;
+  is_active: boolean;
+};
+
+export async function getDeliveryZonesAdmin(): Promise<AdminDeliveryZone[]> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("delivery_zones")
+    .select("wilaya_code, name_ar, name_fr, home_price, office_price, is_active")
+    .order("wilaya_code", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as AdminDeliveryZone[];
+}
+
+export async function updateDeliveryZones(
+  rows: DeliveryZoneUpdate[]
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const payload = rows.map((row) => ({
+    ...row,
+    updated_at: new Date().toISOString(),
+  }));
+  const { error } = await supabase
+    .from("delivery_zones")
+    .upsert(payload, { onConflict: "wilaya_code" });
+  if (error) throw error;
+}

@@ -473,3 +473,147 @@ export async function setImageColorAction(
     return actionError(error);
   }
 }
+
+// ------------------------------------------------------------
+// Delivery zones (all requireAdmin + rate limited)
+// ------------------------------------------------------------
+
+export type DeliveryZoneInput = {
+  wilaya_code: number;
+  home_price: number;
+  office_price: number;
+  is_active: boolean;
+};
+
+function normalizeDeliveryRow(
+  row: DeliveryZoneInput,
+  parse: (v: unknown) => number | null
+): DeliveryZoneInput {
+  return {
+    wilaya_code: row.wilaya_code,
+    home_price: parse(row.home_price) as number,
+    office_price: parse(row.office_price) as number,
+    is_active: row.is_active,
+  };
+}
+
+export async function saveDeliveryZoneAction(
+  input: DeliveryZoneInput
+): Promise<ActionResult> {
+  try {
+    const { userId } = await requireAdmin();
+    enforceAdminRateLimit(userId, "saveDeliveryZone");
+
+    const { isValidWilayaCode, parseDeliveryPrice, validateDeliveryPrice } =
+      await import("@/lib/admin/delivery-validation");
+
+    if (!isValidWilayaCode(input?.wilaya_code)) {
+      return { ok: false, error: "Invalid wilaya code." };
+    }
+    if (typeof input.is_active !== "boolean") {
+      return { ok: false, error: "Invalid active flag." };
+    }
+    const homeError = validateDeliveryPrice(input.home_price);
+    if (homeError) return { ok: false, error: homeError };
+    const officeError = validateDeliveryPrice(input.office_price);
+    if (officeError) return { ok: false, error: officeError };
+
+    const { updateDeliveryZones } = await import("@/lib/api/admin");
+    await updateDeliveryZones([
+      normalizeDeliveryRow(input, parseDeliveryPrice),
+    ]);
+    revalidatePath("/admin/delivery");
+    revalidatePath("/shop");
+    return { ok: true };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function saveAllDeliveryZonesAction(
+  rows: DeliveryZoneInput[]
+): Promise<ActionResult> {
+  try {
+    const { userId } = await requireAdmin();
+    enforceAdminRateLimit(userId, "saveAllDeliveryZones");
+
+    const { isValidWilayaCode, parseDeliveryPrice, validateDeliveryPrice } =
+      await import("@/lib/admin/delivery-validation");
+
+    if (!Array.isArray(rows) || rows.length === 0 || rows.length > 58) {
+      return { ok: false, error: "Invalid delivery zone payload." };
+    }
+
+    const seen = new Set<number>();
+    for (const row of rows) {
+      if (!isValidWilayaCode(row?.wilaya_code)) {
+        return { ok: false, error: "Invalid wilaya code." };
+      }
+      if (seen.has(row.wilaya_code)) {
+        return { ok: false, error: "Duplicate wilaya code." };
+      }
+      seen.add(row.wilaya_code);
+      if (typeof row.is_active !== "boolean") {
+        return { ok: false, error: "Invalid active flag." };
+      }
+      const homeError = validateDeliveryPrice(row.home_price);
+      if (homeError) return { ok: false, error: homeError };
+      const officeError = validateDeliveryPrice(row.office_price);
+      if (officeError) return { ok: false, error: officeError };
+    }
+
+    const { updateDeliveryZones } = await import("@/lib/api/admin");
+    await updateDeliveryZones(
+      rows.map((row) => normalizeDeliveryRow(row, parseDeliveryPrice))
+    );
+    revalidatePath("/admin/delivery");
+    revalidatePath("/shop");
+    return { ok: true };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function bulkSetDeliveryPricesAction(
+  field: "home" | "office",
+  price: number
+): Promise<ActionResult> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "bulkSetDeliveryPrices");
+
+    if (field !== "home" && field !== "office") {
+      return { ok: false, error: "Invalid price field." };
+    }
+    const { parseDeliveryPrice, validateDeliveryPrice } = await import(
+      "@/lib/admin/delivery-validation"
+    );
+    const priceError = validateDeliveryPrice(price);
+    if (priceError) return { ok: false, error: priceError };
+    const parsed = parseDeliveryPrice(price) as number;
+
+    const { data, error } = await supabase
+      .from("delivery_zones")
+      .select("wilaya_code, home_price, office_price, is_active");
+    if (error) throw new Error(error.message);
+
+    const rows = (data ?? []) as DeliveryZoneInput[];
+    if (rows.length === 0) throw new Error("No delivery zones found.");
+
+    const { updateDeliveryZones } = await import("@/lib/api/admin");
+    await updateDeliveryZones(
+      rows.map((row) => ({
+        wilaya_code: row.wilaya_code,
+        home_price: field === "home" ? parsed : Number(row.home_price),
+        office_price: field === "office" ? parsed : Number(row.office_price),
+        is_active: row.is_active,
+      }))
+    );
+
+    revalidatePath("/admin/delivery");
+    revalidatePath("/shop");
+    return { ok: true };
+  } catch (error) {
+    return actionError(error);
+  }
+}

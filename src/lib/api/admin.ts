@@ -7,18 +7,112 @@ export type AdminOrder = {
   guest_phone: string;
   status: string;
   total: number;
+  delivery_price: number;
+  wilaya_code: number | null;
+  delivery_type: string;
   created_at: string;
 };
 
-export async function getOrders(): Promise<AdminOrder[]> {
-  const { supabase } = await requireAdmin();
-  const { data, error } = await supabase
-    .from("orders")
-    .select("id, guest_name, guest_phone, status, total, created_at")
-    .order("created_at", { ascending: false });
+export type AdminOrderFilters = {
+  status?: string;
+  q?: string;
+  from?: string;
+  to?: string;
+  wilaya?: number;
+  page?: number;
+  pageSize?: number;
+};
 
-  if (error) throw error;
-  return (data ?? []) as AdminOrder[];
+export type AdminOrderListResult = {
+  orders: AdminOrder[];
+  total: number;
+  counts: Record<string, number>;
+};
+
+const ORDER_STATUS_KEYS = [
+  "pending",
+  "confirmed",
+  "no_answer",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "returned",
+] as const;
+
+function applyOrderFilters(query: any, filters: AdminOrderFilters): any {
+  let q = query;
+  const search = filters.q?.trim();
+  if (search) {
+    const safe = search.replace(/[,()%\\]/g, "").slice(0, 60);
+    if (safe) {
+      q = q.or(`guest_name.ilike.%${safe}%,guest_phone.ilike.%${safe}%`);
+    }
+  }
+  if (filters.from && /^\d{4}-\d{2}-\d{2}$/.test(filters.from)) {
+    q = q.gte("created_at", `${filters.from}T00:00:00`);
+  }
+  if (filters.to && /^\d{4}-\d{2}-\d{2}$/.test(filters.to)) {
+    q = q.lte("created_at", `${filters.to}T23:59:59.999`);
+  }
+  if (
+    typeof filters.wilaya === "number" &&
+    filters.wilaya >= 1 &&
+    filters.wilaya <= 58
+  ) {
+    q = q.eq("wilaya_code", filters.wilaya);
+  }
+  return q;
+}
+
+export async function getOrders(
+  filters: AdminOrderFilters = {}
+): Promise<AdminOrderListResult> {
+  const { supabase } = await requireAdmin();
+  const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? 20));
+  const page = Math.max(1, filters.page ?? 1);
+  const offset = (page - 1) * pageSize;
+
+  let query: any = supabase
+    .from("orders")
+    .select(
+      "id, guest_name, guest_phone, status, total, delivery_price, wilaya_code, delivery_type, created_at"
+    );
+  query = applyOrderFilters(query, filters);
+  if (filters.status && ORDER_STATUS_KEYS.includes(filters.status as any)) {
+    query = query.eq("status", filters.status);
+  }
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .range(offset, offset + pageSize - 1);
+  if (error) throw new Error(error.message);
+
+  const countFor = async (status?: string): Promise<number> => {
+    let q: any = supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true });
+    q = applyOrderFilters(q, filters);
+    if (status) q = q.eq("status", status);
+    const { count, error: countError } = await q;
+    if (countError) throw new Error(countError.message);
+    return count ?? 0;
+  };
+
+  const [total, ...statusCounts] = await Promise.all([
+    countFor(),
+    ...ORDER_STATUS_KEYS.map((s) => countFor(s)),
+  ]);
+
+  const counts: Record<string, number> = {};
+  ORDER_STATUS_KEYS.forEach((s, i) => {
+    counts[s] = statusCounts[i];
+  });
+
+  return {
+    orders: (data ?? []) as AdminOrder[],
+    total,
+    counts,
+  };
 }
 
 export type AdminOrderItem = {
@@ -28,6 +122,15 @@ export type AdminOrderItem = {
   size: string | null;
   quantity: number;
   unit_price_at_purchase: number;
+};
+
+export type AdminOrderHistoryEntry = {
+  id: string;
+  old_status: string | null;
+  new_status: string;
+  changed_by: string | null;
+  note: string | null;
+  changed_at: string;
 };
 
 export type AdminOrderDetail = {
@@ -40,10 +143,18 @@ export type AdminOrderDetail = {
   payment_method: string;
   subtotal: number;
   discount_total: number;
+  delivery_price: number;
   total: number;
+  wilaya_code: number | null;
+  delivery_type: string;
+  wilaya_name_ar: string | null;
+  wilaya_name_fr: string | null;
+  admin_note: string | null;
+  status_updated_at: string;
   confirmation_token: string;
   created_at: string;
   items: AdminOrderItem[];
+  history: AdminOrderHistoryEntry[];
 };
 
 export async function getOrderById(id: string): Promise<AdminOrderDetail | null> {
@@ -51,7 +162,7 @@ export async function getOrderById(id: string): Promise<AdminOrderDetail | null>
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, guest_name, guest_phone, guest_email, guest_address, status, payment_method, subtotal, discount_total, total, confirmation_token, created_at"
+      "id, guest_name, guest_phone, guest_email, guest_address, status, payment_method, subtotal, discount_total, delivery_price, total, wilaya_code, delivery_type, admin_note, status_updated_at, confirmation_token, created_at"
     )
     .eq("id", id)
     .maybeSingle();
@@ -59,15 +170,40 @@ export async function getOrderById(id: string): Promise<AdminOrderDetail | null>
   if (error) throw error;
   if (!order) return null;
 
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("id, product_name, color, size, quantity, unit_price_at_purchase")
-    .eq("order_id", id)
-    .order("created_at", { ascending: true });
+  const [{ data: items }, { data: history }] = await Promise.all([
+    supabase
+      .from("order_items")
+      .select("id, product_name, color, size, quantity, unit_price_at_purchase")
+      .eq("order_id", id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("order_status_history")
+      .select("id, old_status, new_status, changed_by, note, changed_at")
+      .eq("order_id", id)
+      .order("changed_at", { ascending: true }),
+  ]);
+
+  let wilaya_name_ar: string | null = null;
+  let wilaya_name_fr: string | null = null;
+  const wilayaCode = (order as { wilaya_code: number | null }).wilaya_code;
+  if (wilayaCode != null) {
+    const { data: zone } = await supabase
+      .from("delivery_zones")
+      .select("name_ar, name_fr")
+      .eq("wilaya_code", wilayaCode)
+      .maybeSingle();
+    if (zone) {
+      wilaya_name_ar = (zone as { name_ar: string }).name_ar;
+      wilaya_name_fr = (zone as { name_fr: string }).name_fr;
+    }
+  }
 
   return {
-    ...(order as AdminOrderDetail),
+    ...(order as Omit<AdminOrderDetail, "items" | "history" | "wilaya_name_ar" | "wilaya_name_fr">),
+    wilaya_name_ar,
+    wilaya_name_fr,
     items: (items ?? []) as AdminOrderItem[],
+    history: (history ?? []) as AdminOrderHistoryEntry[],
   };
 }
 
@@ -546,33 +682,52 @@ export type DashboardStats = {
   pendingOrders: number;
   totalProducts: number;
   pendingReviews: number;
+  statusCounts: Record<string, number>;
 };
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   const { supabase } = await requireAdmin();
+  const statuses = [
+    "pending",
+    "confirmed",
+    "no_answer",
+    "shipped",
+    "delivered",
+    "cancelled",
+    "returned",
+  ] as const;
+
   const [
     { count: totalOrders },
-    { count: pendingOrders },
     { count: totalProducts },
     { count: pendingReviews },
+    ...statusResults
   ] = await Promise.all([
     supabase.from("orders").select("id", { count: "exact", head: true }),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
     supabase.from("products").select("id", { count: "exact", head: true }),
     supabase
       .from("reviews")
       .select("id", { count: "exact", head: true })
       .eq("is_approved", false),
+    ...statuses.map((s) =>
+      supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("status", s)
+    ),
   ]);
+
+  const statusCounts: Record<string, number> = {};
+  statuses.forEach((s, i) => {
+    statusCounts[s] = statusResults[i].count ?? 0;
+  });
 
   return {
     totalOrders: totalOrders ?? 0,
-    pendingOrders: pendingOrders ?? 0,
+    pendingOrders: statusCounts.pending ?? 0,
     totalProducts: totalProducts ?? 0,
     pendingReviews: pendingReviews ?? 0,
+    statusCounts,
   };
 }
 

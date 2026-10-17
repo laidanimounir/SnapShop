@@ -12,27 +12,101 @@ function enforceAdminRateLimit(userId: string, action: string) {
   }
 }
 
-const validStatuses = [
-  "pending",
-  "confirmed",
-  "shipped",
-  "delivered",
-  "cancelled",
-];
+export async function updateOrderStatus(
+  orderId: string,
+  newStatus: string,
+  note?: string
+): Promise<ActionResult> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "updateOrderStatus");
 
-export async function updateOrderStatus(id: string, formData: FormData) {
-  const status = formData.get("status") as string;
-  if (!validStatuses.includes(status)) {
-    throw new Error("Invalid order status");
+    const { allowedTransitions, isOrderStatus } = await import(
+      "@/lib/admin/order-transitions"
+    );
+    if (!isOrderStatus(newStatus)) {
+      return { ok: false, error: "Invalid order status." };
+    }
+
+    const { data: current, error: fetchError } = await supabase
+      .from("orders")
+      .select("status")
+      .eq("id", orderId)
+      .maybeSingle();
+    if (fetchError) throw new Error(fetchError.message);
+    if (!current) return { ok: false, error: "Order not found." };
+
+    const from = (current as { status: string }).status;
+    if (!allowedTransitions(from).includes(newStatus)) {
+      return {
+        ok: false,
+        error: `Cannot change status from ${from} to ${newStatus}.`,
+      };
+    }
+
+    const trimmedNote = note?.trim()
+      ? note.trim().slice(0, 1000)
+      : null;
+
+    // Optimistic guard: only apply if the status is still the one we saw.
+    const { data: updated, error } = await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", orderId)
+      .eq("status", from)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!updated) {
+      return {
+        ok: false,
+        error: "The order status changed meanwhile. Reload and try again.",
+      };
+    }
+
+    // The DB trigger wrote the history row; attach the reason and actor.
+    const { data: history } = await supabase
+      .from("order_status_history")
+      .select("id")
+      .eq("order_id", orderId)
+      .eq("new_status", newStatus)
+      .order("changed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (history) {
+      await supabase
+        .from("order_status_history")
+        .update({ note: trimmedNote, changed_by: userId })
+        .eq("id", (history as { id: string }).id);
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/orders");
+    revalidatePath(`/admin/orders/${orderId}`);
+    return { ok: true };
+  } catch (error) {
+    return actionError(error);
   }
+}
 
-  const { userId, supabase } = await requireAdmin();
-  enforceAdminRateLimit(userId, "updateOrderStatus");
-  const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/admin/orders");
-  revalidatePath(`/admin/orders/${id}`);
+export async function updateAdminNote(
+  orderId: string,
+  note: string
+): Promise<ActionResult> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "updateAdminNote");
+    const trimmed = note.trim().slice(0, 2000);
+    const { error } = await supabase
+      .from("orders")
+      .update({ admin_note: trimmed ? trimmed : null })
+      .eq("id", orderId);
+    if (error) throw new Error(error.message);
+    revalidatePath(`/admin/orders/${orderId}`);
+    return { ok: true };
+  } catch (error) {
+    return actionError(error);
+  }
 }
 
 export async function setProductActive(id: string, formData: FormData) {

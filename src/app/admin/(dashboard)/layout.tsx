@@ -33,7 +33,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-emerald-600 text-white text-center text-sm font-medium py-2 px-4 flex items-center justify-center gap-3">
+      <div className="bg-emerald-600 text-white text-center text-sm font-medium py-2 px-4 flex items-center justify-center gap-3 print:hidden">
         {email ? (
           <>
             <span>Signed in as {email}</span>
@@ -51,7 +51,7 @@ export default async function AdminLayout({
         )}
       </div>
       <div className="flex">
-        <aside className="w-56 bg-white border-r border-black/10 min-h-[calc(100vh-2.5rem)] p-4 shrink-0">
+        <aside className="w-56 bg-white border-r border-black/10 min-h-[calc(100vh-2.5rem)] p-4 shrink-0 print:hidden">
           <nav className="flex flex-col space-y-1">
             {navItems.map((item) => (
               <Link
@@ -64,7 +64,7 @@ export default async function AdminLayout({
             ))}
           </nav>
         </aside>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 print:p-0">{children}</main>
       </div>
     </div>
   );

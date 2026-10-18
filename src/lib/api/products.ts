@@ -58,7 +58,7 @@ export async function getProductFacets(): Promise<ProductFacet> {
       .eq("is_active", true),
     supabase
       .from("product_variants")
-      .select("color, color_hex, products!inner(is_active)")
+      .select("color, color_hex, size, products!inner(is_active)")
       .eq("is_active", true)
       .eq("products.is_active", true),
   ]);

@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_QUANTITY_PER_VARIANT,
   clampQuantity,
-} from "../features/carts/cartsSlice";
+  isValidQuantity,
+} from "../quantity";
 
-describe("cart quantity clamping (mirrors server cap 1-10)", () => {
+describe("quantity clamping (mirrors server cap 1-10)", () => {
   it("caps at the server maximum", () => {
     expect(MAX_QUANTITY_PER_VARIANT).toBe(10);
     expect(clampQuantity(11)).toBe(10);
@@ -21,5 +22,19 @@ describe("cart quantity clamping (mirrors server cap 1-10)", () => {
     expect(clampQuantity(1)).toBe(1);
     expect(clampQuantity(5)).toBe(5);
     expect(clampQuantity(10)).toBe(10);
+  });
+});
+
+describe("isValidQuantity (server accepts 1-10 integers only)", () => {
+  it("accepts integers in range", () => {
+    expect(isValidQuantity(1)).toBe(true);
+    expect(isValidQuantity(10)).toBe(true);
+  });
+
+  it("rejects out-of-range and non-integers", () => {
+    expect(isValidQuantity(0)).toBe(false);
+    expect(isValidQuantity(11)).toBe(false);
+    expect(isValidQuantity(2.5)).toBe(false);
+    expect(isValidQuantity(NaN)).toBe(false);
   });
 });

@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { placeGuestOrder } from "@/lib/api/orders";
 import type { OrderItemPayload } from "@/lib/api/orders";
-import { fetchDeliveryZones } from "@/lib/api/delivery";
 import { createIdempotencyKey } from "@/lib/idempotency";
 import {
   DELIVERY_TYPE_LABEL,
@@ -11,31 +10,20 @@ import {
   getDeliveryPrice,
   getOrderTotal,
   type DeliveryType,
-  type DeliveryZone,
 } from "@/lib/delivery";
+import { useDeliveryZones } from "@/lib/hooks/useDeliveryZones";
+import {
+  hasAnyFieldError,
+  validateAddress,
+  validateCheckoutFields,
+  validateName,
+  validatePhone,
+  validateWilaya,
+  type FieldErrors,
+} from "@/lib/checkout/validation";
 import { cn } from "@/lib/utils";
 import Price from "@/components/common/Price";
 import { ar } from "@/lib/store/i18n-ar";
-
-type FieldErrors = {
-  customerName?: string;
-  phone?: string;
-  address?: string;
-  wilaya?: string;
-};
-
-const validateName = (value: string): string | undefined =>
-  !value.trim() ? ar.checkout.validation.nameRequired : undefined;
-
-const validatePhone = (value: string): string | undefined => {
-  if (!value.trim()) return ar.checkout.validation.phoneRequired;
-  const digits = value.replace(/\D/g, "");
-  if (digits.length < 8) return ar.checkout.validation.phoneMin;
-  return undefined;
-};
-
-const validateAddress = (value: string): string | undefined =>
-  !value.trim() ? ar.checkout.validation.addressRequired : undefined;
 
 export default function GuestCheckoutForm({
   items,
@@ -55,9 +43,7 @@ export default function GuestCheckoutForm({
   const [address, setAddress] = useState("");
   const [wilayaCode, setWilayaCode] = useState<string>("");
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("home");
-  const [zones, setZones] = useState<DeliveryZone[]>([]);
-  const [zonesLoading, setZonesLoading] = useState(true);
-  const [zonesError, setZonesError] = useState<string | null>(null);
+  const { zones, zonesLoading, zonesError } = useDeliveryZones();
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,26 +52,6 @@ export default function GuestCheckoutForm({
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
   // Honeypot: hidden from humans; bots that fill it are rejected.
   const [company, setCompany] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchDeliveryZones()
-      .then((rows) => {
-        if (!cancelled) {
-          setZones(rows);
-          setZonesLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setZonesError(ar.checkout.validation.zonesError);
-          setZonesLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const selectedZone = useMemo(
     () => zones.find((z) => z.wilaya_code === Number(wilayaCode)) ?? null,
@@ -99,10 +65,7 @@ export default function GuestCheckoutForm({
     customerName: touched.customerName ? validateName(customerName) : undefined,
     phone: touched.phone ? validatePhone(phone) : undefined,
     address: touched.address ? validateAddress(address) : undefined,
-    wilaya:
-      touched.wilaya && zones.length > 0 && !wilayaCode
-        ? ar.checkout.validation.wilayaRequired
-        : undefined,
+    wilaya: touched.wilaya ? validateWilaya(wilayaCode, zones.length > 0) : undefined,
   };
 
   const handleBlur = (field: string) =>
@@ -110,11 +73,14 @@ export default function GuestCheckoutForm({
 
   const handleConfirm = async () => {
     setTouched({ customerName: true, phone: true, address: true, wilaya: true });
-    const nameErr = validateName(customerName);
-    const phoneErr = validatePhone(phone);
-    const addrErr = validateAddress(address);
-    const wilayaErr = zones.length > 0 && !wilayaCode ? ar.checkout.validation.wilayaRequired : undefined;
-    if (nameErr || phoneErr || addrErr || wilayaErr) return;
+    const fieldErrors = validateCheckoutFields({
+      customerName,
+      phone,
+      address,
+      wilayaCode,
+      hasZones: zones.length > 0,
+    });
+    if (hasAnyFieldError(fieldErrors)) return;
 
     if (zonesError || zonesLoading) {
       setError(zonesError ?? ar.checkout.validation.zonesLoading);

@@ -21,6 +21,95 @@ export type ProductPage = {
   total: number;
 };
 
+export type ProductFacetColor = { name: string; hex: string };
+
+export type ProductFacet = {
+  categories: string[];
+  colors: ProductFacetColor[];
+  sizes: string[];
+  maxPrice: number;
+};
+
+const DEFAULT_MAX_PRICE = 500;
+
+function sortSizeValues(values: string[]): string[] {
+  return [...values].sort((a, b) => {
+    const aNum = a.trim() !== "" && !Number.isNaN(Number(a));
+    const bNum = b.trim() !== "" && !Number.isNaN(Number(b));
+    if (aNum && bNum) return Number(a) - Number(b);
+    if (aNum) return -1;
+    if (bNum) return 1;
+    return a.localeCompare(b);
+  });
+}
+
+/**
+ * Distinct filter values for the storefront, derived from active products and
+ * their active variants. Values are returned exactly as stored (never
+ * translated or normalized). Uses explicit column lists — never select("*").
+ */
+export async function getProductFacets(): Promise<ProductFacet> {
+  const supabase = createServerSupabase();
+
+  const [{ data: products }, { data: variants }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("category, base_price")
+      .eq("is_active", true),
+    supabase
+      .from("product_variants")
+      .select("color, color_hex, products!inner(is_active)")
+      .eq("is_active", true)
+      .eq("products.is_active", true),
+  ]);
+
+  const productRows = (products ?? []) as Array<{
+    category?: string | null;
+    base_price?: number | null;
+  }>;
+  const variantRows = (variants ?? []) as Array<{
+    color?: string | null;
+    color_hex?: string | null;
+    size?: string | null;
+  }>;
+
+  const categories = Array.from(
+    new Set(
+      productRows
+        .map((p) => p.category?.trim())
+        .filter((c): c is string => Boolean(c))
+    )
+  ).sort((a, b) => a.localeCompare(b, "ar"));
+
+  const colorMap = new Map<string, string>();
+  for (const v of variantRows) {
+    const name = v.color?.trim();
+    if (!name) continue;
+    if (!colorMap.has(name)) colorMap.set(name, v.color_hex?.trim() || "");
+  }
+  const colors = Array.from(colorMap.entries())
+    .map(([name, hex]) => ({ name, hex }))
+    .sort((a, b) => a.name.localeCompare(b.name, "ar"));
+
+  const sizes = sortSizeValues(
+    Array.from(
+      new Set(
+        variantRows
+          .map((v) => v.size?.trim())
+          .filter((s): s is string => Boolean(s))
+      )
+    )
+  );
+
+  const maxBase = productRows.reduce(
+    (max, p) => Math.max(max, Number(p.base_price) || 0),
+    0
+  );
+  const maxPrice = maxBase > 0 ? Math.ceil(maxBase / 5) * 5 : DEFAULT_MAX_PRICE;
+
+  return { categories, colors, sizes, maxPrice };
+}
+
 async function attachVariantsAndImages(products: Product[]): Promise<Product[]> {
   if (products.length === 0) return [];
 

@@ -1,5 +1,11 @@
 import ProductCard from "@/components/common/ProductCard";
 import { getProducts } from "@/lib/api/products";
+import {
+  ar,
+  arabicCount,
+  formatAr,
+  productCountForms,
+} from "@/lib/store/i18n-ar";
 
 export default async function SearchPage({
   searchParams,
@@ -18,15 +24,19 @@ export default async function SearchPage({
               type="search"
               name="q"
               defaultValue={q}
-              placeholder="Search for products..."
+              placeholder={ar.search.searchPlaceholder}
               className="w-full px-4 py-3 rounded-full border border-black/10 outline-none focus:border-black/30"
             />
           </form>
         </div>
         <h1 className="font-bold text-2xl md:text-[32px] mb-5 mt-6">
-          {q ? `Search results for "${q}"` : "Search"}
+          {q
+            ? formatAr(ar.search.resultsFor, { q })
+            : ar.search.title}
         </h1>
-        <span className="text-sm text-black/60">{total} products</span>
+        <span className="text-sm text-black/60">
+          {arabicCount(total, productCountForms)}
+        </span>
 
         {products.length > 0 ? (
           <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 mt-5">
@@ -36,7 +46,7 @@ export default async function SearchPage({
           </div>
         ) : (
           <div className="py-20 text-center text-black/50">
-            No products found.
+            {ar.search.noResults}
           </div>
         )}
       </div>

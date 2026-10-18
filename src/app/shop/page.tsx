@@ -5,7 +5,12 @@ import Filters from "@/components/shop-page/filters";
 import SortSelect from "@/components/shop-page/SortSelect";
 import { FiSliders } from "react-icons/fi";
 import ProductCard from "@/components/common/ProductCard";
-import { getProducts, type ProductFilters } from "@/lib/api/products";
+import {
+  getProducts,
+  getProductFacets,
+  type ProductFacet,
+  type ProductFilters,
+} from "@/lib/api/products";
 import {
   Pagination,
   PaginationContent,
@@ -14,18 +19,28 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  ar,
+  arabicCount,
+  formatAr,
+  productCountForms,
+} from "@/lib/store/i18n-ar";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const EMPTY_FACETS: ProductFacet = {
+  categories: [],
+  colors: [],
+  sizes: [],
+  maxPrice: 500,
+};
 
 export default async function ShopPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const category =
-    (searchParams.category as string) || (searchParams.style as string) || undefined;
+  const category = (searchParams.category as string) || undefined;
   const color = searchParams.color as string | undefined;
   const size = searchParams.size as string | undefined;
   const minPrice = searchParams.minPrice
@@ -38,16 +53,19 @@ export default async function ShopPage({
   const page = searchParams.page ? Number(searchParams.page as string) : 1;
   const pageSize = 9;
 
-  const { products, total } = await getProducts({
-    category,
-    color,
-    size,
-    minPrice,
-    maxPrice,
-    sort,
-    page,
-    pageSize,
-  });
+  const [{ products, total }, facets] = await Promise.all([
+    getProducts({
+      category,
+      color,
+      size,
+      minPrice,
+      maxPrice,
+      sort,
+      page,
+      pageSize,
+    }),
+    getProductFacets().catch(() => EMPTY_FACETS),
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -71,32 +89,36 @@ export default async function ShopPage({
       <div className="max-w-frame mx-auto px-4 xl:px-0">
         <hr className="h-[1px] border-t-black/10 mb-5 sm:mb-6" />
         <BreadcrumbShop />
-        <div className="flex md:space-x-5 items-start">
+        <div className="flex md:gap-5 items-start">
           <div className="hidden md:block min-w-[295px] max-w-[295px] border border-black/10 rounded-[20px] px-5 md:px-6 py-5 space-y-5 md:space-y-6">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-black text-xl">Filters</span>
+              <span className="font-bold text-black text-xl">{ar.shop.filters}</span>
               <FiSliders className="text-2xl text-black/40" />
             </div>
             <Suspense fallback={null}>
-              <Filters />
+              <Filters facets={facets} />
             </Suspense>
           </div>
           <div className="flex flex-col w-full space-y-5">
             <div className="flex flex-col lg:flex-row lg:justify-between">
               <div className="flex items-center justify-between">
                 <h1 className="font-bold text-2xl md:text-[32px]">
-                  {category ? capitalize(category) : "Shop"}
+                  {category || ar.shop.title}
                 </h1>
                 <Suspense fallback={null}>
-                  <MobileFilters />
+                  <MobileFilters facets={facets} />
                 </Suspense>
               </div>
               <div className="flex flex-col sm:items-center sm:flex-row">
-                <span className="text-sm md:text-base text-black/60 mr-3">
-                  Showing {from}-{to} of {total} Products
+                <span className="text-sm md:text-base text-black/60 me-3">
+                  {formatAr(ar.shop.showing, {
+                    from,
+                    to,
+                    total: arabicCount(total, productCountForms),
+                  })}
                 </span>
                 <div className="flex items-center">
-                  Sort by:{" "}
+                  {ar.shop.sortBy}{" "}
                   <Suspense fallback={null}>
                     <SortSelect />
                   </Suspense>
@@ -112,7 +134,7 @@ export default async function ShopPage({
               </div>
             ) : (
               <div className="py-20 text-center text-black/50">
-                No products match your filters.
+                {ar.shop.noProducts}
               </div>
             )}
 

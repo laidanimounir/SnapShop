@@ -7,11 +7,12 @@ import {
 
 import { cn } from "@/lib/utils";
 import { ButtonProps, buttonVariants } from "@/components/ui/button";
+import { ar } from "@/lib/store/i18n-ar";
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
     role="navigation"
-    aria-label="pagination"
+    aria-label={ar.a11y.pagination}
     className={cn("mx-auto flex w-full justify-center", className)}
     {...props}
   />
@@ -69,13 +70,13 @@ const PaginationPrevious = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to previous page"
+    aria-label={ar.shop.previous}
     size="default"
-    className={cn("gap-1 px-2.5 xs:pl-2.5", className)}
+    className={cn("gap-1 px-2.5 xs:ps-2.5", className)}
     {...props}
   >
-    <ArrowLeftIcon className="h-4 w-4 hidden xs:block" />
-    <span className="xs:ml-2">Previous</span>
+    <ArrowRightIcon className="h-4 w-4 hidden xs:block" />
+    <span className="xs:ms-2">{ar.shop.previous}</span>
   </PaginationLink>
 );
 PaginationPrevious.displayName = "PaginationPrevious";
@@ -85,13 +86,13 @@ const PaginationNext = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to next page"
+    aria-label={ar.shop.next}
     size="default"
-    className={cn("gap-1 px-2.5 xs:pr-2.5", className)}
+    className={cn("gap-1 px-2.5 xs:pe-2.5", className)}
     {...props}
   >
-    <span className="xs:mr-2">Next</span>
-    <ArrowRightIcon className="h-4 w-4 hidden xs:block" />
+    <span className="xs:me-2">{ar.shop.next}</span>
+    <ArrowLeftIcon className="h-4 w-4 hidden xs:block" />
   </PaginationLink>
 );
 PaginationNext.displayName = "PaginationNext";
@@ -106,7 +107,7 @@ const PaginationEllipsis = ({
     {...props}
   >
     <DotsHorizontalIcon className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
+    <span className="sr-only">{ar.a11y.morePages}</span>
   </span>
 );
 PaginationEllipsis.displayName = "PaginationEllipsis";

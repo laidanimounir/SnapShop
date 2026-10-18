@@ -3,7 +3,9 @@ import Rating from "../ui/Rating";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types/product.types";
-import { getDiscountedPrice, formatPrice } from "@/lib/pricing";
+import { getDiscountedPrice } from "@/lib/pricing";
+import Price from "./Price";
+import { formatStorePrice } from "@/lib/store/i18n-ar";
 
 type ProductCardProps = {
   data: Product;
@@ -21,11 +23,10 @@ const ProductCard = ({ data }: ProductCardProps) => {
     data.discount_amount
   );
   const hasDiscount = data.discount_percentage > 0 || data.discount_amount > 0;
-  const slug = data.name.toLowerCase().split(" ").join("-");
 
   return (
     <Link
-      href={`/shop/product/${data.id}/${slug}`}
+      href={`/shop/product/${data.id}`}
       className="flex flex-col items-start aspect-auto"
     >
       <div className="group relative bg-[#F0EEED] rounded-[13px] lg:rounded-[20px] w-full lg:max-w-[295px] aspect-square mb-2.5 xl:mb-4 overflow-hidden">
@@ -42,7 +43,7 @@ const ProductCard = ({ data }: ProductCardProps) => {
             width={295}
             height={298}
             className="absolute inset-0 rounded-md w-full h-full object-contain opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-            alt={`${data.name} alternate`}
+            alt={data.name}
           />
         )}
       </div>
@@ -56,28 +57,29 @@ const ProductCard = ({ data }: ProductCardProps) => {
           size={19}
           readonly
         />
-        <span className="text-black text-xs xl:text-sm ml-[11px] xl:ml-[13px] pb-0.5 xl:pb-0">
-          {data.rating.toFixed(1)}
-          <span className="text-black/60">/5</span>
+        <span className="text-black text-xs xl:text-sm ms-[11px] xl:ms-[13px] pb-0.5 xl:pb-0">
+          <bdi dir="ltr">{data.rating.toFixed(1)}/5</bdi>
         </span>
       </div>
-      <div className="flex items-center space-x-[5px] xl:space-x-2.5">
-        <span className="font-bold text-black text-xl xl:text-2xl">
-          {formatPrice(price)}
-        </span>
+      <div className="flex items-center gap-[5px] xl:gap-2.5">
+        <Price
+          value={price}
+          className="font-bold text-black text-xl xl:text-2xl"
+        />
         {hasDiscount && (
-          <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-            {formatPrice(data.base_price)}
-          </span>
+          <Price
+            value={data.base_price}
+            className="font-bold text-black/40 line-through text-xl xl:text-2xl"
+          />
         )}
         {data.discount_percentage > 0 && (
           <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
-            -{data.discount_percentage}%
+            <bdi dir="ltr">-{data.discount_percentage}%</bdi>
           </span>
         )}
         {data.discount_amount > 0 && (
           <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
-            -{formatPrice(data.discount_amount)}
+            <bdi dir="ltr">-{formatStorePrice(data.discount_amount)}</bdi>
           </span>
         )}
       </div>

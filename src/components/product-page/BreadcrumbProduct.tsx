@@ -8,6 +8,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import Link from "next/link";
+import { ar } from "@/lib/store/i18n-ar";
 
 const BreadcrumbProduct = ({ title }: { title: string }) => {
   return (
@@ -15,13 +16,13 @@ const BreadcrumbProduct = ({ title }: { title: string }) => {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="/">Home</Link>
+            <Link href="/">{ar.shop.home}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="/shop">Shop</Link>
+            <Link href="/shop">{ar.shop.title}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />

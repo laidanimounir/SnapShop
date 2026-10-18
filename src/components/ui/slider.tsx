@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "@/lib/utils";
+import Price from "@/components/common/Price";
 
 interface SliderProps
   extends React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> {
@@ -10,7 +11,6 @@ interface SliderProps
   max: number;
   step?: number;
   defaultValue?: [number, number];
-  label?: string;
 }
 
 const Slider = React.forwardRef<
@@ -24,7 +24,6 @@ const Slider = React.forwardRef<
       max,
       step = 1,
       defaultValue = [min, max],
-      label,
       ...props
     },
     ref
@@ -35,10 +34,14 @@ const Slider = React.forwardRef<
       setValues([newValues[0], newValues[1]]);
     };
 
+    const position = (value: number) =>
+      ((value - min) / (max - min)) * 100;
+
     return (
       <div className="w-full relative">
         <SliderPrimitive.Root
           ref={ref}
+          dir="rtl"
           className={cn(
             "relative flex w-full touch-none select-none items-center",
             className
@@ -57,24 +60,18 @@ const Slider = React.forwardRef<
           {/* Thumb 1 with Label */}
           <div
             className="absolute -translate-x-1/2 -bottom-8 text-xs font-medium px-2 py-1 rounded z-10"
-            style={{
-              left: `${((values[0] - min) / (max - min)) * 100}%`,
-            }}
+            style={{ insetInlineStart: `${position(values[0])}%` }}
           >
-            {label}
-            {values[0]}
+            <Price value={values[0]} />
           </div>
           <SliderPrimitive.Thumb className="relative block h-4 w-4 rounded-full border border-primary/50 bg-black shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
 
           {/* Thumb 2 with Label */}
           <div
             className="absolute -translate-x-1/2 -bottom-8 text-xs font-medium px-2 py-1 rounded z-10"
-            style={{
-              left: `${((values[1] - min) / (max - min)) * 100}%`,
-            }}
+            style={{ insetInlineStart: `${position(values[1])}%` }}
           >
-            {label}
-            {values[1]}
+            <Price value={values[1]} />
           </div>
           <SliderPrimitive.Thumb className="relative block h-4 w-4 rounded-full border border-primary/50 bg-black shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
         </SliderPrimitive.Root>

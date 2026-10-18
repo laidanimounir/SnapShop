@@ -1,17 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { ChevronRightIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { ChevronLeftIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import { Slot } from "@radix-ui/react-slot";
 
 import { cn } from "@/lib/utils";
+import { ar } from "@/lib/store/i18n-ar";
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
   React.ComponentPropsWithoutRef<"nav"> & {
     separator?: React.ReactNode;
   }
->(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />);
+>(({ ...props }, ref) => (
+  <nav ref={ref} aria-label={ar.a11y.breadcrumb} {...props} />
+));
 Breadcrumb.displayName = "Breadcrumb";
 
 const BreadcrumbList = React.forwardRef<
@@ -85,7 +88,7 @@ const BreadcrumbSeparator = ({
     className={cn("[&>svg]:size-3.5", className)}
     {...props}
   >
-    {children ?? <ChevronRightIcon />}
+    {children ?? <ChevronLeftIcon />}
   </li>
 );
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
@@ -101,7 +104,7 @@ const BreadcrumbEllipsis = ({
     {...props}
   >
     <DotsHorizontalIcon className="h-4 w-4" />
-    <span className="sr-only">More</span>
+    <span className="sr-only">{ar.a11y.more}</span>
   </span>
 );
 BreadcrumbEllipsis.displayName = "BreadcrumbElipssis";

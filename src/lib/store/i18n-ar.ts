@@ -95,15 +95,15 @@ export const ar = {
   shop: {
     filters: "التصفية",
     filter: "تصفية",
+    home: "الرئيسية",
     category: "الفئة",
     price: "السعر",
     colors: "الألوان",
     size: "المقاس",
-    dressStyle: "نمط الملابس",
     clearFilters: "مسح التصفية",
     title: "المتجر",
     all: "الكل",
-    showing: "عرض {from}-{to} من {total} {products}",
+    showing: "عرض {from}-{to} من {total}",
     sortBy: "ترتيب حسب:",
     sort: {
       mostPopular: "الأكثر شيوعًا",
@@ -112,6 +112,8 @@ export const ar = {
       newest: "الأحدث",
     },
     noProducts: "لا توجد منتجات مطابقة للتصفية.",
+    previous: "السابق",
+    next: "التالي",
   },
   search: {
     title: "بحث",

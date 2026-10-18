@@ -3,7 +3,6 @@ import "@/styles/globals.css";
 import { cairo } from "@/styles/fonts";
 import StorefrontChrome from "@/components/layout/StorefrontChrome";
 import HolyLoader from "holy-loader";
-import Providers from "./providers";
 import { BRAND_NAME, TAGLINE } from "@/lib/config";
 import { ar } from "@/lib/store/i18n-ar";
 
@@ -35,9 +34,7 @@ export default function RootLayout({
             store_settings.tracking_pixel on the server and inject the script
             here. Intentionally NOT implemented: no tracking is injected. */}
         <HolyLoader color="#C9A24B" />
-        <Providers>
-          <StorefrontChrome>{children}</StorefrontChrome>
-        </Providers>
+        <StorefrontChrome>{children}</StorefrontChrome>
       </body>
     </html>
   );

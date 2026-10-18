@@ -204,7 +204,7 @@ export async function getProducts(
   query = query.range(from, to);
 
   const { data, count, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 
   const products = await attachVariantsAndImages((data ?? []) as Product[]);
   return { products, total: count ?? 0 };
@@ -221,7 +221,7 @@ export async function getProductById(id: string): Promise<Product | null> {
     .eq("is_active", true)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   if (!data) return null;
 
   const [product] = await attachVariantsAndImages([data as Product]);
@@ -239,7 +239,7 @@ export async function getApprovedReviews(productId: string): Promise<Review[]> {
     .eq("is_approved", true)
     .order("created_at", { ascending: false });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Review[];
 }
 
@@ -254,6 +254,6 @@ export async function getFeaturedReviews(limit = 6): Promise<Review[]> {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as Review[];
 }

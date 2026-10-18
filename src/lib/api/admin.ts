@@ -1,5 +1,7 @@
 import { requireAdmin } from "@/lib/supabase/admin";
 import { storagePathFromPublicUrl } from "@/lib/admin/product-validation";
+import { buildDeliveryZoneUpdates } from "@/lib/admin/delivery-updates";
+import { ar } from "@/lib/admin/i18n-ar";
 
 export type AdminOrder = {
   id: string;
@@ -167,7 +169,7 @@ export async function getOrderById(id: string): Promise<AdminOrderDetail | null>
     .eq("id", id)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   if (!order) return null;
 
   const [{ data: items }, { data: history }] = await Promise.all([
@@ -314,7 +316,7 @@ export async function getAdminProductById(
     .eq("id", id)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   if (!product) return null;
 
   const [{ data: variants }, { data: images }] = await Promise.all([
@@ -361,7 +363,7 @@ export async function getAdminReviews(
   if (filter === "approved") query = query.eq("is_approved", true);
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 
   return ((data ?? []) as any[]).map((r) => ({
     id: r.id,
@@ -433,7 +435,7 @@ export async function createProduct(input: ProductWriteInput): Promise<{ id: str
     })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return { id: (data as { id: string }).id };
 }
 
@@ -443,7 +445,7 @@ export async function updateProduct(
 ): Promise<void> {
   const { supabase } = await requireAdmin();
   const { error } = await supabase.from("products").update(input).eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 /**
@@ -504,7 +506,7 @@ export async function saveVariants(
       sku: row.sku?.trim() ? row.sku.trim() : null,
       is_active: row.is_active ?? true,
     });
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     created += 1;
   }
 
@@ -514,14 +516,14 @@ export async function saveVariants(
         .from("product_variants")
         .update({ is_active: false, stock_quantity: 0 })
         .eq("id", old.id);
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       deactivated += 1;
     } else {
       const { error } = await supabase
         .from("product_variants")
         .delete()
         .eq("id", old.id);
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       deleted += 1;
     }
   }
@@ -541,7 +543,7 @@ export async function saveVariants(
         ...(row.color_hex !== undefined ? { color_hex: row.color_hex } : {}),
       })
       .eq("id", match.id);
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     updated += 1;
   }
 
@@ -567,7 +569,7 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
       .from("products")
       .update({ is_active: false })
       .eq("id", id);
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     return { deleted: false, deactivated: true };
   }
 
@@ -577,11 +579,11 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
   if (objects && objects.length > 0) {
     const paths = objects.map((o) => `products/${id}/${o.name}`);
     const { error } = await supabase.storage.from("product-images").remove(paths);
-    if (error) throw error;
+    if (error) throw new Error(error.message);
   }
 
   const { error } = await supabase.from("products").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return { deleted: true, deactivated: false };
 }
 
@@ -592,7 +594,7 @@ export async function deleteProductImage(imageId: string): Promise<{ productId: 
     .select("id, product_id, url, position, is_primary")
     .eq("id", imageId)
     .maybeSingle();
-  if (fetchError) throw fetchError;
+  if (fetchError) throw new Error(fetchError.message);
   if (!row) throw new Error("Image not found.");
 
   const path = storagePathFromPublicUrl((row as { url: string }).url);
@@ -605,7 +607,7 @@ export async function deleteProductImage(imageId: string): Promise<{ productId: 
     .from("product_images")
     .delete()
     .eq("id", imageId);
-  if (delError) throw delError;
+  if (delError) throw new Error(delError.message);
 
   if ((row as { is_primary: boolean }).is_primary) {
     const { data: next } = await supabase
@@ -633,7 +635,7 @@ export async function setPrimaryImage(imageId: string): Promise<void> {
     .select("id, product_id")
     .eq("id", imageId)
     .maybeSingle();
-  if (fetchError) throw fetchError;
+  if (fetchError) throw new Error(fetchError.message);
   if (!row) throw new Error("Image not found.");
   const productId = (row as { product_id: string }).product_id;
 
@@ -641,13 +643,13 @@ export async function setPrimaryImage(imageId: string): Promise<void> {
     .from("product_images")
     .update({ is_primary: false })
     .eq("product_id", productId);
-  if (clearError) throw clearError;
+  if (clearError) throw new Error(clearError.message);
 
   const { error } = await supabase
     .from("product_images")
     .update({ is_primary: true })
     .eq("id", imageId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export async function reorderProductImages(
@@ -661,7 +663,7 @@ export async function reorderProductImages(
       .update({ position: i })
       .eq("id", orderedIds[i])
       .eq("product_id", productId);
-    if (error) throw error;
+    if (error) throw new Error(error.message);
   }
 }
 
@@ -674,7 +676,7 @@ export async function setImageColor(
     .from("product_images")
     .update({ color })
     .eq("id", imageId);
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 }
 
 export type DashboardStats = {
@@ -757,7 +759,7 @@ export async function getDeliveryZonesAdmin(): Promise<AdminDeliveryZone[]> {
     .from("delivery_zones")
     .select("wilaya_code, name_ar, name_fr, home_price, office_price, is_active")
     .order("wilaya_code", { ascending: true });
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return (data ?? []) as AdminDeliveryZone[];
 }
 
@@ -765,12 +767,43 @@ export async function updateDeliveryZones(
   rows: DeliveryZoneUpdate[]
 ): Promise<void> {
   const { supabase } = await requireAdmin();
-  const payload = rows.map((row) => ({
-    ...row,
-    updated_at: new Date().toISOString(),
-  }));
-  const { error } = await supabase
-    .from("delivery_zones")
-    .upsert(payload, { onConflict: "wilaya_code" });
-  if (error) throw error;
+  const payload = buildDeliveryZoneUpdates(rows);
+
+  // Update each row individually. An upsert would build an INSERT whose
+  // omitted NOT NULL columns (name_ar/name_fr) make Postgres raise 23502
+  // before the ON CONFLICT branch can run. All 58 wilayas are seeded and
+  // cannot be created from the admin UI, so a partial UPDATE is always right.
+  const outcomes = await Promise.all(
+    payload.map(
+      async (
+        row
+      ): Promise<{ ok: true } | { ok: false; error: Error }> => {
+        const { data, error } = await supabase
+          .from("delivery_zones")
+          .update({
+            home_price: row.home_price,
+            office_price: row.office_price,
+            is_active: row.is_active,
+            updated_at: row.updated_at,
+          })
+          .eq("wilaya_code", row.wilaya_code)
+          .select("wilaya_code");
+        if (error) return { ok: false, error: new Error(error.message) };
+        if (!data || data.length === 0) {
+          return {
+            ok: false,
+            error: new Error(
+              `${ar.messages.unknownWilaya} (${row.wilaya_code})`
+            ),
+          };
+        }
+        return { ok: true };
+      }
+    )
+  );
+
+  const failure = outcomes.find(
+    (outcome): outcome is { ok: false; error: Error } => !outcome.ok
+  );
+  if (failure) throw failure.error;
 }

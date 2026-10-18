@@ -4,6 +4,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient, requireAdmin } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { ar, formatAr, statusLabelAr } from "@/lib/admin/i18n-ar";
+import { normalizeActionError } from "@/lib/admin/action-errors";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -205,9 +206,10 @@ export type ActionResult<T = object> =
   | { ok: false; error: string };
 
 function actionError(error: unknown): { ok: false; error: string } {
+  console.error("[admin action]", error);
   return {
     ok: false,
-    error: error instanceof Error ? error.message : ar.messages.generic,
+    error: normalizeActionError(error),
   };
 }
 

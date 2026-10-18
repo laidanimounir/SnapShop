@@ -9,7 +9,6 @@ function siteOrigin(): string {
 const STATIC_ROUTES = [
   "/",
   "/shop",
-  "/cart",
   "/search",
   "/track-order",
   "/about",

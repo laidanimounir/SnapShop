@@ -58,6 +58,16 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    // The cart was removed in favor of single-product direct checkout.
+    return [
+      {
+        source: "/cart",
+        destination: "/shop",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

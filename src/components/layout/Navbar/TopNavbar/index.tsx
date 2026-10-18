@@ -12,7 +12,6 @@ import { MenuItem } from "./MenuItem";
 import Image from "next/image";
 import InputGroup from "@/components/ui/input-group";
 import ResTopNavbar from "./ResTopNavbar";
-import CartBtn from "./CartBtn";
 import { BRAND_NAME } from "@/lib/config";
 import { ar } from "@/lib/store/i18n-ar";
 
@@ -134,7 +133,6 @@ const TopNavbar = () => {
               className="max-w-[22px] max-h-[22px]"
             />
           </Link>
-          <CartBtn />
           <Link href="/#signin" className="p-1">
             <Image
               priority

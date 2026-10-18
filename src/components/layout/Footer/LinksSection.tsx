@@ -28,7 +28,6 @@ const footerLinksData: FooterLinks[] = [
     children: [
       { id: 31, label: ar.footer.sections.shop.allProducts, url: "/shop" },
       { id: 32, label: ar.footer.sections.shop.trackOrder, url: "/track-order" },
-      { id: 33, label: ar.footer.sections.shop.yourCart, url: "/cart" },
     ],
   },
 ];

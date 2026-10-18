@@ -1,8 +1,8 @@
 # SnapShop — Clothing E-Commerce Storefront
 
-A modern, fully responsive clothing e-commerce frontend built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, **Redux Toolkit**, and **shadcn/ui**.
+A modern, fully responsive clothing e-commerce frontend built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, and **shadcn/ui**.
 
-This is the **storefront** — the customer-facing website where visitors browse products, add items to cart, and place **cash-on-delivery (COD)** orders as guests (no account required).
+This is the **storefront** — the customer-facing website where visitors browse products and place **cash-on-delivery (COD)** orders directly from a product page as guests (no account required).
 
 ---
 
@@ -26,7 +26,7 @@ This is the **storefront** — the customer-facing website where visitors browse
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS + shadcn/ui |
-| State | Redux Toolkit + redux-persist |
+| State | Server components + local UI state (no client store) |
 | Animation | Framer Motion |
 | Icons | Lucide React, React Icons |
 | Backend | Supabase Postgres (project `fvvretvbeiovjozpqbyk`, `https://fvvretvbeiovjozpqbyk.supabase.co`) — guest checkout via RPCs, RLS-enforced reads |
@@ -105,24 +105,22 @@ snapshop/
 │   └── images/         # Product and lifestyle images
 ├── src/
 │   ├── app/            # Next.js App Router pages
-│   │   ├── layout.tsx  # Root layout (navbar, footer, providers)
+│   │   ├── layout.tsx  # Root layout (navbar, footer)
 │   │   ├── page.tsx    # Homepage
-│   │   ├── shop/       # Shop listing + product detail pages
-│   │   └── cart/       # Shopping cart page
+│   │   └── shop/       # Shop listing + product detail pages
 │   ├── components/
 │   │   ├── ui/         # shadcn/ui components (reusable primitives)
 │   │   ├── common/     # Shared components (ProductCard, ReviewCard)
 │   │   ├── homepage/   # Homepage sections (Hero, Brands, DressStyle, Reviews)
 │   │   ├── layout/     # Navbar, Footer, Banner
-│   │   ├── product-page/  # Product detail sections
-│   │   ├── shop-page/     # Shop listing filters
-│   │   └── cart-page/     # Cart page components
+│   │   ├── product-page/  # Product detail sections + OrderForm
+│   │   └── shop-page/     # Shop listing filters
 │   ├── lib/
 │   │   ├── config.ts   # Env-var-driven brand configuration
-│   │   ├── store.ts    # Redux store setup
 │   │   ├── utils.ts    # Utility functions
-│   │   ├── features/   # Redux slices (products, carts)
-│   │   └── hooks/      # Custom hooks
+│   │   ├── api/        # Supabase clients (products, orders, reviews)
+│   │   ├── checkout/   # Checkout field validators
+│   │   └── hooks/      # Custom hooks (delivery zones, etc.)
 │   ├── styles/         # Global CSS and fonts
 │   └── types/          # TypeScript type definitions
 ├── .env.local.example  # Environment variable template
@@ -136,8 +134,8 @@ snapshop/
 
 - **Product browsing** — Shop page with filters (category, price, size, color, dress style)
 - **Product detail** — Image gallery, color/size selection, pricing with discounts, reviews, FAQs, specs
-- **Shopping cart** — Add/remove items, quantity controls, discount calculation, persisted to localStorage
-- **Guest checkout** — Name, phone, address form (no account required)
+- **Inline order form** — Name, phone, wilaya, address and quantity on the product page itself, with a sticky order bar on mobile
+- **Guest checkout** — No account required; the order is placed against the selected product variant only
 - **Cash on delivery (COD)** — No online payment integration; orders are confirmed via phone/WhatsApp
 - **Responsive design** — Mobile-first, works across all screen sizes
 - **Animations** — Framer Motion page transitions and scroll reveals

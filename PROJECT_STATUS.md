@@ -1,6 +1,6 @@
 # SnapShop — Project Status
 
-Last updated: 2026-10-15
+Last updated: 2026-10-18
 
 This file documents the current state of the SnapShop e-commerce project for future reference. It is based entirely on the actual codebase, git history, and migration files — no planned/future features are described as if they already exist.
 
@@ -10,7 +10,7 @@ This file documents the current state of the SnapShop e-commerce project for fut
 
 SnapShop is a clothing e-commerce **storefront** with a small internal **admin dashboard**, backed by a **Supabase** Postgres database.
 
-- **Storefront (customer-facing):** browse products, filter/search, product detail with color/size variants and stock, client-side cart, guest (cash-on-delivery) checkout with order tracking, and product reviews.
+- **Storefront (customer-facing):** browse products, filter/search, product detail with color/size variants and stock, guest (cash-on-delivery) checkout placed directly from the product page with order tracking, and product reviews. There is **no cart** — each order is for a single product variant (1–10 units).
 - **Admin dashboard (internal):** a simple `/admin` section in the same Next.js app to view and manage orders, products, and reviews. It requires Supabase Auth sign-in (`/admin/login`) plus membership in `public.admin_users` — see Security Notes.
 
 **Stack**
@@ -20,7 +20,7 @@ SnapShop is a clothing e-commerce **storefront** with a small internal **admin d
 | Framework | Next.js 14.2.7 (App Router) |
 | Language | TypeScript 5 (strict) |
 | Styling | Tailwind CSS 3.4 + shadcn/ui (new-york) |
-| State | Redux Toolkit + redux-persist (cart only, persisted to localStorage) |
+| State | Server components + local UI state (Redux removed in `53a90b2`) |
 | Animation / icons | Framer Motion, react-icons, react-simple-star-rating |
 | Backend | Supabase (Postgres + RLS). Supabase Auth is used for `/admin` sign-in (guest checkout stays account-free) |
 | DB client | `@supabase/supabase-js` 2.112.3 |
@@ -49,8 +49,8 @@ Commit `ae8064f` "Wire storefront to Supabase backend" (plus the earlier mock-da
 - **Shop** (`/shop`) — real server-side filtering (category, price range, color, size, dress style), sorting (most popular / low price / high price / newest), pagination, and accurate "Showing X–Y of Z Products" counts. Filters are applied via URL query params.
 - **Search** (`/search?q=`) — searches product `name`/`description` (ilike).
 - **Product detail** (`/shop/product/[uuid]/[slug]`) — real variants (color/size), stock-aware size selection (out-of-stock sizes disabled), image gallery, percentage **and** fixed-amount discounts, real product description/category/brand, real rating (from `products.rating`).
-- **Cart** (`/cart`) — Redux + localStorage, items keyed by variant UUID, correct subtotal/discount/total (no more blended-discount bug).
-- **Guest checkout** — "Buy Now" (single item) and cart "Go to Checkout" both call the `place_guest_order` RPC, handle loading/errors (e.g. insufficient stock), and redirect to `/order-confirmation/[token]` on success, clearing the cart.
+- **Inline order form** — the product page has a single guest order form (name, phone, wilaya, delivery method, address, quantity) plus a sticky "اطلب الآن" action bar on mobile; cart, `/cart` page, navbar cart badge, and Redux were removed in favor of this flow (`da12fe8`→`53a90b2`). `/cart` redirects to `/shop`.
+- **Guest checkout** — the inline form calls the `place_guest_order` RPC (single `{ variant_id, quantity }` item), handles loading/errors (e.g. insufficient stock), and redirects to `/order-confirmation/[token]` on success.
 - **Order tracking** — `/order-confirmation/[token]` (shows the token + order details) and `/track-order` (paste a token to look up an order anytime).
 - **Reviews** — product page fetches approved reviews; "Write a Review" submits via `submit_review` (goes in `is_approved = false`, with a "pending approval" message).
 - **States** — `loading.tsx`, `error.tsx`, `not-found.tsx` for shop/product routes.
@@ -81,15 +81,14 @@ Commits `8b311db`–`5661b77`.
 - **Admin security** — the `/admin` section requires Supabase Auth sign-in + `admin_users` membership (middleware redirect + `requireAdmin()` on every admin read/action). Keep the service-role key server-side; review `admin_users` membership periodically.
 - **Payments** — cash-on-delivery only. No payment gateway integration.
 - **Real admin app** — the planned separate admin dashboard (a different frontend project, likely Flutter) that will connect to this same Supabase backend has **not** been built. The current `/admin` is a temporary internal tool.
-- **Hardcoded storefront content** — hero stats ("200+ brands", "2000+ products", "3000+ customers" via `AnimatedCounter`), the brand-logo marquee (Versace/Zara/Gucci/Prada/Calvin Klein — placeholder, `TODO`-flagged in `src/components/homepage/Brands/index.tsx`), generic FAQs (`Tabs/FaqContent.tsx`), and footer links (all `"#"`).
-- **No ESLint config** — `npm run lint` (`next lint`) prompts interactively; there is no `.eslintrc`/`eslint.config`.
-- **No tests** — zero unit/integration tests.
-- **PII in localStorage** — guest name/phone/address are cached in `localStorage` (`snapshop_customer_info`) for convenience; see Security Notes.
+- **Hardcoded storefront content** — hero stats ("200+ brands", "2000+ products", "3000+ customers" via `AnimatedCounter`), the brand-logo marquee (Versace/Zara/Gucci/Prada/Calvin Klein — placeholder, `TODO`-flagged in `src/components/homepage/Brands/index.tsx`), and generic FAQs (`Tabs/FaqContent.tsx`).
+- **ESLint** — `next lint` passes cleanly (no interactive prompt); config lives in `package.json` (`next lint` defaults).
+- **Tests** — 107 Vitest unit tests (pricing, checkout validation, quantity clamp, order-form money math, i18n helpers) run via `npm test`; no integration/e2e yet.
 - **Customer order read-back** — guests can only look up orders via the confirmation token (`get_order_by_token`); there is no account-based order history.
-- **Stock restocking on cancel** — stock is decremented at order placement; cancelling an order does **not** automatically restore stock.
+- **Stock restocking on cancel** — handled by the `restore_stock_on_cancel()` trigger added in migration `0004`.
 - **Denormalized product rating** — `products.rating` is maintained by the review trigger only; it is not recomputed retroactively if the trigger is dropped/recreated.
 - **`src/types/database.types.ts`** is generated but currently **unused** (the Supabase client is intentionally untyped to avoid strict generated-type friction).
-- **Minor UI debt** — `Footer/LayoutSpacing.tsx` still adds bottom padding for the old fixed mobile "add to cart" bar that was removed.
+- **Sticky order bar spacing** — `Footer/LayoutSpacing.tsx` intentionally adds bottom padding on product pages so the fixed mobile "اطلب الآن" bar does not cover the footer.
 
 ---
 
@@ -126,7 +125,7 @@ Commits `8b311db`–`5661b77`.
 
 ### Guest checkout flow
 
-1. Client gathers guest name/phone/address + line items (`{ variant_id, quantity }`).
+1. The product page order form gathers guest name/phone/wilaya/address + a single line item (`{ variant_id, quantity }`).
 2. Calls `place_guest_order` RPC (`SECURITY DEFINER`, runs as the function owner, bypasses RLS).
 3. The function validates stock under row lock, computes `subtotal`/`discount_total`/`total` server-side (never trusting the client), snapshots `unit_price_at_purchase`, decrements variant stock, and returns `{ order_id, confirmation_token, subtotal, discount_total, total }`.
 4. The storefront redirects to `/order-confirmation/[token]`, which reads the order back via `get_order_by_token(token)`.
@@ -173,15 +172,14 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 1. **Browse products** — open `http://localhost:3000`. The home page should show "NEW ARRIVALS" and "TOP SELLING" carousels with real products (e.g. "T-shirt with Tape Details", "Skinny Fit Jeans").
 2. **Filter/search** — go to `/shop`. Click a category (e.g. "t-shirts") and confirm the grid narrows and the "Showing X–Y of Z Products" count updates. Try a price range and a color/size. Use the sort dropdown. Search via the navbar (or `/search?q=shirt`) and confirm results.
 3. **Product detail + variants** — click a product. Confirm the color/size controls reflect real variants; an out-of-stock size is disabled (seed: "T-shirt with Tape Details" → Green has stock 0).
-4. **Add to cart** — pick a color/size, set quantity, click "Add to Cart". The navbar cart badge increments; open `/cart` and confirm subtotal/discount/total and quantity controls.
-5. **Checkout as guest** — click "Go to Checkout", fill Name/Phone/Address, click "Confirm Purchase". Wait for the redirect to `/order-confirmation/[token]`.
-6. **Note the confirmation token** — the success page displays the order token and order details.
-7. **Track order** — open `/track-order`, paste the token, click "Track", and confirm the same order/details appear.
-8. **As admin, change order status** — open `/admin/orders`, click the order, change status (e.g. `pending` → `confirmed`) and Save. Confirm it persists on reload.
-9. **Approve a review** — open `/admin/reviews`, filter "Pending" (if none, first submit a review on the storefront product page via "Write a Review"), click "Approve". 
-10. **Verify rating updates on storefront** — return to the reviewed product's page and confirm `products.rating` changed to reflect the newly approved review (and that the review now appears in the "Rating & Reviews" tab).
-11. **Toggle a product** — in `/admin/products`, click a product's Active/Inactive button; confirm the product disappears from the public storefront when inactive (RLS filters `is_active = true`), then toggle it back.
-12. **Confirm storefront still works** — browse `/shop` and a product page to confirm nothing broke.
+4. **Place an order as guest** — on the product page, pick a color/size, set quantity, and fill Name/Phone/Wilaya/Address in the inline order form (a sticky "اطلب الآن" bar shows the total on mobile). Click "اطلب الآن". Wait for the redirect to `/order-confirmation/[token]`.
+5. **Note the confirmation token** — the success page displays the order token and order details.
+6. **Track order** — open `/track-order`, paste the token, click "Track", and confirm the same order/details appear.
+7. **As admin, change order status** — open `/admin/orders`, click the order, change status (e.g. `pending` → `confirmed`) and Save. Confirm it persists on reload.
+8. **Approve a review** — open `/admin/reviews`, filter "Pending" (if none, first submit a review on the storefront product page via "Write a Review"), click "Approve". 
+9. **Verify rating updates on storefront** — return to the reviewed product's page and confirm `products.rating` changed to reflect the newly approved review (and that the review now appears in the "Rating & Reviews" tab).
+10. **Toggle a product** — in `/admin/products`, click a product's Active/Inactive button; confirm the product disappears from the public storefront when inactive (RLS filters `is_active = true`), then toggle it back.
+11. **Confirm storefront still works** — browse `/shop` and a product page to confirm nothing broke. Visiting `/cart` should redirect to `/shop`.
 
 ---
 
@@ -223,7 +221,6 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 
 - **The `/admin` dashboard has NO authentication.** Anyone who can reach the URL can view/modify orders, products, and reviews. It is for local/internal testing only and **must not be deployed as-is**.
 - **Service role key** (`SUPABASE_SERVICE_ROLE_KEY`) is stored in `.env.local` (gitignored) and used **server-side only** in `src/lib/supabase/admin.ts`. Never reference it in a client component or a `NEXT_PUBLIC_*` variable, and never commit it.
-- **Guest PII in plaintext localStorage** — name/phone/address are cached under `snapshop_customer_info` for convenience. This is client-side only and can be exfiltrated by any XSS. Revisit before production.
 - **No rate limiting / bot protection** on guest order creation (no accounts, no captcha).
 - **No server-side validation beyond the Postgres functions** — the functions recompute prices/stock server-side (good), but the client form is the only thing validating field presence/format.
 - **`opencode.json`** (gitignored) contains the Supabase MCP access token used by this development environment; do not commit it.
@@ -256,12 +253,11 @@ In rough order of priority:
   - `src/lib/supabase/server.ts` — server-component anon factory.
   - `src/lib/supabase/admin.ts` — server-only service-role factory.
 - **State**
-  - `src/lib/store.ts` — Redux store + redux-persist.
-  - `src/lib/features/carts/cartsSlice.ts` — cart (variant UUIDs, `price`/`originalPrice`).
   - `src/lib/pricing.ts` — discount/price helpers.
+  - No client store: cart/Redux (`store.ts`, `cartsSlice.ts`, `redux-persist`) removed in `53a90b2`.
 - **Types** — `src/types/product.types.ts`, `review.types.ts`, `database.types.ts` (generated, unused).
-- **Storefront routes** — `src/app/page.tsx`, `src/app/shop/*`, `src/app/cart/page.tsx`, `src/app/search/page.tsx`, `src/app/order-confirmation/[token]/page.tsx`, `src/app/track-order/page.tsx`.
+- **Storefront routes** — `src/app/page.tsx`, `src/app/shop/*`, `src/app/search/page.tsx`, `src/app/order-confirmation/[token]/page.tsx`, `src/app/track-order/page.tsx`. (`/cart` redirects to `/shop` via `next.config.mjs`.)
 - **Admin routes** — `src/app/admin/layout.tsx`, `src/app/admin/page.tsx`, `src/app/admin/actions.ts` (server actions), `src/app/admin/orders/*`, `src/app/admin/products/*`, `src/app/admin/reviews/*`.
-- **Components** — `src/components/common/*`, `src/components/product-page/*`, `src/components/cart-page/*`, `src/components/shop-page/*`, `src/components/checkout/GuestCheckoutForm.tsx`, `src/components/layout/*`, `src/components/ui/*` (shadcn).
+- **Components** — `src/components/common/*`, `src/components/product-page/*` (incl. `OrderForm.tsx`), `src/components/shop-page/*`, `src/components/layout/*`, `src/components/ui/*` (shadcn).
 - **Database** — `supabase/migrations/0001_initial_schema.sql`, `0002_order_tracking_and_rating.sql`, `0003_grant_read_privileges.sql`, `supabase/seed_test_data.sql`.
 - **Config** — `.env.local.example` (template), `.env.local` (gitignored, actual values), `next.config.mjs` (Supabase image domain), `tailwind.config.ts`.

@@ -10,6 +10,7 @@ import {
 import ProductCard from "./ProductCard";
 import { Product } from "@/types/product.types";
 import Link from "next/link";
+import { ar } from "@/lib/store/i18n-ar";
 
 type ProductListSecProps = {
   title: string;
@@ -41,14 +42,15 @@ const ProductListSec = ({ title, data, viewAllLink }: ProductListSecProps) => {
         <Carousel
           opts={{
             align: "start",
+            direction: "rtl",
           }}
           className="w-full mb-6 md:mb-9"
         >
-          <CarouselContent className="mx-4 xl:mx-0 space-x-4 sm:space-x-5">
+          <CarouselContent className="mx-4 xl:mx-0 gap-4 sm:gap-5">
             {data.map((product) => (
               <CarouselItem
                 key={product.id}
-                className="w-full max-w-[198px] sm:max-w-[295px] pl-0"
+                className="w-full max-w-[198px] sm:max-w-[295px] ps-0"
               >
                 <ProductCard data={product} />
               </CarouselItem>
@@ -61,7 +63,7 @@ const ProductListSec = ({ title, data, viewAllLink }: ProductListSecProps) => {
               href={viewAllLink}
               className="w-full inline-block sm:w-[218px] px-[54px] py-4 border rounded-full hover:bg-black hover:text-white text-black transition-all font-medium text-sm sm:text-base border-black/10"
             >
-              View All
+              {ar.home.viewAll}
             </Link>
           </div>
         )}

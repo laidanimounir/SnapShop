@@ -3,6 +3,7 @@ import DressStyle from "@/components/homepage/DressStyle";
 import Header from "@/components/homepage/Header";
 import Reviews from "@/components/homepage/Reviews";
 import { getProducts, getFeaturedReviews } from "@/lib/api/products";
+import { ar } from "@/lib/store/i18n-ar";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function Home() {
       <Header />
       <main className="my-[50px] sm:my-[72px]">
         <ProductListSec
-          title="NEW ARRIVALS"
+          title={ar.home.newArrivals}
           data={newArrivals}
           viewAllLink="/shop?sort=newest"
         />
@@ -28,7 +29,7 @@ export default async function Home() {
         </div>
         <div className="mb-[50px] sm:mb-20">
           <ProductListSec
-            title="top selling"
+            title={ar.home.topSelling}
             data={topSelling}
             viewAllLink="/shop?sort=most-popular"
           />

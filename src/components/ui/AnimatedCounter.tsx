@@ -42,7 +42,7 @@ const AnimatedCounter = ({
       ease: "easeOut",
       ...animationOptions,
       onUpdate(value) {
-        element.textContent = Number(value.toFixed(0)).toLocaleString();
+        element.textContent = Number(value.toFixed(0)).toLocaleString("en-US");
       },
     });
 
@@ -52,7 +52,11 @@ const AnimatedCounter = ({
     };
   }, [ref, inView, from, to]);
 
-  return <span ref={ref} />;
+  return (
+    <bdi dir="ltr">
+      <span ref={ref} />
+    </bdi>
+  );
 };
 
 export default AnimatedCounter;

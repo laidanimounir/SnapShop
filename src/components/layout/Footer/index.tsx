@@ -6,6 +6,7 @@ import Link from "next/link";
 import LinksSection from "./LinksSection";
 import LayoutSpacing from "./LayoutSpacing";
 import { BRAND_NAME, CONTACT_PHONE, CONTACT_EMAIL, GITHUB_URL } from "@/lib/config";
+import { ar } from "@/lib/store/i18n-ar";
 
 const Footer = () => {
   return (
@@ -22,30 +23,29 @@ const Footer = () => {
               >
                 {BRAND_NAME}
               </h1>
-              <p className="text-black/60 text-sm mb-4">
-                We have clothes that suits your style and which you&apos;re proud to
-                wear. From women to men.
-              </p>
-              <div className="flex items-center mb-4">
-                <Link
-                  href={GITHUB_URL}
-                  className="bg-white hover:bg-[#C9A24B] hover:text-white transition-all mr-3 w-7 h-7 rounded-full border border-black/20 flex items-center justify-center p-1.5"
-                >
-                  <FaGithub />
-                </Link>
+                <p className="text-black/60 text-sm mb-4">{ar.footer.description}</p>
+                <div className="flex items-center mb-4">
+                  <Link
+                    href={GITHUB_URL}
+                    className="bg-white hover:bg-[#C9A24B] hover:text-white transition-all me-3 w-7 h-7 rounded-full border border-black/20 flex items-center justify-center p-1.5"
+                  >
+                    <FaGithub />
+                  </Link>
+                </div>
+                <div className="text-sm text-black/60 space-y-1">
+                  <p>
+                    <span className="font-medium text-black">
+                      {ar.footer.phoneWhatsApp}
+                    </span>{" "}
+                    {CONTACT_PHONE}
+                  </p>
+                  <p>
+                    <span className="font-medium text-black">{ar.footer.email}:</span>{" "}
+                    {CONTACT_EMAIL}
+                  </p>
+                </div>
               </div>
-              <div className="text-sm text-black/60 space-y-1">
-                <p>
-                  <span className="font-medium text-black">Phone / WhatsApp:</span>{" "}
-                  {CONTACT_PHONE}
-                </p>
-                <p>
-                  <span className="font-medium text-black">Email:</span>{" "}
-                  {CONTACT_EMAIL}
-                </p>
-              </div>
-            </div>
-            <div className="hidden lg:grid col-span-9 lg:grid-cols-4 lg:pl-10">
+              <div className="hidden lg:grid col-span-9 lg:grid-cols-4 lg:ps-10">
               <LinksSection />
             </div>
             <div className="grid lg:hidden grid-cols-2 sm:grid-cols-4">
@@ -55,8 +55,8 @@ const Footer = () => {
 
           <hr className="h-[1px] border-t-black/10 mb-6" />
           <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center mb-2">
-            <p className="text-sm text-center sm:text-left text-black/60 mb-4 sm:mb-0 sm:mr-1">
-              &copy; {new Date().getFullYear()} {BRAND_NAME} &mdash; All rights reserved
+            <p className="text-sm text-center sm:text-start text-black/60 mb-4 sm:mb-0 sm:me-1">
+              &copy; {new Date().getFullYear()} {BRAND_NAME} &mdash; {ar.footer.allRights}
             </p>
           </div>
         </div>

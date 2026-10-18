@@ -19,6 +19,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { BRAND_NAME } from "@/lib/config";
+import { ar } from "@/lib/store/i18n-ar";
 
 const ResTopNavbar = ({ data }: { data: NavMenu }) => {
   return (
@@ -29,11 +30,11 @@ const ResTopNavbar = ({ data }: { data: NavMenu }) => {
           src="/icons/menu.svg"
           height={100}
           width={100}
-          alt="menu"
+          alt={ar.a11y.menu}
           className="max-w-[22px] max-h-[22px]"
         />
       </SheetTrigger>
-      <SheetContent side="left" className="overflow-y-auto">
+      <SheetContent side="right" className="overflow-y-auto">
         <SheetHeader className="mb-10">
           <SheetTitle asChild>
             <SheetClose asChild>
@@ -57,10 +58,10 @@ const ResTopNavbar = ({ data }: { data: NavMenu }) => {
                 <div className="mb-4 w-full">
                   <Accordion type="single" collapsible>
                     <AccordionItem value={item.label} className="border-none">
-                      <AccordionTrigger className="text-left p-0 py-0.5 font-normal text-base">
+                      <AccordionTrigger className="text-start p-0 py-0.5 font-normal text-base">
                         {item.label}
                       </AccordionTrigger>
-                      <AccordionContent className="p-4 pb-0 border-l flex flex-col">
+                      <AccordionContent className="p-4 pb-0 border-s flex flex-col">
                         {item.children.map((itemChild, idx) => (
                           <SheetClose
                             key={itemChild.id}

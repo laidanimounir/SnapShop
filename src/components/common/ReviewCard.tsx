@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { IoIosCheckmarkCircle } from "react-icons/io";
 import { Review } from "@/types/review.types";
 import { cn } from "@/lib/utils";
+import { ar } from "@/lib/store/i18n-ar";
 
 type ReviewCardProps = {
   blurChild?: React.ReactNode;
@@ -15,7 +16,7 @@ type ReviewCardProps = {
 };
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
+  new Date(iso).toLocaleDateString("ar-DZ-u-nu-latn", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -51,13 +52,13 @@ const ReviewCard = ({
         )}
       </div>
       <div className="flex items-center mb-2 sm:mb-3">
-        <strong className="text-black sm:text-xl mr-1">{data.reviewer_name}</strong>
+        <strong className="text-black sm:text-xl me-1">{data.reviewer_name}</strong>
         <IoIosCheckmarkCircle className="text-[#01AB31] text-xl sm:text-2xl" />
       </div>
       <p className="text-sm sm:text-base text-black/60">{data.comment}</p>
       {isDate && (
         <p className="text-black/60 text-sm font-medium mt-4 sm:mt-6">
-          Posted on {formatDate(data.created_at)}
+          {ar.home.postedOn} {formatDate(data.created_at)}
         </p>
       )}
     </div>

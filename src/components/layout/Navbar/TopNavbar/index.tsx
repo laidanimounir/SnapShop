@@ -14,57 +14,58 @@ import InputGroup from "@/components/ui/input-group";
 import ResTopNavbar from "./ResTopNavbar";
 import CartBtn from "./CartBtn";
 import { BRAND_NAME } from "@/lib/config";
+import { ar } from "@/lib/store/i18n-ar";
 
 const data: NavMenu = [
   {
     id: 1,
-    label: "Shop",
+    label: ar.nav.shop,
     type: "MenuList",
     children: [
       {
         id: 11,
-        label: "Men's clothes",
+        label: ar.nav.menuChildren.mensClothes,
         url: "/shop#men-clothes",
-        description: "In attractive and spectacular colors and designs",
+        description: ar.nav.menuChildren.mensClothesDesc,
       },
       {
         id: 12,
-        label: "Women's clothes",
+        label: ar.nav.menuChildren.womensClothes,
         url: "/shop#women-clothes",
-        description: "Ladies, your style and tastes are important to us",
+        description: ar.nav.menuChildren.womensClothesDesc,
       },
       {
         id: 13,
-        label: "Kids clothes",
+        label: ar.nav.menuChildren.kidsClothes,
         url: "/shop#kids-clothes",
-        description: "For all ages, with happy and beautiful colors",
+        description: ar.nav.menuChildren.kidsClothesDesc,
       },
       {
         id: 14,
-        label: "Bags and Shoes",
+        label: ar.nav.menuChildren.bagsShoes,
         url: "/shop#bag-shoes",
-        description: "Suitable for men, women and all tastes and styles",
+        description: ar.nav.menuChildren.bagsShoesDesc,
       },
     ],
   },
   {
     id: 2,
     type: "MenuItem",
-    label: "On Sale",
+    label: ar.nav.onSale,
     url: "/shop#on-sale",
     children: [],
   },
   {
     id: 3,
     type: "MenuItem",
-    label: "New Arrivals",
+    label: ar.nav.newArrivals,
     url: "/shop#new-arrivals",
     children: [],
   },
   {
     id: 4,
     type: "MenuItem",
-    label: "Brands",
+    label: ar.nav.brands,
     url: "/shop#brands",
     children: [],
   },
@@ -75,20 +76,20 @@ const TopNavbar = () => {
     <nav className="sticky top-0 bg-white z-20">
       <div className="flex relative max-w-frame mx-auto items-center justify-between md:justify-start py-5 md:py-6 px-4 xl:px-0">
         <div className="flex items-center">
-          <div className="block md:hidden mr-4">
+          <div className="block md:hidden me-4">
             <ResTopNavbar data={data} />
           </div>
           <Link
             href="/"
             className={cn([
               integralCF.className,
-              "text-2xl lg:text-[32px] mb-2 mr-3 lg:mr-10",
+              "text-2xl lg:text-[32px] mb-2 me-3 lg:me-10",
             ])}
           >
             {BRAND_NAME}
           </Link>
         </div>
-        <NavigationMenu className="hidden md:flex mr-2 lg:mr-7">
+        <NavigationMenu className="hidden md:flex me-2 lg:me-7">
           <NavigationMenuList>
             {data.map((item) => (
               <React.Fragment key={item.id}>
@@ -102,7 +103,7 @@ const TopNavbar = () => {
             ))}
           </NavigationMenuList>
         </NavigationMenu>
-        <form action="/search" method="get" className="hidden md:flex bg-[#F0F0F0] mr-3 lg:mr-10 rounded-full">
+        <form action="/search" method="get" className="hidden md:flex bg-[#F0F0F0] me-3 lg:me-10 rounded-full">
           <InputGroup className="bg-[#F0F0F0]">
             <InputGroup.Text>
               <Image
@@ -110,26 +111,26 @@ const TopNavbar = () => {
                 src="/icons/search.svg"
                 height={20}
                 width={20}
-                alt="search"
+                alt={ar.a11y.search}
                 className="min-w-5 min-h-5"
               />
             </InputGroup.Text>
             <InputGroup.Input
               type="search"
               name="q"
-              placeholder="Search for products..."
+              placeholder={ar.nav.searchPlaceholder}
               className="bg-transparent placeholder:text-black/40"
             />
           </InputGroup>
         </form>
         <div className="flex items-center">
-          <Link href="/search" className="block md:hidden mr-[14px] p-1">
+          <Link href="/search" className="block md:hidden me-[14px] p-1">
             <Image
               priority
               src="/icons/search-black.svg"
               height={100}
               width={100}
-              alt="search"
+              alt={ar.a11y.search}
               className="max-w-[22px] max-h-[22px]"
             />
           </Link>
@@ -140,7 +141,7 @@ const TopNavbar = () => {
               src="/icons/user.svg"
               height={100}
               width={100}
-              alt="user"
+              alt={ar.a11y.user}
               className="max-w-[22px] max-h-[22px]"
             />
           </Link>

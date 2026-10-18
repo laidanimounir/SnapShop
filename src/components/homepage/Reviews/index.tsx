@@ -16,6 +16,7 @@ import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { useIsClient, useMediaQuery } from "usehooks-ts";
 import ReviewCard from "@/components/common/ReviewCard";
 import { Review } from "@/types/review.types";
+import { ar } from "@/lib/store/i18n-ar";
 
 type ReviewsProps = { data: Review[] };
 
@@ -54,6 +55,7 @@ const Reviews = ({ data }: ReviewsProps) => {
           opts={{
             align: "center",
             loop: true,
+            direction: "rtl",
           }}
           className="relative w-full mb-6 md:mb-9"
         >
@@ -65,17 +67,17 @@ const Reviews = ({ data }: ReviewsProps) => {
               transition={{ delay: 0.6, duration: 0.6 }}
               className={cn([
                 cairo.className,
-                "text-[32px] leading-[36px] md:text-5xl capitalize mr-auto",
+                "text-[32px] leading-[36px] md:text-5xl capitalize me-auto",
               ])}
             >
-              OUR HAPPY CUSTOMERS
+              {ar.home.happyCustomers}
             </motion.h2>
-            <div className="flex items-center space-x-1 ml-2">
+            <div className="flex items-center gap-1 ms-2">
               <CarouselPrevious variant="ghost" className="text-2xl">
-                <FaArrowLeft />
+                <FaArrowRight />
               </CarouselPrevious>
               <CarouselNext variant="ghost" className="text-2xl">
-                <FaArrowRight />
+                <FaArrowLeft />
               </CarouselNext>
             </div>
           </div>
@@ -114,7 +116,7 @@ const Reviews = ({ data }: ReviewsProps) => {
                                 ? 0
                                 : current - 2) === index &&
                               "backdrop-blur-[2px]",
-                          "absolute bg-white/10 right-0 top-0 h-full w-full z-10",
+                          "absolute bg-white/10 start-0 top-0 h-full w-full z-10",
                         ])}
                       />
                     )

@@ -14,11 +14,12 @@ import {
   getDiscountedPrice,
   getDiscountAmount,
   getEffectivePrice,
-  formatPrice,
 } from "@/lib/pricing";
 import { sortSizes } from "@/lib/sizes";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
 import { IoMdCheckmark } from "react-icons/io";
+import Price from "@/components/common/Price";
+import { ar, formatStorePrice } from "@/lib/store/i18n-ar";
 
 const Header = ({ product }: { product: Product }) => {
   const dispatch = useAppDispatch();
@@ -164,7 +165,7 @@ const Header = ({ product }: { product: Product }) => {
           <h1
             className={cn([
               cairo.className,
-              "text-2xl md:text-[40px] md:leading-[40px] mb-3 md:mb-3.5 capitalize",
+              "text-2xl md:text-[40px] md:leading-[40px] mb-3 md:mb-3.5",
             ])}
           >
             {product.name}
@@ -178,28 +179,29 @@ const Header = ({ product }: { product: Product }) => {
               size={25}
               readonly
             />
-            <span className="text-black text-xs sm:text-sm ml-[11px] sm:ml-[13px] pb-0.5 sm:pb-0">
-              {product.rating.toFixed(1)}
-              <span className="text-black/60">/5</span>
+            <span className="text-black text-xs sm:text-sm ms-[11px] sm:ms-[13px] pb-0.5 sm:pb-0">
+              <bdi dir="ltr">{product.rating.toFixed(1)}/5</bdi>
             </span>
           </div>
-          <div className="flex items-center space-x-2.5 sm:space-x-3 mb-5">
-            <span className="font-bold text-black text-2xl sm:text-[32px]">
-              {formatPrice(price)}
-            </span>
+          <div className="flex items-center gap-2.5 sm:gap-3 mb-5">
+            <Price
+              value={price}
+              className="font-bold text-black text-2xl sm:text-[32px]"
+            />
             {hasDiscount && (
-              <span className="font-bold text-black/40 line-through text-2xl sm:text-[32px]">
-                {formatPrice(basePrice)}
-              </span>
+              <Price
+                value={basePrice}
+                className="font-bold text-black/40 line-through text-2xl sm:text-[32px]"
+              />
             )}
             {product.discount_percentage > 0 && (
               <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
-                -{product.discount_percentage}%
+                <bdi dir="ltr">-{product.discount_percentage}%</bdi>
               </span>
             )}
             {product.discount_amount > 0 && (
               <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
-                -{formatPrice(discountAmount)}
+                <bdi dir="ltr">-{formatStorePrice(discountAmount)}</bdi>
               </span>
             )}
           </div>
@@ -211,9 +213,9 @@ const Header = ({ product }: { product: Product }) => {
               <hr className="h-[1px] border-t-black/10 mb-5" />
               <div className="flex flex-col">
                 <span className="text-sm sm:text-base text-black/60 mb-4">
-                  Select Colors
+                  {ar.product.selectColors}
                 </span>
-                <div className="flex items-center flex-wrap space-x-3 sm:space-x-4">
+                <div className="flex items-center flex-wrap gap-3 sm:gap-4">
                   {colors.map((color) => (
                     <button
                       key={color.name}
@@ -239,9 +241,9 @@ const Header = ({ product }: { product: Product }) => {
               <hr className="h-[1px] border-t-black/10 my-5" />
               <div className="flex flex-col">
                 <span className="text-sm sm:text-base text-black/60 mb-4">
-                  Choose Size
+                  {ar.product.chooseSize}
                 </span>
-                <div className="flex items-center flex-wrap lg:space-x-3">
+                <div className="flex items-center flex-wrap lg:gap-3">
                   {sizes.map((size) => {
                     const variant = activeVariants.find(
                       (v) =>
@@ -295,25 +297,23 @@ const Header = ({ product }: { product: Product }) => {
             <button
               type="button"
               disabled={!selectedVariant || stock <= 0}
-              className="bg-black w-full ml-3 sm:ml-5 rounded-full h-11 md:h-[52px] text-sm sm:text-base text-white hover:bg-black/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-black w-full ms-3 sm:ms-5 rounded-full h-11 md:h-[52px] text-sm sm:text-base text-white hover:bg-black/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleAddToCart}
             >
-              {stock <= 0 ? "Out of Stock" : "Add to Cart"}
+              {stock <= 0 ? ar.product.outOfStock : ar.product.addToCart}
             </button>
             <button
               type="button"
               disabled={!selectedVariant || stock <= 0}
-              className="bg-brand-accent w-full ml-3 sm:ml-5 rounded-full h-11 md:h-[52px] text-sm sm:text-base text-white hover:bg-brand-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-brand-accent w-full ms-3 sm:ms-5 rounded-full h-11 md:h-[52px] text-sm sm:text-base text-white hover:bg-brand-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => setBuyNowOpen(true)}
             >
-              Buy Now
+              {ar.product.buyNow}
             </button>
           </div>
 
           {!selectedVariant && (
-            <p className="text-xs text-black/50 mt-3">
-              This product is currently unavailable.
-            </p>
+            <p className="text-xs text-black/50 mt-3">{ar.product.unavailable}</p>
           )}
         </div>
       </div>

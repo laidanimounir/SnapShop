@@ -12,16 +12,16 @@ import {
   removeItem,
 } from "@/lib/features/carts/cartsSlice";
 import { useAppDispatch } from "@/lib/hooks/redux";
-import { formatPrice } from "@/lib/pricing";
+import Price from "@/components/common/Price";
+import { ar } from "@/lib/store/i18n-ar";
 
 const ProductCard = ({ data }: { data: CartItem }) => {
   const dispatch = useAppDispatch();
-  const slug = data.name.toLowerCase().split(" ").join("-");
 
   return (
-    <div className="flex items-start space-x-4">
+    <div className="flex items-start gap-4">
       <Link
-        href={`/shop/product/${data.product_id}/${slug}`}
+        href={`/shop/product/${data.product_id}`}
         className="bg-[#F0EEED] rounded-lg w-full min-w-[100px] max-w-[100px] sm:max-w-[124px] aspect-square overflow-hidden"
       >
         <Image
@@ -35,7 +35,7 @@ const ProductCard = ({ data }: { data: CartItem }) => {
       <div className="flex w-full self-stretch flex-col">
         <div className="flex items-center justify-between">
           <Link
-            href={`/shop/product/${data.product_id}/${slug}`}
+            href={`/shop/product/${data.product_id}`}
             className="text-black font-bold text-base xl:text-xl"
           >
             {data.name}
@@ -53,27 +53,29 @@ const ProductCard = ({ data }: { data: CartItem }) => {
           <div className="mb-auto -mt-1">
             {data.size && (
               <div>
-                <span className="text-black text-xs md:text-sm mr-1">Size:</span>
+                <span className="text-black text-xs md:text-sm ms-1">{ar.cart.size}:</span>
                 <span className="text-black/60 text-xs md:text-sm">{data.size}</span>
               </div>
             )}
             {data.color && (
               <div className="-mt-1.5">
-                <span className="text-black text-xs md:text-sm mr-1">Color:</span>
+                <span className="text-black text-xs md:text-sm ms-1">{ar.cart.color}:</span>
                 <span className="text-black/60 text-xs md:text-sm">{data.color}</span>
               </div>
             )}
           </div>
         )}
         <div className="flex items-center flex-wrap justify-between">
-          <div className="flex items-center space-x-[5px] xl:space-x-2.5">
-            <span className="font-bold text-black text-xl xl:text-2xl">
-              {formatPrice(data.price)}
-            </span>
+          <div className="flex items-center gap-[5px] xl:gap-2.5">
+            <Price
+              value={data.price}
+              className="font-bold text-black text-xl xl:text-2xl"
+            />
             {data.price < data.originalPrice && (
-              <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-                {formatPrice(data.originalPrice)}
-              </span>
+              <Price
+                value={data.originalPrice}
+                className="font-bold text-black/40 line-through text-xl xl:text-2xl"
+              />
             )}
           </div>
           <div className="bg-[#F0F0F0] rounded-full flex items-center justify-between px-4 py-2.5 min-w-[105px] max-w-[105px] sm:max-w-32">

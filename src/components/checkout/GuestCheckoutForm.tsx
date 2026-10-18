@@ -13,8 +13,9 @@ import {
   type DeliveryType,
   type DeliveryZone,
 } from "@/lib/delivery";
-import { formatPrice } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
+import Price from "@/components/common/Price";
+import { ar } from "@/lib/store/i18n-ar";
 
 type FieldErrors = {
   customerName?: string;
@@ -24,17 +25,17 @@ type FieldErrors = {
 };
 
 const validateName = (value: string): string | undefined =>
-  !value.trim() ? "Please enter your full name" : undefined;
+  !value.trim() ? ar.checkout.validation.nameRequired : undefined;
 
 const validatePhone = (value: string): string | undefined => {
-  if (!value.trim()) return "Please enter your phone number";
+  if (!value.trim()) return ar.checkout.validation.phoneRequired;
   const digits = value.replace(/\D/g, "");
-  if (digits.length < 8) return "Phone number must have at least 8 digits";
+  if (digits.length < 8) return ar.checkout.validation.phoneMin;
   return undefined;
 };
 
 const validateAddress = (value: string): string | undefined =>
-  !value.trim() ? "Please enter your shipping address" : undefined;
+  !value.trim() ? ar.checkout.validation.addressRequired : undefined;
 
 export default function GuestCheckoutForm({
   items,
@@ -77,9 +78,7 @@ export default function GuestCheckoutForm({
       })
       .catch(() => {
         if (!cancelled) {
-          setZonesError(
-            "Could not load delivery options. Please refresh the page and try again."
-          );
+          setZonesError(ar.checkout.validation.zonesError);
           setZonesLoading(false);
         }
       });
@@ -102,7 +101,7 @@ export default function GuestCheckoutForm({
     address: touched.address ? validateAddress(address) : undefined,
     wilaya:
       touched.wilaya && zones.length > 0 && !wilayaCode
-        ? "Please select your wilaya"
+        ? ar.checkout.validation.wilayaRequired
         : undefined,
   };
 
@@ -114,19 +113,16 @@ export default function GuestCheckoutForm({
     const nameErr = validateName(customerName);
     const phoneErr = validatePhone(phone);
     const addrErr = validateAddress(address);
-    const wilayaErr = zones.length > 0 && !wilayaCode ? "wilaya" : undefined;
+    const wilayaErr = zones.length > 0 && !wilayaCode ? ar.checkout.validation.wilayaRequired : undefined;
     if (nameErr || phoneErr || addrErr || wilayaErr) return;
 
     if (zonesError || zonesLoading) {
-      setError(
-        zonesError ??
-          "Delivery options are still loading. Please try again in a moment."
-      );
+      setError(zonesError ?? ar.checkout.validation.zonesLoading);
       return;
     }
 
     if (company.trim() !== "") {
-      setError("Something went wrong placing your order. Please try again.");
+      setError(ar.checkout.validation.honeypot);
       return;
     }
 
@@ -151,7 +147,7 @@ export default function GuestCheckoutForm({
       setError(
         e instanceof Error
           ? e.message
-          : "Something went wrong placing your order. Please try again."
+          : ar.checkout.validation.generic
       );
       setIsSubmitting(false);
     }
@@ -168,13 +164,13 @@ export default function GuestCheckoutForm({
       )}
 
       <div>
-        <label className="block text-xs font-medium text-black mb-1">Customer Name</label>
+        <label className="block text-xs font-medium text-black mb-1">{ar.checkout.customerName}</label>
         <input
           type="text"
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
           onBlur={() => handleBlur("customerName")}
-          placeholder="Your full name"
+          placeholder={ar.checkout.fullName}
           className={cn(
             "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all",
             errors.customerName ? "border-red-400 focus:border-red-500" : "border-black/10 focus:border-black/30"
@@ -184,13 +180,13 @@ export default function GuestCheckoutForm({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-black mb-1">Phone Number</label>
+        <label className="block text-xs font-medium text-black mb-1">{ar.checkout.phoneNumber}</label>
         <input
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           onBlur={() => handleBlur("phone")}
-          placeholder="+213 5XX XX XX XX"
+          placeholder={ar.checkout.phonePlaceholder}
           className={cn(
             "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all",
             errors.phone ? "border-red-400 focus:border-red-500" : "border-black/10 focus:border-black/30"
@@ -201,7 +197,7 @@ export default function GuestCheckoutForm({
 
       <div>
         <label htmlFor="checkout-wilaya" className="block text-xs font-medium text-black mb-1">
-          Wilaya
+          {ar.checkout.wilaya}
         </label>
         <select
           id="checkout-wilaya"
@@ -216,7 +212,7 @@ export default function GuestCheckoutForm({
           )}
         >
           <option value="">
-            {zonesLoading ? "Loading wilayas…" : "Select your wilaya"}
+            {zonesLoading ? ar.checkout.loadingWilayas : ar.checkout.selectWilaya}
           </option>
           {zones.map((zone) => (
             <option key={zone.wilaya_code} value={zone.wilaya_code}>
@@ -229,7 +225,7 @@ export default function GuestCheckoutForm({
       </div>
 
       <div>
-        <span className="block text-xs font-medium text-black mb-1">Delivery Method</span>
+        <span className="block text-xs font-medium text-black mb-1">{ar.checkout.deliveryMethod}</span>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(["home", "office"] as DeliveryType[]).map((type) => {
             const price = getDeliveryPrice(selectedZone, type);
@@ -256,7 +252,7 @@ export default function GuestCheckoutForm({
                   {DELIVERY_TYPE_LABEL[type]}
                 </span>
                 <span className="font-medium text-black/70">
-                  {selectedZone ? formatPrice(price) : "—"}
+                  {selectedZone ? <Price value={price} /> : "—"}
                 </span>
               </label>
             );
@@ -264,18 +260,18 @@ export default function GuestCheckoutForm({
         </div>
         {!selectedZone && (
           <p className="text-xs text-black/50 mt-1">
-            Select a wilaya to see delivery prices.
+            {ar.checkout.selectWilayaHint}
           </p>
         )}
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-black mb-1">Shipping Address</label>
+        <label className="block text-xs font-medium text-black mb-1">{ar.checkout.shippingAddress}</label>
         <textarea
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onBlur={() => handleBlur("address")}
-          placeholder="Street, building, landmarks"
+          placeholder={ar.checkout.addressPlaceholder}
           rows={2}
           className={cn(
             "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all resize-none",
@@ -287,35 +283,34 @@ export default function GuestCheckoutForm({
 
       <div className="rounded-lg border border-black/10 p-3 space-y-2 text-sm">
         <div className="flex items-center justify-between">
-          <span className="text-black/60">Subtotal</span>
-          <span>{formatPrice(subtotal)}</span>
+          <span className="text-black/60">{ar.checkout.subtotal}</span>
+          <span><Price value={subtotal} /></span>
         </div>
         {discountTotal > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-black/60">Discount</span>
-            <span className="text-red-600">-{formatPrice(discountTotal)}</span>
+            <span className="text-black/60">{ar.checkout.discount}</span>
+            <span className="text-red-600">-<Price value={discountTotal} /></span>
           </div>
         )}
         <div className="flex items-center justify-between">
           <span className="text-black/60">
-            Delivery{selectedZone ? ` (${DELIVERY_TYPE_LABEL[deliveryType]})` : ""}
+            {ar.checkout.delivery}
+            {selectedZone ? ` (${DELIVERY_TYPE_LABEL[deliveryType]})` : ""}
           </span>
-          <span>{selectedZone ? formatPrice(deliveryPrice) : "—"}</span>
+          <span>{selectedZone ? <Price value={deliveryPrice} /> : "—"}</span>
         </div>
         <hr className="border-t-black/10" />
         <div className="flex items-center justify-between font-bold text-base">
-          <span>Total</span>
-          <span>{selectedZone ? formatPrice(orderTotal) : "—"}</span>
+          <span>{ar.checkout.total}</span>
+          <span>{selectedZone ? <Price value={orderTotal} /> : "—"}</span>
         </div>
-        <p className="text-[11px] text-black/50">
-          Cash on delivery. The final total is recalculated by the server.
-        </p>
+        <p className="text-[11px] text-black/50">{ar.checkout.codNote}</p>
       </div>
 
       {/* Honeypot field: hidden from humans, bots that fill it are rejected. */}
       <div className="hidden" aria-hidden="true">
         <label>
-          Company
+          {ar.checkout.company}
           <input
             type="text"
             name="company"
@@ -339,7 +334,7 @@ export default function GuestCheckoutForm({
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
         )}
-        {isSubmitting ? "Processing..." : "Confirm Purchase"}
+        {isSubmitting ? ar.checkout.processing : ar.checkout.confirmPurchase}
       </button>
     </div>
   );

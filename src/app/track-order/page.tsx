@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { getOrderByToken, type TrackedOrder } from "@/lib/api/orders";
-import { formatPrice } from "@/lib/pricing";
+import Price from "@/components/common/Price";
 import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ar, statusLabelAr, deliveryTypeLabelAr } from "@/lib/store/i18n-ar";
 
 export default function TrackOrderPage() {
   const [token, setToken] = useState("");
@@ -21,10 +22,10 @@ export default function TrackOrderPage() {
     setOrder(null);
     try {
       const result = await getOrderByToken(token.trim());
-      if (!result) setError("No order found with that token.");
+      if (!result) setError(ar.order.noOrder);
       else setOrder(result);
     } catch {
-      setError("Something went wrong looking up your order.");
+      setError(ar.order.lookupError);
     } finally {
       setLoading(false);
     }
@@ -34,18 +35,19 @@ export default function TrackOrderPage() {
     <main className="pb-20">
       <div className="max-w-frame mx-auto px-4 xl:px-0 py-10">
         <h1 className={cn([cairo.className, "text-2xl md:text-3xl text-center mb-6"])}>
-          Track your order
+          {ar.order.trackTitle}
         </h1>
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto flex space-x-2">
+        <form onSubmit={handleSubmit} className="max-w-md mx-auto flex gap-2">
           <input
             type="text"
+            dir="ltr"
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            placeholder="Paste your confirmation token"
+            placeholder={ar.order.tokenPlaceholder}
             className="w-full px-4 py-3 rounded-full border border-black/10 outline-none focus:border-black/30"
           />
           <Button type="submit" disabled={loading} className="rounded-full bg-black">
-            {loading ? "..." : "Track"}
+            {loading ? ar.order.trackLoading : ar.order.track}
           </Button>
         </form>
 
@@ -54,36 +56,28 @@ export default function TrackOrderPage() {
         {order && (
           <div className="max-w-2xl mx-auto mt-8 border border-black/10 rounded-[20px] p-6 space-y-4">
             <div className="flex justify-between">
-              <span className="text-black/60">Status</span>
-              <span className="font-bold capitalize">
-                {order.status.replace(/_/g, " ")}
-              </span>
+              <span className="text-black/60">{ar.order.status}</span>
+              <span className="font-bold">{statusLabelAr(order.status)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-black/60">Customer</span>
+              <span className="text-black/60">{ar.order.customer}</span>
               <span>{order.guest_name}</span>
             </div>
-            {(order.wilaya_name_fr || order.wilaya_name_ar) && (
+            {order.wilaya_name_ar && (
               <div className="flex justify-between">
-                <span className="text-black/60">Wilaya</span>
-                <span>
-                  {[order.wilaya_name_fr, order.wilaya_name_ar]
-                    .filter(Boolean)
-                    .join(" — ")}
-                </span>
+                <span className="text-black/60">{ar.order.wilaya}</span>
+                <span>{order.wilaya_name_ar}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-black/60">Delivery</span>
-              <span className="capitalize">
-                {order.delivery_type === "office"
-                  ? "Office pickup"
-                  : "Home delivery"}
-              </span>
+              <span className="text-black/60">{ar.order.delivery}</span>
+              <span>{deliveryTypeLabelAr(order.delivery_type ?? "home")}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-black/60">Placed</span>
-              <span>{new Date(order.created_at).toLocaleString()}</span>
+              <span className="text-black/60">{ar.order.placed}</span>
+              <span>
+                {new Date(order.created_at).toLocaleString("ar-DZ-u-nu-latn")}
+              </span>
             </div>
             <hr className="border-t-black/10" />
             {order.items.map((item, i) => (
@@ -93,29 +87,31 @@ export default function TrackOrderPage() {
                   {[item.color, item.size].filter(Boolean).length > 0
                     ? ` (${[item.color, item.size].filter(Boolean).join(" / ")})`
                     : ""}{" "}
-                  × {item.quantity}
+                  <bdi dir="ltr">× {item.quantity}</bdi>
                 </span>
-                <span className="font-medium">{formatPrice(item.unit_price_at_purchase)}</span>
+                <span className="font-medium">
+                  <Price value={item.unit_price_at_purchase} />
+                </span>
               </div>
             ))}
             <hr className="border-t-black/10" />
             <div className="flex justify-between text-sm">
-              <span className="text-black/60">Subtotal</span>
-              <span>{formatPrice(order.subtotal)}</span>
+              <span className="text-black/60">{ar.order.subtotal}</span>
+              <span><Price value={order.subtotal} /></span>
             </div>
             {order.discount_total > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-black/60">Discount</span>
-                <span className="text-red-600">-{formatPrice(order.discount_total)}</span>
+                <span className="text-black/60">{ar.order.discount}</span>
+                <span className="text-red-600">-<Price value={order.discount_total} /></span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-black/60">Delivery</span>
-              <span>{formatPrice(order.delivery_price ?? 0)}</span>
+              <span className="text-black/60">{ar.order.deliveryFee}</span>
+              <span><Price value={order.delivery_price ?? 0} /></span>
             </div>
             <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>{formatPrice(order.total)}</span>
+              <span>{ar.order.total}</span>
+              <span><Price value={order.total} /></span>
             </div>
           </div>
         )}

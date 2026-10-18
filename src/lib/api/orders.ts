@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { ar } from "@/lib/store/i18n-ar";
 
 export type OrderItemPayload = {
   variant_id: string;
@@ -66,32 +67,34 @@ export async function placeGuestOrder(input: {
 }
 
 // Maps raw Postgres/RPC errors to text that is safe to show shoppers.
+// The regexes deliberately match the English server messages; only the
+// returned text is Arabic. Raw error.message is never surfaced to users.
 export function toUserFacingOrderError(message: string): string {
   if (/is not available|not found|invalid product variant id/i.test(message)) {
-    return "Sorry, one of the items in your order is no longer available. Please review your cart and try again.";
+    return ar.errors.itemUnavailable;
   }
   if (/insufficient stock/i.test(message)) {
-    return "Sorry, there is not enough stock for one of your items. Please adjust the quantities and try again.";
+    return ar.errors.insufficientStock;
   }
   if (/invalid quantity|too many units|too many distinct items/i.test(message)) {
-    return "Please check your quantities (max 10 per item, max 100 units per order) and try again.";
+    return ar.errors.invalidQuantity;
   }
   if (/invalid phone number/i.test(message)) {
-    return "Please enter a valid phone number (6-15 digits).";
+    return ar.errors.invalidPhone;
   }
   if (/invalid email address/i.test(message)) {
-    return "Please enter a valid email address.";
+    return ar.errors.invalidEmail;
   }
   if (/unsupported payment method/i.test(message)) {
-    return "Cash on delivery is the only payment method available right now.";
+    return ar.errors.unsupportedPayment;
   }
   if (/wilaya is required|delivery is not available|invalid delivery type/i.test(message)) {
-    return "Please select a valid wilaya and delivery method.";
+    return ar.errors.invalidWilaya;
   }
   if (/guest name|guest phone|guest address|at least one item/i.test(message)) {
-    return "Please fill in your name, phone number, and address before placing the order.";
+    return ar.errors.missingFields;
   }
-  return "Something went wrong placing your order. Please try again.";
+  return ar.errors.orderGeneric;
 }
 
 export async function getOrderByToken(
@@ -101,6 +104,6 @@ export async function getOrderByToken(
     p_token: token,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(ar.errors.generic);
   return data as TrackedOrder | null;
 }

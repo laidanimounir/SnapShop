@@ -13,6 +13,7 @@ import { submitReview } from "@/lib/api/reviews";
 import type { Review } from "@/types/review.types";
 import { cn } from "@/lib/utils";
 import { IoMdStar, IoMdStarOutline } from "react-icons/io";
+import { ar, formatAr } from "@/lib/store/i18n-ar";
 
 const ReviewsContent = ({
   reviews,
@@ -27,8 +28,8 @@ const ReviewsContent = ({
     <section>
       <div className="flex items-center justify-between flex-col sm:flex-row mb-5 sm:mb-6">
         <div className="flex items-center mb-4 sm:mb-0">
-          <h3 className="text-xl sm:text-2xl font-bold text-black mr-2">
-            All Reviews
+          <h3 className="text-xl sm:text-2xl font-bold text-black me-2">
+            {ar.product.reviews.title}
           </h3>
           <span className="text-sm sm:text-base text-black/60">({reviews.length})</span>
         </div>
@@ -37,7 +38,7 @@ const ReviewsContent = ({
           onClick={() => setOpen(true)}
           className="sm:min-w-[166px] px-4 py-3 sm:px-5 sm:py-4 rounded-full bg-black font-medium text-xs sm:text-base h-12"
         >
-          Write a Review
+          {ar.product.reviews.writeReview}
         </Button>
       </div>
 
@@ -48,7 +49,7 @@ const ReviewsContent = ({
           ))}
         </div>
       ) : (
-        <p className="text-black/50 mb-5">No reviews yet. Be the first to leave one.</p>
+        <p className="text-black/50 mb-5">{ar.product.reviews.noReviews}</p>
       )}
 
       <ReviewForm open={open} onOpenChange={setOpen} productId={productId} />
@@ -76,11 +77,11 @@ function ReviewForm({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setError("Please enter your name");
+      setError(ar.product.reviewForm.nameError);
       return;
     }
     if (company.trim() !== "") {
-      setError("Something went wrong submitting your review.");
+      setError(ar.product.reviewForm.errorGeneric);
       return;
     }
     setSubmitting(true);
@@ -95,7 +96,7 @@ function ReviewForm({
       setSubmitted(true);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Something went wrong submitting your review."
+        e instanceof Error ? e.message : ar.product.reviewForm.errorGeneric
       );
     } finally {
       setSubmitting(false);
@@ -106,13 +107,13 @@ function ReviewForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
-          <DialogTitle>Write a Review</DialogTitle>
+          <DialogTitle>{ar.product.reviewForm.title}</DialogTitle>
         </DialogHeader>
 
         {submitted ? (
           <div className="text-center py-6">
             <p className="font-medium text-black">
-              Thank you! Your review has been submitted and is pending approval.
+              {ar.product.reviewForm.submitted}
             </p>
             <Button
               onClick={() => {
@@ -124,30 +125,38 @@ function ReviewForm({
               }}
               className="mt-4 rounded-full"
             >
-              Close
+              {ar.product.reviewForm.close}
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-black mb-1">Your name</label>
+              <label className="block text-xs font-medium text-black mb-1">
+                {ar.product.reviewForm.name}
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                placeholder={ar.product.reviewForm.namePlaceholder}
                 className="w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none focus:border-black/30"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-black mb-1">Rating</label>
-              <div className="flex items-center space-x-1">
+              <label className="block text-xs font-medium text-black mb-1">
+                {ar.product.reviewForm.rating}
+              </label>
+              <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     key={n}
                     type="button"
-                    aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                    aria-label={
+                      n === 1
+                        ? ar.product.reviewForm.starOne
+                        : formatAr(ar.product.reviewForm.starMany, { n })
+                    }
                     onClick={() => setRating(n)}
                   >
                     {n <= rating ? (
@@ -161,11 +170,13 @@ function ReviewForm({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-black mb-1">Comment</label>
+              <label className="block text-xs font-medium text-black mb-1">
+                {ar.product.reviewForm.comment}
+              </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Share your thoughts..."
+                placeholder={ar.product.reviewForm.commentPlaceholder}
                 rows={3}
                 className={cn(
                   "w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none resize-none focus:border-black/30"
@@ -176,7 +187,7 @@ function ReviewForm({
             {/* Honeypot field: hidden from humans. */}
             <div className="hidden" aria-hidden="true">
               <label>
-                Company
+                {ar.product.reviewForm.company}
                 <input
                   type="text"
                   name="company"
@@ -196,7 +207,9 @@ function ReviewForm({
               disabled={submitting}
               className="w-full py-3 rounded-full bg-black text-white disabled:opacity-50"
             >
-              {submitting ? "Submitting..." : "Submit Review"}
+              {submitting
+                ? ar.product.reviewForm.submitting
+                : ar.product.reviewForm.submit}
             </Button>
           </div>
         )}

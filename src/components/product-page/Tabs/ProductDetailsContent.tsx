@@ -1,23 +1,24 @@
 import React from "react";
 import type { Product } from "@/types/product.types";
+import { ar } from "@/lib/store/i18n-ar";
 
 const ProductDetailsContent = ({ product }: { product: Product }) => {
   const specs: { label: string; value: string }[] = [
-    { label: "Category", value: product.category ?? "-" },
-    { label: "Brand", value: product.brand ?? "-" },
+    { label: ar.product.details.category, value: product.category ?? "-" },
+    { label: ar.product.details.brand, value: product.brand ?? "-" },
   ];
 
   return (
     <section>
       <h3 className="text-xl sm:text-2xl font-bold text-black mb-5 sm:mb-6">
-        Product details
+        {ar.product.details.title}
       </h3>
       <p className="text-sm sm:text-base text-black/60 mb-6">{product.description}</p>
       <div className="grid grid-cols-3">
         {specs.map((item, i) => (
           <React.Fragment key={i}>
             <div>
-              <p className="text-sm py-3 w-full leading-7 lg:py-4 pr-2 text-neutral-500">
+              <p className="text-sm py-3 w-full leading-7 lg:py-4 ps-2 text-neutral-500">
                 {item.label}
               </p>
             </div>

@@ -41,11 +41,9 @@ describe("delivery helpers", () => {
     expect(getOrderTotal(0.1, 0, 0.2)).toBe(0.3);
   });
 
-  it("formats a zone label with code and both names", () => {
-    expect(formatZoneLabel(zone)).toBe("16 — Alger — الجزائر");
-    expect(
-      formatZoneLabel({ ...zone, wilaya_code: 1, name_fr: "Adrar" })
-    ).toBe("01 — Adrar — الجزائر");
+  it("formats a zone label with the code and Arabic name only", () => {
+    expect(formatZoneLabel(zone)).toBe("16 — الجزائر");
+    expect(formatZoneLabel({ ...zone, wilaya_code: 1 })).toBe("01 — الجزائر");
   });
 
   it("narrows delivery types", () => {

@@ -21,9 +21,9 @@ const PhotoSection = ({
   const gallery = capped.filter((url) => url !== selected).slice(0, MAX_PRODUCT_IMAGES - 1);
 
   return (
-    <div className="flex flex-col-reverse lg:flex-row lg:space-x-3.5">
+    <div className="flex flex-col-reverse lg:flex-row lg:gap-3.5">
       {gallery.length > 0 && (
-        <div className="flex lg:flex-col space-x-3 lg:space-x-0 lg:space-y-3.5 w-full lg:w-fit items-center lg:justify-start justify-center">
+        <div className="flex lg:flex-col gap-3 lg:gap-x-0 lg:gap-y-3.5 w-full lg:w-fit items-center lg:justify-start justify-center">
           {gallery.map((photo) => (
             <button
               key={photo}

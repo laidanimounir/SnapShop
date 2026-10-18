@@ -12,7 +12,8 @@ import GuestCheckoutForm from "@/components/checkout/GuestCheckoutForm";
 import { useRouter } from "next/navigation";
 import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
-import { formatPrice } from "@/lib/pricing";
+import Price from "@/components/common/Price";
+import { ar } from "@/lib/store/i18n-ar";
 
 type BuyNowModalProps = {
   open: boolean;
@@ -44,10 +45,10 @@ const BuyNowModal = ({
       <DialogContent className="sm:max-w-md bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className={cn([cairo.className, "text-xl"])}>
-            Quick Checkout
+            {ar.cart.quickCheckout}
           </DialogTitle>
           <DialogDescription className="text-sm text-black/60">
-            Confirm your details to place the order
+            {ar.cart.confirmDetails}
           </DialogDescription>
         </DialogHeader>
 
@@ -71,7 +72,7 @@ const BuyNowModal = ({
                   </p>
                 )}
                 <p className="text-sm font-bold text-black">
-                  {formatPrice(price * quantity)}
+                  <Price value={price * quantity} />
                 </p>
               </div>
             </div>

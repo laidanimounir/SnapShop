@@ -210,6 +210,7 @@ export const ar = {
     empty: "سلة التسوق فارغة.",
     shop: "تسوّق",
     checkout: "إتمام الطلب",
+    quickCheckout: "إتمام سريع",
     confirmDetails: "أكّد بياناتك لإتمام الطلب",
     size: "المقاس",
     color: "اللون",
@@ -393,6 +394,20 @@ export function formatAr(
   return template.replace(/\{(\w+)\}/g, (match, key: string) =>
     key in values ? String(values[key]) : match
   );
+}
+
+/**
+ * Truncate to at most `max` user-perceived characters (grapheme clusters) so
+ * metadata descriptions never split a combining mark or emoji in half.
+ */
+export function truncateGraphemes(text: string, max: number): string {
+  if (text.length <= max) return text;
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const segmenter = new Intl.Segmenter("ar", { granularity: "grapheme" });
+    const parts = Array.from(segmenter.segment(text), (s) => s.segment);
+    return parts.slice(0, max).join("").trimEnd();
+  }
+  return Array.from(text).slice(0, max).join("").trimEnd();
 }
 
 export type ArabicCountForms = {

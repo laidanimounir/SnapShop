@@ -5,6 +5,9 @@ import Tabs from "@/components/product-page/Tabs";
 import { getProductById, getProducts, getApprovedReviews } from "@/lib/api/products";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ar, truncateGraphemes } from "@/lib/store/i18n-ar";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function generateMetadata({
   params,
@@ -12,16 +15,21 @@ export async function generateMetadata({
   params: { slug: string[] };
 }): Promise<Metadata> {
   const product = await getProductById(params.slug[0]).catch(() => null);
-  if (!product) return { title: "Product not found" };
-  const description = product.description.slice(0, 160);
+  if (!product) return { title: ar.meta.notFoundTitle };
+  const description = truncateGraphemes(product.description, 160);
   const primary =
     product.images.find((i) => i.is_primary) ?? product.images[0];
+  const path = `/shop/product/${product.id}`;
   return {
     title: product.name,
     description,
+    alternates: {
+      canonical: `${SITE_URL.replace(/\/$/, "")}${path}`,
+    },
     openGraph: {
       title: product.name,
       description,
+      locale: ar.meta.ogLocale,
       ...(primary ? { images: [{ url: primary.url }] } : {}),
     },
   };
@@ -56,7 +64,7 @@ export default async function ProductPage({
       </div>
       <div className="mb-[50px] sm:mb-20">
         <ProductListSec
-          title="You might also like"
+          title={ar.product.youMightAlsoLike}
           data={related.filter((p) => p.id !== productId)}
         />
       </div>

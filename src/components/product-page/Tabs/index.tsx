@@ -8,6 +8,7 @@ import ReviewsContent from "./ReviewsContent";
 import FaqContent from "./FaqContent";
 import type { Product } from "@/types/product.types";
 import type { Review } from "@/types/review.types";
+import { ar } from "@/lib/store/i18n-ar";
 
 type TabBtn = {
   id: number;
@@ -15,9 +16,9 @@ type TabBtn = {
 };
 
 const tabBtnData: TabBtn[] = [
-  { id: 1, label: "Product Details" },
-  { id: 2, label: "Rating & Reviews" },
-  { id: 3, label: "FAQs" },
+  { id: 1, label: ar.product.tabs.details },
+  { id: 2, label: ar.product.tabs.ratingReviews },
+  { id: 3, label: ar.product.tabs.faqs },
 ];
 
 const Tabs = ({ reviews, product }: { reviews: Review[]; product: Product }) => {

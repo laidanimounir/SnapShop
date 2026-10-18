@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { ar } from "@/lib/store/i18n-ar";
 
 export async function submitReview(input: {
   product_id: string;
@@ -13,6 +14,6 @@ export async function submitReview(input: {
     p_comment: input.comment,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(ar.errors.reviewGeneric);
   return data as string;
 }

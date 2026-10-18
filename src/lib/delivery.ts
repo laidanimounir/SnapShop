@@ -36,13 +36,11 @@ export function getOrderTotal(
   return round2(subtotal - discountTotal + deliveryPrice);
 }
 
-export function formatZoneLabel(
-  zone: Pick<DeliveryZone, "wilaya_code" | "name_ar" | "name_fr">
-): string {
-  return `${String(zone.wilaya_code).padStart(2, "0")} — ${zone.name_fr} — ${zone.name_ar}`;
+export function formatZoneLabel(zone: DeliveryZone): string {
+  return `${String(zone.wilaya_code).padStart(2, "0")} — ${zone.name_ar}`;
 }
 
 export const DELIVERY_TYPE_LABEL: Record<DeliveryType, string> = {
-  home: "Home delivery",
-  office: "Office pickup",
+  home: "توصيل للمنزل",
+  office: "استلام من المكتب",
 };

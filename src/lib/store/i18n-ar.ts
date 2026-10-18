@@ -128,6 +128,9 @@ export const ar = {
     outOfStock: "نفدت الكمية",
     addToCart: "أضف إلى السلة",
     buyNow: "اشترِ الآن",
+    orderNow: "اطلب الآن",
+    pickColor: "اختر اللون",
+    pickSize: "اختر المقاس",
     unavailable: "هذا المنتج غير متوفر حاليًا.",
     youMightAlsoLike: "قد يعجبك أيضًا",
     details: {

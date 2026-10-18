@@ -1,15 +1,12 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import PhotoSection from "./PhotoSection";
-import BuyNowModal from "./BuyNowModal";
+import OrderForm from "../OrderForm";
 import { Product } from "@/types/product.types";
 import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import Rating from "@/components/ui/Rating";
-import { addToCart } from "@/lib/features/carts/cartsSlice";
-import { useAppDispatch } from "@/lib/hooks/redux";
 import {
   getDiscountedPrice,
   getDiscountAmount,
@@ -22,8 +19,6 @@ import Price from "@/components/common/Price";
 import { ar, formatStorePrice } from "@/lib/store/i18n-ar";
 
 const Header = ({ product }: { product: Product }) => {
-  const dispatch = useAppDispatch();
-
   // Only active variants reach the storefront (filtered server-side),
   // but guard again so a stale prop never shows a dead variant.
   const activeVariants = useMemo(
@@ -130,25 +125,7 @@ const Header = ({ product }: { product: Product }) => {
   const hasDiscount = product.discount_percentage > 0 || product.discount_amount > 0;
   const stock = selectedVariant?.stock_quantity ?? 0;
 
-  const handleAddToCart = () => {
-    if (!selectedVariant || stock <= 0) return;
-    dispatch(
-      addToCart({
-        variant_id: selectedVariant.id,
-        product_id: product.id,
-        name: product.name,
-        srcUrl: selectedImage || primaryImage,
-        color: selectedVariant.color,
-        size: selectedVariant.size,
-        price,
-        originalPrice: basePrice,
-        quantity,
-      })
-    );
-  };
-
   const [quantity, setQuantity] = useState(1);
-  const [buyNowOpen, setBuyNowOpen] = useState(false);
 
   return (
     <>
@@ -294,41 +271,27 @@ const Header = ({ product }: { product: Product }) => {
                 +
               </button>
             </div>
-            <button
-              type="button"
-              disabled={!selectedVariant || stock <= 0}
-              className="bg-black w-full ms-3 sm:ms-5 rounded-full h-11 md:h-[52px] text-sm sm:text-base text-white hover:bg-black/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleAddToCart}
-            >
-              {stock <= 0 ? ar.product.outOfStock : ar.product.addToCart}
-            </button>
-            <button
-              type="button"
-              disabled={!selectedVariant || stock <= 0}
-              className="bg-brand-accent w-full ms-3 sm:ms-5 rounded-full h-11 md:h-[52px] text-sm sm:text-base text-white hover:bg-brand-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => setBuyNowOpen(true)}
-            >
-              {ar.product.buyNow}
-            </button>
           </div>
+
+          <OrderForm
+            variantId={selectedVariant?.id ?? null}
+            quantity={quantity}
+            product={{ id: product.id, name: product.name }}
+            image={selectedImage || primaryImage}
+            unitPrice={basePrice}
+            unitDiscount={discountAmount}
+            stock={stock}
+            hasColors={hasColors}
+            hasSizes={hasSizes}
+            selectedColor={selectedColor}
+            selectedSize={selectedSize}
+          />
 
           {!selectedVariant && (
             <p className="text-xs text-black/50 mt-3">{ar.product.unavailable}</p>
           )}
         </div>
       </div>
-
-      <BuyNowModal
-        open={buyNowOpen}
-        onOpenChange={setBuyNowOpen}
-        variantId={selectedVariant?.id ?? ""}
-        quantity={quantity}
-        title={product.name}
-        image={selectedImage || primaryImage}
-        color={selectedVariant?.color ?? null}
-        size={selectedVariant?.size ?? null}
-        price={price}
-      />
     </>
   );
 };

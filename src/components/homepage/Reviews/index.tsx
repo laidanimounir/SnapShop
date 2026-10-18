@@ -85,7 +85,7 @@ const Reviews = ({ data }: ReviewsProps) => {
             {data.map((review, index) => (
               <CarouselItem
                 key={review.id}
-                className="w-full max-w-[358px] sm:max-w-[400px] pl-5"
+                className="w-full max-w-[358px] sm:max-w-[400px] ps-5"
               >
                 <ReviewCard
                   className="h-full"

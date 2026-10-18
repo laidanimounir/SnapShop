@@ -5,7 +5,7 @@ import Image from "next/image";
 import PhotoSection from "./PhotoSection";
 import BuyNowModal from "./BuyNowModal";
 import { Product } from "@/types/product.types";
-import { integralCF } from "@/styles/fonts";
+import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import Rating from "@/components/ui/Rating";
 import { addToCart } from "@/lib/features/carts/cartsSlice";
@@ -163,7 +163,7 @@ const Header = ({ product }: { product: Product }) => {
         <div>
           <h1
             className={cn([
-              integralCF.className,
+              cairo.className,
               "text-2xl md:text-[40px] md:leading-[40px] mb-3 md:mb-3.5 capitalize",
             ])}
           >

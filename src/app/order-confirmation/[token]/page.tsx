@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getOrderByToken, type TrackedOrder } from "@/lib/api/orders";
 import { formatPrice } from "@/lib/pricing";
-import { integralCF } from "@/styles/fonts";
+import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -46,7 +46,7 @@ export default function OrderConfirmationPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className={cn([integralCF.className, "text-2xl md:text-3xl"])}>
+              <h1 className={cn([cairo.className, "text-2xl md:text-3xl"])}>
                 Order placed successfully!
               </h1>
               <p className="text-black/60 mt-2 text-sm">

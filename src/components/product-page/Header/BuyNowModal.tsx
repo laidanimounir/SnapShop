@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import GuestCheckoutForm from "@/components/checkout/GuestCheckoutForm";
 import { useRouter } from "next/navigation";
-import { integralCF } from "@/styles/fonts";
+import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/pricing";
 
@@ -43,7 +43,7 @@ const BuyNowModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className={cn([integralCF.className, "text-xl"])}>
+          <DialogTitle className={cn([cairo.className, "text-xl"])}>
             Quick Checkout
           </DialogTitle>
           <DialogDescription className="text-sm text-black/60">

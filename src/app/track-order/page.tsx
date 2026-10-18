@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { getOrderByToken, type TrackedOrder } from "@/lib/api/orders";
 import { formatPrice } from "@/lib/pricing";
-import { integralCF } from "@/styles/fonts";
+import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -33,7 +33,7 @@ export default function TrackOrderPage() {
   return (
     <main className="pb-20">
       <div className="max-w-frame mx-auto px-4 xl:px-0 py-10">
-        <h1 className={cn([integralCF.className, "text-2xl md:text-3xl text-center mb-6"])}>
+        <h1 className={cn([cairo.className, "text-2xl md:text-3xl text-center mb-6"])}>
           Track your order
         </h1>
         <form onSubmit={handleSubmit} className="max-w-md mx-auto flex space-x-2">

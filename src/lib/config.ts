@@ -1,7 +1,8 @@
 export const BRAND_NAME =
   process.env.NEXT_PUBLIC_BRAND_NAME || "SnapShop";
 export const TAGLINE =
-  process.env.NEXT_PUBLIC_TAGLINE || "SnapShop - Modern E-Commerce";
+  process.env.NEXT_PUBLIC_TAGLINE ||
+  "تسوّق أحدث صيحات الملابس أونلاين مع الدفع عند الاستلام والتوصيل حتى الباب.";
 export const OWNER_NAME =
   process.env.NEXT_PUBLIC_OWNER_NAME || "Store Owner";
 export const CONTACT_PHONE =

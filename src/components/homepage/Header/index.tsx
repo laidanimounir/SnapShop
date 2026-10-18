@@ -1,7 +1,7 @@
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { integralCF } from "@/styles/fonts";
+import { cairo } from "@/styles/fonts";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -18,7 +18,7 @@ const Header = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className={cn([
-              integralCF.className,
+              cairo.className,
               "text-4xl lg:text-[64px] lg:leading-[64px] mb-5 lg:mb-8",
             ])}
           >

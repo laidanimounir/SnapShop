@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import GuestCheckoutForm from "@/components/checkout/GuestCheckoutForm";
 import { cn } from "@/lib/utils";
-import { integralCF } from "@/styles/fonts";
+import { cairo } from "@/styles/fonts";
 import { FaArrowRight } from "react-icons/fa6";
 import { TbBasketExclamation } from "react-icons/tb";
 import React, { useState } from "react";
@@ -39,7 +39,7 @@ export default function CartPage() {
             <BreadcrumbCart />
             <h2
               className={cn([
-                integralCF.className,
+                cairo.className,
                 "font-bold text-[32px] md:text-[40px] text-black uppercase mb-5 md:mb-6",
               ])}
             >
@@ -110,7 +110,7 @@ export default function CartPage() {
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent className="sm:max-w-md bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className={cn([integralCF.className, "text-xl"])}>
+            <DialogTitle className={cn([cairo.className, "text-xl"])}>
               Checkout
             </DialogTitle>
             <DialogDescription className="text-sm text-black/60">

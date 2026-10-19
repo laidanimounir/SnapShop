@@ -317,6 +317,7 @@ export function LandingPageEditor({
           }}
           renderEditor={(section) => (
             <SectionFields
+              pageId={page.id}
               section={section}
               onChange={(props) => {
                 setSections((prev) =>
@@ -329,6 +330,7 @@ export function LandingPageEditor({
         />
         <div>
           <SettingsPanel
+            pageId={page.id}
             theme={theme}
             onTheme={updateTheme}
             fields={fields}

@@ -2,6 +2,7 @@
 
 import { ar } from "@/lib/admin/i18n-ar";
 import type { Section } from "@/lib/admin/landing-sections";
+import { ImageUploadButton } from "./ImageUploadButton";
 
 const inputCls = "w-full px-3 py-2 border border-black/15 rounded-lg text-sm";
 const urlCls = `${inputCls} font-mono`;
@@ -70,9 +71,11 @@ function AddButton({
 }
 
 export function SectionFields({
+  pageId,
   section,
   onChange,
 }: {
+  pageId: string;
   section: Section;
   onChange: (props: Section["props"]) => void;
 }) {
@@ -117,6 +120,10 @@ export function SectionFields({
             <p className="text-xs text-black/50 mt-1">
               {ar.landing.fields.imageUrlHelp}
             </p>
+            <ImageUploadButton
+              pageId={pageId}
+              onUploaded={(url) => onChange({ ...props, imageUrl: url })}
+            />
           </div>
           <div>
             <label className={labelCls}>{ar.landing.fields.ctaText}</label>
@@ -160,6 +167,18 @@ export function SectionFields({
                           images: replaceAt(props.images, index, {
                             ...image,
                             imageUrl: e.target.value,
+                          }),
+                        })
+                      }
+                    />
+                    <ImageUploadButton
+                      pageId={pageId}
+                      onUploaded={(url) =>
+                        onChange({
+                          ...props,
+                          images: replaceAt(props.images, index, {
+                            ...image,
+                            imageUrl: url,
                           }),
                         })
                       }
@@ -483,6 +502,18 @@ export function SectionFields({
                         })
                       }
                     />
+                    <ImageUploadButton
+                      pageId={pageId}
+                      onUploaded={(url) =>
+                        onChange({
+                          ...props,
+                          pairs: replaceAt(props.pairs, index, {
+                            ...pair,
+                            beforeUrl: url,
+                          }),
+                        })
+                      }
+                    />
                   </div>
                   <div>
                     <label className={labelCls}>
@@ -499,6 +530,18 @@ export function SectionFields({
                           pairs: replaceAt(props.pairs, index, {
                             ...pair,
                             afterUrl: e.target.value,
+                          }),
+                        })
+                      }
+                    />
+                    <ImageUploadButton
+                      pageId={pageId}
+                      onUploaded={(url) =>
+                        onChange({
+                          ...props,
+                          pairs: replaceAt(props.pairs, index, {
+                            ...pair,
+                            afterUrl: url,
                           }),
                         })
                       }
@@ -647,6 +690,18 @@ export function SectionFields({
                               imageUrl: e.target.value
                                 ? e.target.value
                                 : undefined,
+                            }),
+                          })
+                        }
+                      />
+                      <ImageUploadButton
+                        pageId={pageId}
+                        onUploaded={(url) =>
+                          onChange({
+                            ...props,
+                            items: replaceAt(props.items, index, {
+                              ...item,
+                              imageUrl: url,
                             }),
                           })
                         }

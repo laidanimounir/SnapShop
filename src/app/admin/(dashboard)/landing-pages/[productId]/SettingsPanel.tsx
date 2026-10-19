@@ -2,6 +2,7 @@
 
 import { ar } from "@/lib/admin/i18n-ar";
 import { LANDING_FONTS, type Theme } from "@/lib/landing/theme";
+import { ImageUploadButton } from "./ImageUploadButton";
 
 const inputCls = "w-full px-3 py-2 border border-black/15 rounded-lg text-sm";
 const labelCls = "block text-sm font-medium mb-1";
@@ -47,11 +48,13 @@ const FONT_LABELS: Record<(typeof LANDING_FONTS)[number], string> = {
 };
 
 export function SettingsPanel({
+  pageId,
   theme,
   onTheme,
   fields,
   onField,
 }: {
+  pageId: string;
   theme: Theme;
   onTheme: (patch: Partial<Theme>) => void;
   fields: SettingsFields;
@@ -180,6 +183,10 @@ export function SettingsPanel({
               value={fields.ogImageUrl}
               onChange={(e) => onField("ogImageUrl", e.target.value)}
               maxLength={2048}
+            />
+            <ImageUploadButton
+              pageId={pageId}
+              onUploaded={(url) => onField("ogImageUrl", url)}
             />
           </div>
         </div>

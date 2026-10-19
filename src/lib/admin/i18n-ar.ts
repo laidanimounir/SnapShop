@@ -413,7 +413,9 @@ export const ar = {
       subtitle: "الوصف",
       imageUrl: "رابط الصورة (https)",
       imageUrlHelp:
-        "الصق رابط صورة مرفوعة (Supabase) يبدأ بـ https. حجم الصورة لا يزيد عن 2 ميغابايت.",
+        "ارفع صورة من جهازك (JPEG أو PNG أو WebP، بحد أقصى 5 ميغابايت) أو الصق رابطًا يبدأ بـ https.",
+      uploadImage: "رفع صورة",
+      uploading: "جارٍ الرفع…",
       images: "الصور",
       alt: "وصف الصورة",
       colorName: "اسم اللون",

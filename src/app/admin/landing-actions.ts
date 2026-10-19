@@ -160,6 +160,84 @@ export async function saveLandingDraftAction(
   }
 }
 
+const LANDING_ASSET_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
+// Saves one hero/gallery/OG image to the public landing-assets bucket.
+// Only a small, decoded-header-verified image is accepted; the returned
+// public URL is stored in the draft content by the editor.
+export async function uploadLandingAssetAction(
+  pageId: string,
+  formData: FormData
+): Promise<ActionResult<{ url: string }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "uploadLandingAsset");
+
+    const { MAX_IMAGE_BYTES, detectImageType } = await import(
+      "@/lib/admin/product-validation"
+    );
+    const { landingAssetPath, isUuid, LANDING_ASSET_BUCKET } = await import(
+      "@/lib/admin/landing-asset"
+    );
+
+    if (!isUuid(pageId)) return { ok: false, error: ar.messages.landingNotFound };
+    const { data: page, error: pageError } = await supabase
+      .from("product_landing_pages")
+      .select("id")
+      .eq("id", pageId)
+      .maybeSingle();
+    if (pageError) throw new Error(pageError.message);
+    if (!page) return { ok: false, error: ar.messages.landingNotFound };
+
+    const file = formData.get("image");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, error: ar.messages.chooseImage };
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      return { ok: false, error: ar.messages.imageSize };
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      return { ok: false, error: ar.messages.imageType };
+    }
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const kind = detectImageType(bytes);
+    if (!kind) return { ok: false, error: ar.messages.imageReal };
+
+    // Header-read dimensions guard against decompression bombs before the
+    // file reaches storage or the Next image optimizer.
+    const { readImageDimensions, withinDimensionLimit } = await import(
+      "@/lib/admin/image-dimensions"
+    );
+    if (!withinDimensionLimit(readImageDimensions(bytes))) {
+      return { ok: false, error: ar.messages.imageDimensions };
+    }
+
+    const { randomUUID } = await import("crypto");
+    const path = landingAssetPath(pageId, randomUUID(), kind);
+    if (!path) return { ok: false, error: ar.messages.generic };
+
+    const { error: uploadError } = await supabase.storage
+      .from(LANDING_ASSET_BUCKET)
+      .upload(path, Buffer.from(bytes), {
+        contentType: LANDING_ASSET_MIME[kind],
+        upsert: false,
+      });
+    if (uploadError) return { ok: false, error: uploadError.message };
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(LANDING_ASSET_BUCKET).getPublicUrl(path);
+    return { ok: true, url: publicUrl };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
 export async function publishLandingPageAction(
   pageId: string
 ): Promise<ActionResult<{ slug: string }>> {

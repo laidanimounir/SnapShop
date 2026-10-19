@@ -175,6 +175,25 @@ export function toggleSectionHidden(
   return sections.map((s) => (s.id === id ? { ...s, hidden: !s.hidden } : s));
 }
 
+// Drag-and-drop reorder: drop `activeId` into the slot currently held by
+// `overId` (arrayMove semantics). Unknown ids, a missing target and a
+// no-op drop all return the original array untouched.
+export function moveSectionTo(
+  sections: Section[],
+  activeId: string,
+  overId: string
+): Section[] {
+  if (activeId === overId) return sections;
+  const from = sections.findIndex((s) => s.id === activeId);
+  const to = sections.findIndex((s) => s.id === overId);
+  if (from === -1 || to === -1) return sections;
+
+  const next = sections.slice();
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
+
 // Shallow-merges a patch into a section's props (nested arrays are
 // replaced wholesale, which is how the side panel edits them).
 export function updateSectionProps(

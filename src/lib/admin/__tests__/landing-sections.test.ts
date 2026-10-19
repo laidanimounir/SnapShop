@@ -6,6 +6,7 @@ import {
   duplicateSection,
   isSectionValid,
   moveSection,
+  moveSectionTo,
   newSection,
   nextSectionId,
   removeSection,
@@ -104,6 +105,43 @@ describe("removeSection / moveSection / toggleSectionHidden", () => {
     const next = toggleSectionHidden(base, "faq-1");
     expect(next[1].hidden).toBe(true);
     expect(next[0].hidden).toBe(false);
+  });
+});
+
+describe("moveSectionTo (drag and drop)", () => {
+  const base = ["hero", "faq", "features", "gallery"].reduce(
+    (acc, type) => addSection(acc, type as never, { imageUrl: IMAGE }),
+    [] as ReturnType<typeof newSection>[]
+  );
+
+  it("moves a section down to the target slot", () => {
+    expect(moveSectionTo(base, "hero-1", "features-1").map((s) => s.id)).toEqual(
+      ["faq-1", "features-1", "hero-1", "gallery-1"]
+    );
+  });
+
+  it("moves a section up to the target slot", () => {
+    expect(
+      moveSectionTo(base, "gallery-1", "faq-1").map((s) => s.id)
+    ).toEqual(["hero-1", "gallery-1", "faq-1", "features-1"]);
+  });
+
+  it("returns the same array for a no-op drop", () => {
+    expect(moveSectionTo(base, "faq-1", "faq-1")).toBe(base);
+  });
+
+  it("returns the same array when an id is unknown", () => {
+    expect(moveSectionTo(base, "nope", "faq-1")).toBe(base);
+    expect(moveSectionTo(base, "faq-1", "nope")).toBe(base);
+    expect(moveSectionTo([], "a", "b")).toEqual([]);
+  });
+
+  it("keeps every section exactly once", () => {
+    const next = moveSectionTo(base, "hero-1", "gallery-1");
+    expect(next).toHaveLength(base.length);
+    expect([...next.map((s) => s.id)].sort()).toEqual(
+      [...base.map((s) => s.id)].sort()
+    );
   });
 });
 

@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SectionRenderer from "@/components/landing/SectionRenderer";
-import { getPublishedLandingPage } from "@/lib/landing/api";
+import { getPublishedLandingPage, getLandingOrderData } from "@/lib/landing/api";
 import {
   LANDING_HEADING_FONT_CSS,
   themeToCssVariables,
@@ -45,6 +45,10 @@ export default async function ProductLandingPage({
   const page = await getPublishedLandingPage(params.slug);
   if (!page) notFound();
 
+  // Real prices, variants and delivery zones for the order form section.
+  // Fetched with the cookie-free anon client so the page stays ISR-cached.
+  const order = await getLandingOrderData(page.productId);
+
   const style = {
     ...themeToCssVariables(page.content.theme),
     fontFamily: "var(--font-body)",
@@ -59,7 +63,7 @@ export default async function ProductLandingPage({
       {/* Static server-generated rule (no user input) so headings use the
           theme's heading font instead of the body font. */}
       <style dangerouslySetInnerHTML={{ __html: LANDING_HEADING_FONT_CSS }} />
-      <SectionRenderer sections={page.content.sections} />
+      <SectionRenderer sections={page.content.sections} order={order} />
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { useState } from "react";
 import SectionRenderer from "@/components/landing/SectionRenderer";
 import { buildPreviewContent } from "@/lib/admin/landing-preview";
 import type { Section } from "@/lib/admin/landing-sections";
+import type { LandingOrderData } from "@/lib/landing/order-data";
 import { ar, formatAr } from "@/lib/admin/i18n-ar";
 import {
   LANDING_HEADING_FONT_CSS,
@@ -21,9 +22,11 @@ type Device = "mobile" | "desktop";
 export function LivePreview({
   theme,
   sections,
+  order,
 }: {
   theme: Theme;
   sections: Section[];
+  order?: LandingOrderData | null;
 }) {
   const [device, setDevice] = useState<Device>("mobile");
   const preview = buildPreviewContent({ theme, sections });
@@ -98,7 +101,11 @@ export function LivePreview({
                 {ar.landing.previewEmpty}
               </p>
             ) : (
-              <SectionRenderer sections={preview.sections} />
+              <SectionRenderer
+                sections={preview.sections}
+                order={order}
+                preview
+              />
             )}
           </div>
         </div>

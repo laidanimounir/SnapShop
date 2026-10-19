@@ -24,6 +24,7 @@ import {
 import { ar, formatAr } from "@/lib/admin/i18n-ar";
 import type { AdminLandingPage, LandingPageStatus } from "@/lib/api/landing-admin";
 import { MAX_SECTIONS, parsePageContent } from "@/lib/landing/content";
+import type { LandingOrderData } from "@/lib/landing/order-data";
 import type { Theme } from "@/lib/landing/theme";
 import { LivePreview } from "./LivePreview";
 import { SectionFields } from "./SectionFields";
@@ -46,10 +47,12 @@ export function LandingPageEditor({
   page,
   productName,
   imageUrls,
+  order,
 }: {
   page: AdminLandingPage;
   productName: string;
   imageUrls: string[];
+  order?: LandingOrderData | null;
 }) {
   const router = useRouter();
 
@@ -333,7 +336,7 @@ export function LandingPageEditor({
           />
         </div>
         <div className="xl:sticky xl:top-4 xl:self-start">
-          <LivePreview theme={theme} sections={sections} />
+          <LivePreview theme={theme} sections={sections} order={order} />
         </div>
       </div>
 

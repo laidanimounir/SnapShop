@@ -4,6 +4,7 @@ import {
   getLandingPageForProduct,
   listTakenSlugs,
 } from "@/lib/api/landing-admin";
+import { getLandingOrderData } from "@/lib/landing/api";
 import { ensureUniqueSlug, suggestSlug } from "@/lib/admin/landing-validation";
 import { CreateLandingPageForm } from "./CreateLandingPageForm";
 import { LandingPageEditor } from "./LandingPageEditor";
@@ -38,6 +39,7 @@ export default async function AdminLandingPageEditorPage({
       page={data.page}
       productName={data.product.name}
       imageUrls={data.imageUrls}
+      order={await getLandingOrderData(data.product.id)}
     />
   );
 }

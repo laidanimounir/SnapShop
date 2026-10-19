@@ -1,5 +1,6 @@
 import { Fragment, type ComponentType, type ReactNode } from "react";
 import { sectionSchema, type Section } from "@/lib/landing/sections";
+import type { LandingOrderData } from "@/lib/landing/order-data";
 import HeroSection from "./sections/HeroSection";
 import GallerySection from "./sections/GallerySection";
 import FeaturesSection from "./sections/FeaturesSection";
@@ -12,7 +13,13 @@ import RichTextSection from "./sections/RichTextSection";
 import OrderFormSection from "./sections/OrderFormSection";
 import StickyCtaSection from "./sections/StickyCtaSection";
 
-type SectionComponent = ComponentType<{ section: unknown }>;
+type SectionProps = {
+  section: unknown;
+  order?: LandingOrderData | null;
+  preview?: boolean;
+};
+
+type SectionComponent = ComponentType<SectionProps>;
 
 const SECTION_COMPONENTS: Record<Section["type"], SectionComponent> = {
   hero: HeroSection,
@@ -31,7 +38,15 @@ const SECTION_COMPONENTS: Record<Section["type"], SectionComponent> = {
 // Maps stored content JSON to section components. Never throws: unknown
 // types, invalid payloads, hidden sections and duplicate ids are all
 // skipped silently, so one bad row can never blank the whole page.
-export default function SectionRenderer({ sections }: { sections: unknown }) {
+export default function SectionRenderer({
+  sections,
+  order,
+  preview,
+}: {
+  sections: unknown;
+  order?: LandingOrderData | null;
+  preview?: boolean;
+}) {
   if (!Array.isArray(sections)) return null;
 
   const nodes: ReactNode[] = [];
@@ -48,7 +63,14 @@ export default function SectionRenderer({ sections }: { sections: unknown }) {
     const Component = SECTION_COMPONENTS[section.type];
     if (!Component) return;
 
-    nodes.push(<Component key={section.id} section={section} />);
+    nodes.push(
+      <Component
+        key={section.id}
+        section={section}
+        order={order}
+        preview={preview}
+      />
+    );
   });
 
   if (nodes.length === 0) return null;

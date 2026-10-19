@@ -5,6 +5,7 @@ import { shapeLandingOrderData, type LandingOrderData } from "./order-data";
 
 export type PublishedLandingPage = {
   slug: string;
+  productId: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
   ogImageUrl: string | null;
@@ -33,6 +34,7 @@ function publicSupabase(): SupabaseClient {
 
 type LandingPageRow = {
   slug: string;
+  product_id: string | null;
   published_content: unknown;
   seo_title: string | null;
   seo_description: string | null;
@@ -50,7 +52,7 @@ export const getPublishedLandingPage = cache(
       const { data, error } = await publicSupabase()
         .from("product_landing_pages")
         .select(
-          "slug, published_content, seo_title, seo_description, og_image_url, products(name)"
+          "slug, product_id, published_content, seo_title, seo_description, og_image_url, products(name)"
         )
         .eq("slug", slug)
         .eq("status", "published")
@@ -59,6 +61,7 @@ export const getPublishedLandingPage = cache(
       const row = data as unknown as LandingPageRow;
       return {
         slug: row.slug,
+        productId: row.product_id ?? null,
         seoTitle: row.seo_title ?? null,
         seoDescription: row.seo_description ?? null,
         ogImageUrl: row.og_image_url ?? null,

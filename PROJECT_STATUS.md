@@ -1,6 +1,6 @@
 # SnapShop — Project Status
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
 This file documents the current state of the SnapShop e-commerce project for future reference. It is based entirely on the actual codebase, git history, and migration files — no planned/future features are described as if they already exist.
 
@@ -60,7 +60,8 @@ Commit `ae8064f` "Wire storefront to Supabase backend" (plus the earlier mock-da
 - **Order tracking** — `/order-confirmation/[token]` (shows the token + order details) and `/track-order` (paste a token to look up an order anytime).
 - **Reviews** — product page fetches approved reviews; "Write a Review" submits via `submit_review` (goes in `is_approved = false`, with a "pending approval" message).
 - **States** — `loading.tsx`, `error.tsx`, `not-found.tsx` for shop/product routes.
-- **Product landing pages (public renderer, stage 1)** — a published landing page has its own URL `/p/{slug}` (server-rendered, Arabic RTL, on-demand ISR with `revalidate = 300`, SEO title/description/OG image from the row). Content is one JSON document (theme + ordered sections) validated by zod on read; sections render through `SectionRenderer`, which silently skips hidden, unknown, duplicate-id and invalid sections so one bad section can never blank a page. Theme values become CSS variables (`--lp-*`) and Arabic fonts (Cairo/Tajawal/Almarai) load with next/font. When a product has a published landing page, the catalog card links to `/p/{slug}` (one shared slug-map query per page, no N+1) and `/shop/product/{uuid}` permanently redirects there; otherwise the old product page is unchanged. The admin editor that writes these pages is **stage 2** and not built yet — a dev seed script (section 8) creates a sample page today.
+- **Product landing pages (public renderer, stage 1)** — a published landing page has its own URL `/p/{slug}` (server-rendered, Arabic RTL, on-demand ISR with `revalidate = 300`, SEO title/description/OG image from the row). Content is one JSON document (theme + ordered sections) validated by zod on read; sections render through `SectionRenderer`, which silently skips hidden, unknown, duplicate-id and invalid sections so one bad section can never blank a page. Theme values become CSS variables (`--lp-*`) and Arabic fonts (Cairo/Tajawal/Almarai) load with next/font. When a product has a published landing page, the catalog card links to `/p/{slug}` (one shared slug-map query per page, no N+1) and `/shop/product/{uuid}` permanently redirects there; otherwise the old product page is unchanged.
+- **Product landing pages (admin editor, stage 2a)** — the `/admin` UI to build those pages. `/admin/landing-pages` lists every product with its page status (draft/published/unpublished, or "لا توجد صفحة") and filters by name/status; opening a product either creates a page (suggested unique slug, then fixed) or opens the editor. The editor keeps the whole page in local state (theme + sections + SEO/pixels), adds/removes/duplicates/hides/reorders cards (arrow buttons, not drag-and-drop), and edits every one of the 11 section types through per-type field editors. Incomplete sections are flagged ("غير مكتمل") and block saving. Save writes the draft (`saveLandingDraftAction`), Publish copies the draft to `published_content` and sets `status`/`published_at` (`publishLandingPageAction`), Unpublish hides it again without losing the published copy; all three revalidate `/admin/landing-pages`, `/p/{slug}`, `/`, `/shop` and `/search`. Saved/published/unsaved states and a leave-page guard are shown, plus a per-section summary line and inline errors. There is no live preview yet, no image upload (paste Supabase https URLs), and no drag-and-drop/templates.
 
 ### Admin dashboard (`/admin`, same app)
 
@@ -79,7 +80,7 @@ Commits `8b311db`–`5661b77`.
 - `tsc --noEmit` passes; `next build` succeeds (7 admin routes + all storefront routes).
 - Rating trigger verified end-to-end (`4.70 → 4.70 pending → 3.80 approved → 4.70 cleanup`).
 - Order status update and product active-toggle verified against the live DB.
-- Hardening pass 2026-10-19: `next lint` clean, `tsc --noEmit` clean, **189 Vitest tests / 25 files pass**, `next build` succeeds.
+- Hardening pass 2026-10-19: `next lint` clean, `tsc --noEmit` clean, **189 Vitest tests / 25 files pass**, `next build` succeeds. After landing-page stage 2a: **225 Vitest tests / 27 files pass** (`next lint`, `tsc --noEmit`, `next build` all clean).
 - Throwaway test order verified the `delivered → returned` restore live: stock `100 → 99 (sale) → 99 (delivered order placed) → 100 (marked returned, trigger) → 100 (order deleted)`, history row `delivered → returned` logged, and `returned → pending` still rejected by the reopen guard. All test rows deleted afterwards.
 
 ---
@@ -92,8 +93,8 @@ Commits `8b311db`–`5661b77`.
 - **Real admin app** — the planned separate admin dashboard (a different frontend project, likely Flutter) that will connect to this same Supabase backend has **not** been built. The current `/admin` is a temporary internal tool.
 - **Hardcoded storefront content** — hero stats ("200+ brands", "2000+ products", "3000+ customers" via `AnimatedCounter`), the brand-logo marquee (Versace/Zara/Gucci/Prada/Calvin Klein — placeholder, `TODO`-flagged in `src/components/homepage/Brands/index.tsx`), and generic FAQs (`Tabs/FaqContent.tsx`).
 - **ESLint** — `next lint` passes cleanly (no interactive prompt); config lives in `package.json` (`next lint` defaults).
-- **Landing page builder — stage 2 not built** — there is no admin UI yet to create/edit/order/reorder landing sections, upload landing assets, set SEO/pixels, or publish/unpublish (which will also need `revalidatePath` for `/p/{slug}`). Stage 1 (schema + public renderer) is done; the editor is next.
-- **Tests** — 189 Vitest unit tests (pricing, checkout validation, quantity clamp, order-form money math, i18n helpers, order transitions, image dimension guard, landing-page schemas/CSS vars/rich text/renderer/seed content) run via `npm test`; no integration/e2e yet.
+- **Landing page builder — stages 2b+ not built** — the admin editor exists (stage 2a: create/edit/reorder by buttons/hide/save/publish/unpublish, plus a shared landing-pages list, SEO + pixel fields, and per-type section field editors). Still missing: drag-and-drop reordering, a live preview of the page, **image upload** to the `landing-assets` bucket (today admins must paste `https://` Supabase URLs — arbitrary hosts do not render because `next.config.mjs` only allows `*.supabase.co`), and applying templates from `landing_page_templates`.
+- **Tests** — 225 Vitest unit tests (pricing, checkout validation, quantity clamp, order-form money math, i18n helpers, order transitions, image dimension guard, landing-page schemas/CSS vars/rich text/renderer/seed content, plus landing-page admin slug/SEO/pixel validators and section helpers) run via `npm test`; no integration/e2e yet.
 - **Customer order read-back** — guests can only look up orders via the confirmation token (`get_order_by_token`); there is no account-based order history.
 - **Stock restocking on cancel/return** — handled by the `restore_stock_on_cancel()` trigger (added in `0004`, extended in `0007` and `0009` to cover `delivered → returned`).
 - **Denormalized product rating** — `products.rating` is maintained by the review trigger only; it is not recomputed retroactively if the trigger is dropped/recreated.
@@ -193,6 +194,15 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 12. **Seed a landing page (optional, dev only)** — run the command in section 8, then open `http://localhost:3000/p/demo-offer`. The page must show the sample sections (hero, gallery, features, size guide, testimonials, FAQ, countdown, rich text, order form) in Arabic RTL with the seeded theme colors.
 13. **Landing page links/redirect** — open `/shop`: the seeded product's card should link to `/p/demo-offer` (the others still go to `/shop/product/{uuid}`). Visit the seeded product's old URL `/shop/product/{uuid}` and confirm it redirects to `/p/demo-offer`.
 14. **Draft is never public** — with the service role, set that row's `status` to `draft` (or change its `slug`); `/p/demo-offer` must then be a 404 and the catalog card must fall back to the old product page. Set it back to `published` (the page refreshes after the 5-minute revalidate window).
+15. **Open the landing page list (admin)** — sign in at `/admin/login`, then open `/admin/landing-pages`. Every product is listed with a status chip ("لا توجد صفحة", مسودة/منشورة/غير منشورة). Type a product name in the search box and pick a filter — the list narrows. (If you ran the dev seeder, the seeded product shows "منشورة" with a "فتح الصفحة" link.)
+16. **Create a page** — click "إنشاء صفحة" on a product with no page. The slug is pre-filled (e.g. `t-shirt-with-tape-details`); accept it or edit it, then click "إنشاء الرابط". You land in the editor.
+17. **Build sections** — pick a type in the dropdown and click "إضافة قسم"; add a hero, a features and an FAQ section. Click a card to select it and edit its fields on the right (title/subtitle/CTA/image URL for hero; item title/text for features; question/answer for FAQ). Use ↑/↓ to reorder, "نسخ" to duplicate, "إخفاء"/"إظهار" to toggle, "حذف" to remove.
+18. **Incomplete sections block saving** — add a "معرض الصور" section and delete its only image; the card shows "غير مكتمل" and pressing "حفظ المسودة" shows an error toast instead of saving. Add an image URL back to continue.
+19. **Theme + SEO + pixels** — change a colour, the button radius and the body font in "المظهر", and fill a SEO title/description, an OG image URL, and a Facebook pixel id (digits only). 
+20. **Save the draft** — click "حفظ المسودة"; the "تغييرات غير محفوظة" chip disappears and the toast says "تم حفظ المسودة". Reload the page — your content is still there (it was written to `draft_content`).
+21. **Publish** — click "نشر". The status chip becomes "منشورة" and "فتح الصفحة" appears; open it (or `/p/{your-slug}` in a new tab) and confirm the sections, colours and fonts render in Arabic RTL, with the SEO title/description and OG image in the page `<head>`.
+22. **Unpublish** — click "إلغاء النشر". The page becomes a public 404 and the catalog card falls back to `/shop/product/{uuid}`, but reopening the editor still shows your content (the published copy is kept).
+23. **Unsaved-changes guard** — change something and press the browser Back button / reload; you are warned before losing the change. The editor also marks the page "تغييرات غير محفوظة" until you save.
 
 ---
 
@@ -258,7 +268,7 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 In rough order of priority:
 
 1. **Build the real admin app** — the separate admin frontend (different project/repo, likely Flutter) that connects to this same Supabase backend (same tables + Storage), superseding the temporary `/admin` dashboard.
-2. **Landing page builder stage 2 (admin editor)** — `/admin` UI to create/edit a page per product: theme controls, add/remove/reorder/hide sections, landing-asset uploads to `landing-assets`, SEO + pixel fields, save draft, publish/unpublish (with `revalidatePath('/p/{slug}')`), and templates from `landing_page_templates`. Stage 1 (schema + public renderer + seed script) is done.
+2. **Landing page builder stages 2b+** — build on the stage-2a admin editor: drag-and-drop reordering, a live preview, landing-asset **uploads** to the `landing-assets` bucket (removing the paste-a-URL limitation and the `*.supabase.co`-only image restriction), and applying saved templates from `landing_page_templates`. Stage 1 (schema + public renderer) and stage 2a (create/edit/save/publish/unpublish editor) are done.
 3. **Auth follow-ups** — admin authentication is done (Supabase Auth + `admin_users`); customer accounts (order history, etc.) remain a later decision.
 4. **Payments** — integrate a payment gateway (currently COD only).
 5. **Deploy** — set up hosting for the storefront and configure the Supabase project for production (remove/secure the `/admin` section or move it to the real admin app).
@@ -274,6 +284,9 @@ In rough order of priority:
   - `src/lib/api/orders.ts` — `placeGuestOrder`, `getOrderByToken` (client RPC).
   - `src/lib/api/reviews.ts` — `submitReview` (client RPC).
   - `src/lib/api/admin.ts` — admin reads (orders, products, reviews, dashboard stats) via service role.
+  - `src/lib/api/landing-admin.ts` — admin landing-page reads (`getAdminLandingPages`, `getLandingPageForProduct`, `listTakenSlugs`) via service role (needed because drafts are RLS-hidden).
+  - `src/lib/admin/landing-validation.ts` — landing-page admin validators (`suggestSlug`, `ensureUniqueSlug`, `validateContentInput`, `validateSeoInput`, `validatePixelsInput`, `buildPublishUpdate`, `buildUnpublishUpdate`).
+  - `src/lib/admin/landing-sections.ts` — landing section factories and list helpers (`addSection`, `removeSection`, `duplicateSection`, `moveSection`, `toggleSectionHidden`, `updateSectionProps`, `isSectionValid`, `sectionSummary`).
   - `src/lib/landing/api.ts` — published landing page reads (`getPublishedLandingPage`, `getPublishedLandingSlugForProduct`, `getPublishedLandingSlugMap`; cookie-free anon client so `/p/[slug]` stays ISR-able).
   - `src/lib/landing/*` — content model: `theme.ts`, `sections.ts`, `content.ts` (schemas + forgiving parser, slug/pixel validators), `rich-text.ts` (safe markup parser), `theme-css.ts` (theme → CSS variables).
 - **Supabase clients**
@@ -286,7 +299,7 @@ In rough order of priority:
 - **Types** — `src/types/product.types.ts`, `review.types.ts`, `database.types.ts` (generated, unused).
 - **Storefront routes** — `src/app/page.tsx`, `src/app/shop/*`, `src/app/search/page.tsx`, `src/app/order-confirmation/[token]/page.tsx`, `src/app/track-order/page.tsx`. (`/cart` redirects to `/shop` via `next.config.mjs`.)
 - **Landing page routes/components** — `src/app/p/[slug]/page.tsx` (public renderer), `src/components/landing/SectionRenderer.tsx`, `src/components/landing/RichText.tsx`, `src/components/landing/sections/*` (one component per section type; `CountdownSection` is the only client component).
-- **Admin routes** — `src/app/admin/layout.tsx`, `src/app/admin/page.tsx`, `src/app/admin/actions.ts` (server actions), `src/app/admin/orders/*`, `src/app/admin/products/*`, `src/app/admin/reviews/*`.
+- **Admin routes** — `src/app/admin/layout.tsx`, `src/app/admin/page.tsx`, `src/app/admin/actions.ts` (server actions), `src/app/admin/orders/*`, `src/app/admin/products/*`, `src/app/admin/reviews/*`, plus the landing-page editor: `src/app/admin/landing-actions.ts` (server actions), `src/app/admin/(dashboard)/landing-pages/page.tsx` (list) and `src/app/admin/(dashboard)/landing-pages/[productId]/` (`page.tsx`, `CreateLandingPageForm.tsx`, `LandingPageEditor.tsx`, `SectionsPanel.tsx`, `SectionFields.tsx`, `SettingsPanel.tsx`).
 - **Components** — `src/components/common/*`, `src/components/product-page/*` (incl. `OrderForm.tsx`), `src/components/shop-page/*`, `src/components/layout/*`, `src/components/ui/*` (shadcn).
 - **Database** — `supabase/migrations/0001_initial_schema.sql` … `0011_landing_pages.sql`, `supabase/seed_test_data.sql`.
 - **Scripts** — `scripts/seed-landing-page.mjs` (dev-only sample landing page seeder) + `scripts/sample-content.mjs` (its content, also validated against the zod schemas by Vitest).

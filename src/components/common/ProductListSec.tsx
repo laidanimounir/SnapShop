@@ -16,9 +16,17 @@ type ProductListSecProps = {
   title: string;
   data: Product[];
   viewAllLink?: string;
+  // product_id -> published landing-page slug, so cards can link to
+  // /p/{slug} when a landing page exists.
+  landingSlugs?: Record<string, string>;
 };
 
-const ProductListSec = ({ title, data, viewAllLink }: ProductListSecProps) => {
+const ProductListSec = ({
+  title,
+  data,
+  viewAllLink,
+  landingSlugs,
+}: ProductListSecProps) => {
   return (
     <section className="max-w-frame mx-auto text-center">
       <motion.h2
@@ -52,7 +60,10 @@ const ProductListSec = ({ title, data, viewAllLink }: ProductListSecProps) => {
                 key={product.id}
                 className="w-full max-w-[198px] sm:max-w-[295px] ps-0"
               >
-                <ProductCard data={product} />
+                <ProductCard
+                  data={product}
+                  landingSlug={landingSlugs?.[product.id]}
+                />
               </CarouselItem>
             ))}
           </CarouselContent>

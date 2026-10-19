@@ -11,6 +11,7 @@ import {
   type ProductFacet,
   type ProductFilters,
 } from "@/lib/api/products";
+import { getPublishedLandingSlugMap } from "@/lib/landing/api";
 import {
   Pagination,
   PaginationContent,
@@ -53,7 +54,7 @@ export default async function ShopPage({
   const page = searchParams.page ? Number(searchParams.page as string) : 1;
   const pageSize = 9;
 
-  const [{ products, total }, facets] = await Promise.all([
+  const [{ products, total }, facets, landingSlugs] = await Promise.all([
     getProducts({
       category,
       color,
@@ -65,6 +66,7 @@ export default async function ShopPage({
       pageSize,
     }),
     getProductFacets().catch(() => EMPTY_FACETS),
+    getPublishedLandingSlugMap(),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -129,7 +131,11 @@ export default async function ShopPage({
             {products.length > 0 ? (
               <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
                 {products.map((product) => (
-                  <ProductCard key={product.id} data={product} />
+                  <ProductCard
+                    key={product.id}
+                    data={product}
+                    landingSlug={landingSlugs[product.id]}
+                  />
                 ))}
               </div>
             ) : (

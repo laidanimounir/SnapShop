@@ -1,5 +1,6 @@
 import ProductCard from "@/components/common/ProductCard";
 import { getProducts } from "@/lib/api/products";
+import { getPublishedLandingSlugMap } from "@/lib/landing/api";
 import {
   ar,
   arabicCount,
@@ -13,7 +14,10 @@ export default async function SearchPage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const q = (searchParams.q as string) || "";
-  const { products, total } = await getProducts({ search: q, pageSize: 24 });
+  const [{ products, total }, landingSlugs] = await Promise.all([
+    getProducts({ search: q, pageSize: 24 }),
+    getPublishedLandingSlugMap(),
+  ]);
 
   return (
     <main className="pb-20">
@@ -41,7 +45,11 @@ export default async function SearchPage({
         {products.length > 0 ? (
           <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 mt-5">
             {products.map((p) => (
-              <ProductCard key={p.id} data={p} />
+              <ProductCard
+                key={p.id}
+                data={p}
+                landingSlug={landingSlugs[p.id]}
+              />
             ))}
           </div>
         ) : (

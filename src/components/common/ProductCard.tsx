@@ -9,9 +9,12 @@ import { formatStorePrice } from "@/lib/store/i18n-ar";
 
 type ProductCardProps = {
   data: Product;
+  // Published landing-page slug for this product, when one exists.
+  // Cards link straight to /p/{slug} instead of the old product page.
+  landingSlug?: string | null;
 };
 
-const ProductCard = ({ data }: ProductCardProps) => {
+const ProductCard = ({ data, landingSlug }: ProductCardProps) => {
   const ordered = [...data.images].sort(
     (a, b) => Number(b.is_primary) - Number(a.is_primary)
   );
@@ -26,7 +29,7 @@ const ProductCard = ({ data }: ProductCardProps) => {
 
   return (
     <Link
-      href={`/shop/product/${data.id}`}
+      href={landingSlug ? `/p/${landingSlug}` : `/shop/product/${data.id}`}
       className="flex flex-col items-start aspect-auto"
     >
       <div className="group relative bg-[#F0EEED] rounded-[13px] lg:rounded-[20px] w-full lg:max-w-[295px] aspect-square mb-2.5 xl:mb-4 overflow-hidden">

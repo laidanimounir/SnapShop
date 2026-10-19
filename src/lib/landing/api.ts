@@ -69,3 +69,48 @@ export const getPublishedLandingPage = cache(
     }
   }
 );
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Slug for one product's published landing page (used by the product page
+// to redirect). Returns null for non-uuid input so the lookup can never
+// throw a Postgres cast error.
+export const getPublishedLandingSlugForProduct = cache(
+  async (productId: unknown): Promise<string | null> => {
+    if (typeof productId !== "string" || !UUID_RE.test(productId)) return null;
+    try {
+      const { data, error } = await publicSupabase()
+        .from("product_landing_pages")
+        .select("slug")
+        .eq("product_id", productId)
+        .eq("status", "published")
+        .maybeSingle();
+      if (error || !data) return null;
+      return (data as { slug: string }).slug;
+    } catch {
+      return null;
+    }
+  }
+);
+
+// Single query returning every published product_id -> slug pair, so
+// catalog pages can link cards to landing pages without an N+1 lookup.
+export const getPublishedLandingSlugMap = cache(
+  async (): Promise<Record<string, string>> => {
+    try {
+      const { data, error } = await publicSupabase()
+        .from("product_landing_pages")
+        .select("product_id, slug")
+        .eq("status", "published");
+      if (error || !data) return {};
+      const map: Record<string, string> = {};
+      for (const row of data as Array<{ product_id: string; slug: string }>) {
+        map[row.product_id] = row.slug;
+      }
+      return map;
+    } catch {
+      return {};
+    }
+  }
+);

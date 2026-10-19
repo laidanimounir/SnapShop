@@ -3,8 +3,12 @@ import BreadcrumbProduct from "@/components/product-page/BreadcrumbProduct";
 import Header from "@/components/product-page/Header";
 import Tabs from "@/components/product-page/Tabs";
 import { getProductById, getProducts, getApprovedReviews } from "@/lib/api/products";
+import {
+  getPublishedLandingSlugForProduct,
+  getPublishedLandingSlugMap,
+} from "@/lib/landing/api";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ar, truncateGraphemes } from "@/lib/store/i18n-ar";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -41,15 +45,22 @@ export default async function ProductPage({
   params: { slug: string[] };
 }) {
   const productId = params.slug[0];
+
+  // When the product has a published landing page, the landing page is the
+  // canonical storefront page for it: send visitors there instead.
+  const landingSlug = await getPublishedLandingSlugForProduct(productId);
+  if (landingSlug) redirect(`/p/${landingSlug}`);
+
   const product = await getProductById(productId);
 
   if (!product) {
     notFound();
   }
 
-  const [reviews, { products: related }] = await Promise.all([
+  const [reviews, { products: related }, landingSlugs] = await Promise.all([
     getApprovedReviews(productId),
     getProducts({ pageSize: 5, sort: "most-popular" }),
+    getPublishedLandingSlugMap(),
   ]);
 
   return (
@@ -66,6 +77,7 @@ export default async function ProductPage({
         <ProductListSec
           title={ar.product.youMightAlsoLike}
           data={related.filter((p) => p.id !== productId)}
+          landingSlugs={landingSlugs}
         />
       </div>
     </main>

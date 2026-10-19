@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Cairo } from "next/font/google";
+import { Cairo, Tajawal, Almarai } from "next/font/google";
 
 const integralCF = localFont({
   src: [
@@ -42,4 +42,18 @@ const cairo = Cairo({
   variable: "--font-cairo",
 });
 
-export { integralCF, satoshi, cairo };
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  variable: "--font-tajawal",
+});
+
+const almarai = Almarai({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  display: "swap",
+  variable: "--font-almarai",
+});
+
+export { integralCF, satoshi, cairo, tajawal, almarai };

@@ -10,6 +10,7 @@ import {
   nextSectionId,
   removeSection,
   sectionSummary,
+  sectionTypeLabel,
   toggleSectionHidden,
   updateSectionProps,
 } from "../landing-sections";
@@ -124,5 +125,10 @@ describe("updateSectionProps / sectionSummary", () => {
     expect(sectionSummary(hero)).toBe("عنوان رئيسي");
     const faq = newSection("faq");
     expect(sectionSummary(faq)).toBe("سؤال؟");
+  });
+
+  it("labels the section type in arabic", () => {
+    expect(sectionTypeLabel(newSection("hero"))).toBe("القسم الرئيسي");
+    expect(sectionTypeLabel(newSection("sticky_cta"))).toBe("زر ثابت");
   });
 });

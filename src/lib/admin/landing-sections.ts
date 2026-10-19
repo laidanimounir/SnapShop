@@ -9,6 +9,7 @@ import {
   type Section,
   type SectionType,
 } from "@/lib/landing/sections";
+import { ar } from "./i18n-ar";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const COUNTDOWN_DEFAULT_DAYS = 3;
@@ -207,6 +208,11 @@ export function sectionSummary(section: Section): string {
     }
   }
   return "";
+}
+
+// Arabic display label for a section's type (used by the editor).
+export function sectionTypeLabel(section: Section): string {
+  return ar.landing.sectionTypes[section.type];
 }
 
 export { SECTION_TYPES };

@@ -347,6 +347,7 @@ export const ar = {
     sectionSettings: "إعدادات القسم",
     selectSection: "اختر قسمًا من القائمة لتعديل إعداداته.",
     noSections: "لا توجد أقسام بعد.",
+    maxSections: "بحد أقصى {n} قسمًا لكل صفحة.",
     deleteSection: "حذف",
     duplicateSection: "نسخ",
     hideSection: "إخفاء",

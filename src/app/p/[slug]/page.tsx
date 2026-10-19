@@ -54,10 +54,25 @@ export default async function ProductLandingPage({
     fontFamily: "var(--font-body)",
   } as CSSProperties;
 
+  // Reserve room for the fixed mobile CTA so it never covers the end of the
+  // page (the order form's submit button sits right above it). The bar only
+  // renders when both the CTA and its order-form target are on the page.
+  const hasStickyCta =
+    page.content.sections.some(
+      (section) => section.type === "sticky_cta" && !section.hidden
+    ) &&
+    page.content.sections.some(
+      (section) => section.type === "order_form" && !section.hidden
+    );
+
   return (
     <main
       data-landing-page
-      className={`${cairo.variable} ${tajawal.variable} ${almarai.variable}`}
+      className={`${cairo.variable} ${tajawal.variable} ${almarai.variable}${
+        hasStickyCta
+          ? " pb-[calc(6rem_+_env(safe-area-inset-bottom))] md:pb-0"
+          : ""
+      }`}
       style={style}
     >
       {/* Static server-generated rule (no user input) so headings use the

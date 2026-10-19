@@ -14,6 +14,7 @@ import {
   duplicateSection,
   isSectionValid,
   moveSection,
+  moveSectionTo,
   removeSection,
   toggleSectionHidden,
   updateSectionProps,
@@ -129,6 +130,14 @@ export function LandingPageEditor({
       return;
     }
     setSections((prev) => duplicateSection(prev, id));
+    touch();
+  };
+
+  const onReorderSections = (activeId: string, overId: string) => {
+    const next = moveSectionTo(sections, activeId, overId);
+    if (next === sections) return;
+    setSections(next);
+    setSelectedId(activeId);
     touch();
   };
 
@@ -297,6 +306,7 @@ export function LandingPageEditor({
             setSections((prev) => moveSection(prev, id, dir));
             touch();
           }}
+          onReorder={onReorderSections}
           onToggleHidden={(id) => {
             setSections((prev) => toggleSectionHidden(prev, id));
             touch();

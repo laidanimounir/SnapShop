@@ -31,7 +31,7 @@ Supabase project: `fvvretvbeiovjozpqbyk` (project URL `https://fvvretvbeiovjozpq
 
 ## 2. WHAT'S DONE
 
-### Backend schema (tracked as migration files — apply 0001 → 0010 in order to `fvvretvbeiovjozpqbyk`)
+### Backend schema (tracked as migration files — apply 0001 → 0011 in order to `fvvretvbeiovjozpqbyk`)
 
 - **Migration 1** `supabase/migrations/0001_initial_schema.sql` — 6 tables (`products`, `product_images`, `product_variants`, `orders`, `order_items`, `reviews`), RLS enabled on all, `place_guest_order()` and `submit_review()` functions, indexes, `set_updated_at()` trigger helper.
 - **Migration 2** `supabase/migrations/0002_order_tracking_and_rating.sql` — `orders.confirmation_token` column, updated `place_guest_order()` (returns token), `get_order_by_token()` function, `recalculate_product_rating()` trigger function + `reviews_rating_trigger` (AFTER INSERT/UPDATE/DELETE on `reviews`).
@@ -43,6 +43,7 @@ Supabase project: `fvvretvbeiovjozpqbyk` (project URL `https://fvvretvbeiovjozpq
 - **Migration 8** `supabase/migrations/0008_store_settings.sql` — `store_settings` table + RPCs.
 - **Migration 9** `supabase/migrations/0009_delivered_return_stock.sql` (2026-10-19, applied) — `restore_stock_on_cancel()` now also restores from `delivered`, matching the app's new `delivered → returned` edge. Reopen guard and once-only restore unchanged; `delivered → cancelled` stays disallowed in the app.
 - **Migration 10** `supabase/migrations/0010_index_cleanup.sql` (2026-10-19, applied) — dropped `idx_orders_status` (prefix of `idx_orders_status_created`), the broken `product_variants_unique_variant` constraint (NULL-distinct, never enforced), and `idx_product_variants_product` (prefix of `uq_variants_product_color_size`).
+- **Migration 11** `supabase/migrations/0011_landing_pages.sql` (2026-10-19, applied) — landing-page builder, **public renderer stage only**: `product_landing_pages` (one row per product: unique `slug` with CHECK, `status` draft/published/unpublished, `draft_content` + `published_content` jsonb, SEO fields, pixel-id fields, `published_at`) and `landing_page_templates` (readable only via service role), plus the public-read `landing-assets` storage bucket (5 MB, jpeg/png/webp). RLS exposes **published rows only** to anon/authenticated; there are no anon write policies and no storage write policies.
 
 See section 7 for the full schema summary.
 
@@ -59,6 +60,7 @@ Commit `ae8064f` "Wire storefront to Supabase backend" (plus the earlier mock-da
 - **Order tracking** — `/order-confirmation/[token]` (shows the token + order details) and `/track-order` (paste a token to look up an order anytime).
 - **Reviews** — product page fetches approved reviews; "Write a Review" submits via `submit_review` (goes in `is_approved = false`, with a "pending approval" message).
 - **States** — `loading.tsx`, `error.tsx`, `not-found.tsx` for shop/product routes.
+- **Product landing pages (public renderer, stage 1)** — a published landing page has its own URL `/p/{slug}` (server-rendered, Arabic RTL, on-demand ISR with `revalidate = 300`, SEO title/description/OG image from the row). Content is one JSON document (theme + ordered sections) validated by zod on read; sections render through `SectionRenderer`, which silently skips hidden, unknown, duplicate-id and invalid sections so one bad section can never blank a page. Theme values become CSS variables (`--lp-*`) and Arabic fonts (Cairo/Tajawal/Almarai) load with next/font. When a product has a published landing page, the catalog card links to `/p/{slug}` (one shared slug-map query per page, no N+1) and `/shop/product/{uuid}` permanently redirects there; otherwise the old product page is unchanged. The admin editor that writes these pages is **stage 2** and not built yet — a dev seed script (section 8) creates a sample page today.
 
 ### Admin dashboard (`/admin`, same app)
 
@@ -77,7 +79,7 @@ Commits `8b311db`–`5661b77`.
 - `tsc --noEmit` passes; `next build` succeeds (7 admin routes + all storefront routes).
 - Rating trigger verified end-to-end (`4.70 → 4.70 pending → 3.80 approved → 4.70 cleanup`).
 - Order status update and product active-toggle verified against the live DB.
-- Hardening pass 2026-10-19: `next lint` clean, `tsc --noEmit` clean, **141 Vitest tests / 18 files pass**, `next build` succeeds.
+- Hardening pass 2026-10-19: `next lint` clean, `tsc --noEmit` clean, **189 Vitest tests / 25 files pass**, `next build` succeeds.
 - Throwaway test order verified the `delivered → returned` restore live: stock `100 → 99 (sale) → 99 (delivered order placed) → 100 (marked returned, trigger) → 100 (order deleted)`, history row `delivered → returned` logged, and `returned → pending` still rejected by the reopen guard. All test rows deleted afterwards.
 
 ---
@@ -90,7 +92,8 @@ Commits `8b311db`–`5661b77`.
 - **Real admin app** — the planned separate admin dashboard (a different frontend project, likely Flutter) that will connect to this same Supabase backend has **not** been built. The current `/admin` is a temporary internal tool.
 - **Hardcoded storefront content** — hero stats ("200+ brands", "2000+ products", "3000+ customers" via `AnimatedCounter`), the brand-logo marquee (Versace/Zara/Gucci/Prada/Calvin Klein — placeholder, `TODO`-flagged in `src/components/homepage/Brands/index.tsx`), and generic FAQs (`Tabs/FaqContent.tsx`).
 - **ESLint** — `next lint` passes cleanly (no interactive prompt); config lives in `package.json` (`next lint` defaults).
-- **Tests** — 141 Vitest unit tests (pricing, checkout validation, quantity clamp, order-form money math, i18n helpers, order transitions, image dimension guard) run via `npm test`; no integration/e2e yet.
+- **Landing page builder — stage 2 not built** — there is no admin UI yet to create/edit/order/reorder landing sections, upload landing assets, set SEO/pixels, or publish/unpublish (which will also need `revalidatePath` for `/p/{slug}`). Stage 1 (schema + public renderer) is done; the editor is next.
+- **Tests** — 189 Vitest unit tests (pricing, checkout validation, quantity clamp, order-form money math, i18n helpers, order transitions, image dimension guard, landing-page schemas/CSS vars/rich text/renderer/seed content) run via `npm test`; no integration/e2e yet.
 - **Customer order read-back** — guests can only look up orders via the confirmation token (`get_order_by_token`); there is no account-based order history.
 - **Stock restocking on cancel/return** — handled by the `restore_stock_on_cancel()` trigger (added in `0004`, extended in `0007` and `0009` to cover `delivered → returned`).
 - **Denormalized product rating** — `products.rating` is maintained by the review trigger only; it is not recomputed retroactively if the trigger is dropped/recreated.
@@ -187,6 +190,9 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 9. **Verify rating updates on storefront** — return to the reviewed product's page and confirm `products.rating` changed to reflect the newly approved review (and that the review now appears in the "Rating & Reviews" tab).
 10. **Toggle a product** — in `/admin/products`, click a product's Active/Inactive button; confirm the product disappears from the public storefront when inactive (RLS filters `is_active = true`), then toggle it back.
 11. **Confirm storefront still works** — browse `/shop` and a product page to confirm nothing broke. Visiting `/cart` should redirect to `/shop`.
+12. **Seed a landing page (optional, dev only)** — run the command in section 8, then open `http://localhost:3000/p/demo-offer`. The page must show the sample sections (hero, gallery, features, size guide, testimonials, FAQ, countdown, rich text, order form) in Arabic RTL with the seeded theme colors.
+13. **Landing page links/redirect** — open `/shop`: the seeded product's card should link to `/p/demo-offer` (the others still go to `/shop/product/{uuid}`). Visit the seeded product's old URL `/shop/product/{uuid}` and confirm it redirects to `/p/demo-offer`.
+14. **Draft is never public** — with the service role, set that row's `status` to `draft` (or change its `slug`); `/p/demo-offer` must then be a 404 and the catalog card must fall back to the old product page. Set it back to `published` (the page refreshes after the 5-minute revalidate window).
 
 ---
 
@@ -200,6 +206,8 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 - **orders** — `id`, `guest_name`, `guest_phone`, `guest_email`, `guest_address`, `status` (pending/confirmed/shipped/delivered/cancelled), `payment_method` (default `cod`), `subtotal`, `discount_total`, `total`, `confirmation_token` (uuid, unique, not null), `created_at`, `updated_at`.
 - **order_items** — `id`, `order_id` (FK, cascade), `product_variant_id` (FK, set null), `product_id` (FK, set null), `product_name`, `color`, `size`, `quantity`, `unit_price_at_purchase`, `discount_amount_at_purchase`, `created_at`.
 - **reviews** — `id`, `product_id` (FK, cascade), `reviewer_name`, `rating` (1–5), `comment`, `is_approved` (default false), `created_at`.
+- **product_landing_pages** — `id` (uuid PK), `product_id` (uuid, **unique** FK → products, cascade — one landing page per product), `slug` (unique, lowercase/digit/dash CHECK, 3–80), `status` (draft/published/unpublished, default draft), `draft_content` jsonb (default `{"theme": {}, "sections": []}`), `published_content` jsonb (public only when published), `seo_title` (≤200), `seo_description` (≤400), `og_image_url`, `facebook_pixel_id` / `tiktok_pixel_id` (digits, 5–20), `published_at`, `created_at`, `updated_at`; index `idx_landing_pages_status`.
+- **landing_page_templates** — `id`, `name` (≤120), `content` jsonb, `created_at`. RLS on, no policies: service role only.
 
 ### Postgres functions
 
@@ -211,6 +219,9 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 ### RLS summary
 
 - `SELECT` (anon + authenticated): active products, their images, their variants, and approved reviews.
+- `product_landing_pages`: `SELECT` (anon + authenticated) **only where `status = 'published'`** (readers get `published_content`; drafts are never exposed). No insert/update/delete policies — writes are service-role-only (stage 2 admin).
+- `landing_page_templates`: no policies at all — service role only.
+- Storage: bucket `landing-assets` is public-read (5 MB limit, image/jpeg + image/png + image/webp); there is no insert/update/delete policy, so uploads go through the service role (stage 2).
 - `orders` / `order_items`: no direct access — function-only.
 - `submit_review` / `get_order_by_token`: `EXECUTE` granted to `anon` only.
 
@@ -221,6 +232,11 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 - **Currently seeded** (via `supabase/seed_test_data.sql`): 5 products ("T-shirt with Tape Details", "Skinny Fit Jeans", "Checkered Shirt", "Sleeve Striped T-shirt", "Gradient Graphic T-shirt"), 21 variants, 9 images, and 3 approved reviews (rating on "T-shirt with Tape Details" auto-computed to 4.7). This exercises no-discount, percentage-discount (20%/30%), and fixed-amount-discount (DA 30) cases, plus an out-of-stock variant.
 - **To clear all test data:** `DELETE FROM public.reviews;` then `DELETE FROM public.products;` (cascades to `product_images` and `product_variants`; order rows, if any, cascade to `order_items` via `DELETE FROM public.orders;`).
 - **To reset the whole database:** drop and re-run the migrations in `supabase/migrations/` (0001 → 0002 → 0003), then re-run `supabase/seed_test_data.sql` if you want test data.
+- **Sample landing page (dev only)** — after the migrations are applied and `.env.local` has `SUPABASE_SERVICE_ROLE_KEY`, run:
+  ```bash
+  node --env-file=.env.local scripts/seed-landing-page.mjs
+  ```
+  This attaches a **published** sample landing page (slug `demo-offer`, all 11 section types) to the newest active product, writing both `draft_content` and `published_content`. Optional flags: `[slug]`, `--product-id=UUID`, `--dry-run` (prints the plan, touches nothing). It refuses to run when `NODE_ENV=production` unless `ALLOW_PROD_SEED=1`. Reset a seeded page with `UPDATE public.product_landing_pages SET status = 'draft' WHERE slug = 'demo-offer';` or remove it with `DELETE FROM public.product_landing_pages WHERE slug = 'demo-offer';`.
 
 ---
 
@@ -233,6 +249,7 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 - **No server-side validation beyond the Postgres functions** — the functions recompute prices/stock server-side (good), but the client form is the only thing validating field presence/format.
 - **`opencode.json`** (gitignored) contains the Supabase MCP access token used by this development environment; do not commit it.
 - **General Supabase MCP risk** — if you drive schema changes through the Supabase MCP server, be aware of prompt-injection risk from untrusted data and avoid connecting it to production data.
+- **Landing pages** — the public renderer only ever reads `published_content`, never `draft_content`, and the DB itself enforces this via RLS (`status = 'published'`). Rich text is a constrained markup subset (bold/italic/links/lists) parsed into React text nodes — stored content can never inject HTML or a `javascript:` URL, and all images must be `https://`. No anon write path exists anywhere (no table policies, no storage policies).
 
 ---
 
@@ -241,11 +258,12 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 In rough order of priority:
 
 1. **Build the real admin app** — the separate admin frontend (different project/repo, likely Flutter) that connects to this same Supabase backend (same tables + Storage), superseding the temporary `/admin` dashboard.
-2. **Auth follow-ups** — admin authentication is done (Supabase Auth + `admin_users`); customer accounts (order history, etc.) remain a later decision.
-3. **Payments** — integrate a payment gateway (currently COD only).
-4. **Deploy** — set up hosting for the storefront and configure the Supabase project for production (remove/secure the `/admin` section or move it to the real admin app).
-5. **Polish hardcoded content** — replace hero stats, brand logos, FAQs, and wire footer links.
-6. **Tooling/quality** — add ESLint config and tests; optionally adopt the generated `src/types/database.types.ts` for a typed Supabase client; clean up `Footer/LayoutSpacing.tsx`.
+2. **Landing page builder stage 2 (admin editor)** — `/admin` UI to create/edit a page per product: theme controls, add/remove/reorder/hide sections, landing-asset uploads to `landing-assets`, SEO + pixel fields, save draft, publish/unpublish (with `revalidatePath('/p/{slug}')`), and templates from `landing_page_templates`. Stage 1 (schema + public renderer + seed script) is done.
+3. **Auth follow-ups** — admin authentication is done (Supabase Auth + `admin_users`); customer accounts (order history, etc.) remain a later decision.
+4. **Payments** — integrate a payment gateway (currently COD only).
+5. **Deploy** — set up hosting for the storefront and configure the Supabase project for production (remove/secure the `/admin` section or move it to the real admin app).
+6. **Polish hardcoded content** — replace hero stats, brand logos, FAQs, and wire footer links.
+7. **Tooling/quality** — add ESLint config and tests; optionally adopt the generated `src/types/database.types.ts` for a typed Supabase client; clean up `Footer/LayoutSpacing.tsx`.
 
 ---
 
@@ -256,6 +274,8 @@ In rough order of priority:
   - `src/lib/api/orders.ts` — `placeGuestOrder`, `getOrderByToken` (client RPC).
   - `src/lib/api/reviews.ts` — `submitReview` (client RPC).
   - `src/lib/api/admin.ts` — admin reads (orders, products, reviews, dashboard stats) via service role.
+  - `src/lib/landing/api.ts` — published landing page reads (`getPublishedLandingPage`, `getPublishedLandingSlugForProduct`, `getPublishedLandingSlugMap`; cookie-free anon client so `/p/[slug]` stays ISR-able).
+  - `src/lib/landing/*` — content model: `theme.ts`, `sections.ts`, `content.ts` (schemas + forgiving parser, slug/pixel validators), `rich-text.ts` (safe markup parser), `theme-css.ts` (theme → CSS variables).
 - **Supabase clients**
   - `src/lib/supabase/client.ts` — browser anon singleton.
   - `src/lib/supabase/server.ts` — server-component anon factory.
@@ -265,7 +285,9 @@ In rough order of priority:
   - No client store: cart/Redux (`store.ts`, `cartsSlice.ts`, `redux-persist`) removed in `53a90b2`.
 - **Types** — `src/types/product.types.ts`, `review.types.ts`, `database.types.ts` (generated, unused).
 - **Storefront routes** — `src/app/page.tsx`, `src/app/shop/*`, `src/app/search/page.tsx`, `src/app/order-confirmation/[token]/page.tsx`, `src/app/track-order/page.tsx`. (`/cart` redirects to `/shop` via `next.config.mjs`.)
+- **Landing page routes/components** — `src/app/p/[slug]/page.tsx` (public renderer), `src/components/landing/SectionRenderer.tsx`, `src/components/landing/RichText.tsx`, `src/components/landing/sections/*` (one component per section type; `CountdownSection` is the only client component).
 - **Admin routes** — `src/app/admin/layout.tsx`, `src/app/admin/page.tsx`, `src/app/admin/actions.ts` (server actions), `src/app/admin/orders/*`, `src/app/admin/products/*`, `src/app/admin/reviews/*`.
 - **Components** — `src/components/common/*`, `src/components/product-page/*` (incl. `OrderForm.tsx`), `src/components/shop-page/*`, `src/components/layout/*`, `src/components/ui/*` (shadcn).
-- **Database** — `supabase/migrations/0001_initial_schema.sql`, `0002_order_tracking_and_rating.sql`, `0003_grant_read_privileges.sql`, `supabase/seed_test_data.sql`.
+- **Database** — `supabase/migrations/0001_initial_schema.sql` … `0011_landing_pages.sql`, `supabase/seed_test_data.sql`.
+- **Scripts** — `scripts/seed-landing-page.mjs` (dev-only sample landing page seeder) + `scripts/sample-content.mjs` (its content, also validated against the zod schemas by Vitest).
 - **Config** — `.env.local.example` (template), `.env.local` (gitignored, actual values), `next.config.mjs` (Supabase image domain), `tailwind.config.ts`.

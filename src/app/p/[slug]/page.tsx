@@ -3,16 +3,16 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SectionRenderer from "@/components/landing/SectionRenderer";
 import { getPublishedLandingPage } from "@/lib/landing/api";
-import { themeToCssVariables } from "@/lib/landing/theme-css";
+import {
+  LANDING_HEADING_FONT_CSS,
+  themeToCssVariables,
+} from "@/lib/landing/theme-css";
 import { cairo, tajawal, almarai } from "@/styles/fonts";
 import { ar } from "@/lib/store/i18n-ar";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const revalidate = 300;
-
-const HEADING_FONT_CSS =
-  "[data-landing-page] h1,[data-landing-page] h2,[data-landing-page] h3,[data-landing-page] h4,[data-landing-page] h5,[data-landing-page] h6{font-family:var(--font-heading,var(--font-body));}";
 
 export async function generateMetadata({
   params,
@@ -58,7 +58,7 @@ export default async function ProductLandingPage({
     >
       {/* Static server-generated rule (no user input) so headings use the
           theme's heading font instead of the body font. */}
-      <style dangerouslySetInnerHTML={{ __html: HEADING_FONT_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: LANDING_HEADING_FONT_CSS }} />
       <SectionRenderer sections={page.content.sections} />
     </main>
   );

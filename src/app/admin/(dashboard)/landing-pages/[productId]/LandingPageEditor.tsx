@@ -25,6 +25,7 @@ import { ar, formatAr } from "@/lib/admin/i18n-ar";
 import type { AdminLandingPage, LandingPageStatus } from "@/lib/api/landing-admin";
 import { MAX_SECTIONS, parsePageContent } from "@/lib/landing/content";
 import type { Theme } from "@/lib/landing/theme";
+import { LivePreview } from "./LivePreview";
 import { SectionFields } from "./SectionFields";
 import { SectionsPanel } from "./SectionsPanel";
 import { SettingsPanel, type SettingsFields } from "./SettingsPanel";
@@ -294,7 +295,7 @@ export function LandingPageEditor({
         </p>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         <SectionsPanel
           sections={sections}
           selectedId={selectedId}
@@ -330,7 +331,9 @@ export function LandingPageEditor({
             fields={fields}
             onField={updateField}
           />
-          <p className="text-xs text-black/50">{ar.landing.previewNote}</p>
+        </div>
+        <div className="xl:sticky xl:top-4 xl:self-start">
+          <LivePreview theme={theme} sections={sections} />
         </div>
       </div>
 

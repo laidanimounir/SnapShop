@@ -31,3 +31,8 @@ export function safeThemeToCssVariables(raw: unknown): Record<string, string> {
   const parsed = themeSchema.safeParse(raw);
   return themeToCssVariables(parsed.success ? parsed.data : themeSchema.parse({}));
 }
+
+// Headings inside a landing page use the theme's heading font instead of
+// the body font. Shared so the public page and the admin preview match.
+export const LANDING_HEADING_FONT_CSS =
+  "[data-landing-page] h1,[data-landing-page] h2,[data-landing-page] h3,[data-landing-page] h4,[data-landing-page] h5,[data-landing-page] h6{font-family:var(--font-heading,var(--font-body));}";

@@ -44,6 +44,7 @@ export async function placeGuestOrder(input: {
   guest_phone: string;
   guest_email?: string;
   guest_address: string;
+  guest_note?: string;
   payment_method?: string;
   items: OrderItemPayload[];
   idempotency_key?: string;
@@ -55,6 +56,7 @@ export async function placeGuestOrder(input: {
     p_guest_phone: input.guest_phone,
     p_guest_address: input.guest_address,
     p_guest_email: input.guest_email ?? null,
+    p_guest_note: input.guest_note ?? null,
     p_payment_method: input.payment_method ?? "cod",
     p_items: input.items,
     p_idempotency_key: input.idempotency_key ?? null,

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import Link from "next/link";
 import { IoMdCheckmark } from "react-icons/io";
 import Price from "@/components/common/Price";
+import type { PlaceOrderResult } from "@/lib/api/orders";
 import {
   hasAnyFieldError,
   validateAddress,
@@ -21,12 +23,14 @@ import {
 } from "@/lib/delivery";
 import type { LandingOrderData, LandingVariant } from "@/lib/landing/order-data";
 import { orderFormSectionSchema } from "@/lib/landing/sections";
+import { createIdempotencyKey } from "@/lib/idempotency";
 import {
   getDiscountAmount,
   getEffectivePrice,
   round2,
 } from "@/lib/pricing";
 import {
+  clampQuantity,
   isValidQuantity,
   MAX_QUANTITY_PER_VARIANT,
 } from "@/lib/quantity";
@@ -185,6 +189,15 @@ export default function OrderFormSection({
   const [company, setCompany] = useState("");
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [placed, setPlaced] = useState<PlaceOrderResult | null>(null);
+  const [idempotency, setIdempotency] = useState<{
+    key: string;
+    variantId: string;
+    quantity: number;
+  } | null>(null);
+
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const wilayaRef = useRef<HTMLSelectElement>(null);
@@ -245,8 +258,9 @@ export default function OrderFormSection({
     el.focus({ preventScroll: true });
   };
 
-  // Step 4 replaces the body of this handler with the placeGuestOrder call.
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (preview || isSubmitting) return;
+
     setTouched({ customerName: true, phone: true, address: true, wilaya: true });
     const fieldErrors = validateCheckoutFields({
       customerName,
@@ -258,6 +272,67 @@ export default function OrderFormSection({
     if (hasAnyFieldError(fieldErrors)) {
       scrollToFirstInvalid(fieldErrors);
       return;
+    }
+    if (isBlocked || !selectedVariant) return;
+    if (!selectedZone) {
+      setSubmitError(ar.checkout.validation.zonesError);
+      return;
+    }
+    // Honeypot: real shoppers never see or fill this field.
+    if (company.trim() !== "") {
+      setSubmitError(ar.checkout.validation.honeypot);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      // Reuse the key while the payload is unchanged; regenerate when the
+      // variant or quantity changed since the failed attempt.
+      let attemptKey: string;
+      if (
+        idempotency &&
+        idempotency.variantId === selectedVariant.id &&
+        idempotency.quantity === quantity
+      ) {
+        attemptKey = idempotency.key;
+      } else {
+        attemptKey = createIdempotencyKey();
+        setIdempotency({
+          key: attemptKey,
+          variantId: selectedVariant.id,
+          quantity,
+        });
+      }
+
+      // Loaded on demand so the Supabase client is not part of the landing
+      // page's initial bundle (the form is often below the fold).
+      const { placeGuestOrder } = await import("@/lib/api/orders");
+
+      const result = await placeGuestOrder({
+        guest_name: customerName.trim(),
+        guest_phone: phone.trim(),
+        guest_address: address.trim(),
+        guest_note: note.trim() || undefined,
+        items: [
+          {
+            variant_id: selectedVariant.id,
+            quantity: clampQuantity(quantity),
+          },
+        ],
+        idempotency_key: attemptKey,
+        wilaya_code: selectedZone.wilaya_code,
+        delivery_type: effectiveDeliveryType,
+      });
+
+      setIdempotency(null);
+      setPlaced(result);
+    } catch (e) {
+      // placeGuestOrder already maps server errors to user-facing Arabic.
+      setSubmitError(
+        e instanceof Error ? e.message : ar.checkout.validation.generic
+      );
+      setIsSubmitting(false);
     }
   };
 
@@ -271,6 +346,50 @@ export default function OrderFormSection({
         <div className="rounded-[var(--lp-btn-radius)] border-2 border-dashed border-black/20 p-6 text-center">
           <h2 className="text-xl font-bold sm:text-2xl">{title}</h2>
           <p className="mt-2 text-sm opacity-70">{ar.product.unavailable}</p>
+        </div>
+      </SectionShell>
+    );
+  }
+
+  if (placed) {
+    return (
+      <SectionShell id="order-form">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-[var(--lp-btn-radius)] border border-black/10 bg-white p-6 text-center text-black shadow-sm sm:p-8"
+        >
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+            <IoMdCheckmark className="text-2xl text-green-700" />
+          </span>
+          <h2 className="mt-4 text-xl font-bold sm:text-2xl">
+            {ar.order.orderPlaced}
+          </h2>
+          <p className="mt-2 text-sm opacity-70">{ar.order.contactSoon}</p>
+          <p className="mx-auto mt-3 flex items-center justify-center gap-2 text-sm">
+            <span className="opacity-70">{ar.checkout.total}</span>
+            <Price value={placed.total} />
+          </p>
+          <p
+            dir="ltr"
+            className="mx-auto mt-3 max-w-full select-all break-all rounded-lg bg-[#F5F5F5] px-3 py-2 font-mono text-xs text-black/80"
+          >
+            {placed.confirmation_token}
+          </p>
+          <div className="mt-5 flex flex-col gap-2">
+            <Link
+              href={`/order-confirmation/${placed.confirmation_token}`}
+              className="w-full rounded-[var(--lp-btn-radius)] bg-[var(--lp-btn-bg)] px-6 py-3 text-base font-bold text-[var(--lp-btn-text)]"
+            >
+              {ar.order.trackOrder}
+            </Link>
+            <Link
+              href="/shop"
+              className="w-full rounded-[var(--lp-btn-radius)] border border-black/15 px-6 py-3 text-sm font-medium"
+            >
+              {ar.order.continueShopping}
+            </Link>
+          </div>
         </div>
       </SectionShell>
     );
@@ -649,14 +768,27 @@ export default function OrderFormSection({
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={isBlocked || preview}
+          disabled={isBlocked || preview || isSubmitting}
           className={cn(
             "mt-4 w-full rounded-[var(--lp-btn-radius)] bg-[var(--lp-btn-bg)] px-6 py-3 text-base font-bold text-[var(--lp-btn-text)] transition-opacity",
             "disabled:cursor-not-allowed disabled:opacity-50"
           )}
         >
-          {isBlocked ? blockedReason : props.ctaText}
+          {isSubmitting
+            ? ar.checkout.processing
+            : isBlocked
+              ? blockedReason
+              : props.ctaText}
         </button>
+
+        {submitError && (
+          <p
+            role="alert"
+            className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+          >
+            {submitError}
+          </p>
+        )}
       </div>
     </SectionShell>
   );

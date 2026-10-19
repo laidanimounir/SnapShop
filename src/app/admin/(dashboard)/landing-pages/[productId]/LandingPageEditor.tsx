@@ -16,6 +16,7 @@ import {
   moveSection,
   removeSection,
   toggleSectionHidden,
+  updateSectionProps,
   type Section,
   type SectionType,
 } from "@/lib/admin/landing-sections";
@@ -23,6 +24,7 @@ import { ar, formatAr } from "@/lib/admin/i18n-ar";
 import type { AdminLandingPage, LandingPageStatus } from "@/lib/api/landing-admin";
 import { MAX_SECTIONS, parsePageContent } from "@/lib/landing/content";
 import type { Theme } from "@/lib/landing/theme";
+import { SectionFields } from "./SectionFields";
 import { SectionsPanel } from "./SectionsPanel";
 import { SettingsPanel, type SettingsFields } from "./SettingsPanel";
 
@@ -299,6 +301,17 @@ export function LandingPageEditor({
             setSections((prev) => toggleSectionHidden(prev, id));
             touch();
           }}
+          renderEditor={(section) => (
+            <SectionFields
+              section={section}
+              onChange={(props) => {
+                setSections((prev) =>
+                  updateSectionProps(prev, section.id, props)
+                );
+                touch();
+              }}
+            />
+          )}
         />
         <div>
           <SettingsPanel

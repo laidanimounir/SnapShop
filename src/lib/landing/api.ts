@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { isValidSlug, parsePageContent, type PageContent } from "./content";
+import { shapeLandingOrderData, type LandingOrderData } from "./order-data";
 
 export type PublishedLandingPage = {
   slug: string;
@@ -111,6 +112,56 @@ export const getPublishedLandingSlugMap = cache(
       return map;
     } catch {
       return {};
+    }
+  }
+);
+
+/**
+ * Active variants (color, hex, size, price override, stock), base price,
+ * discounts and the active delivery zones for one product — everything
+ * the public landing page order form needs, fetched with the same
+ * cookie-free anon client so ISR keeps working. Returns null when the
+ * product is missing/inactive or any query fails.
+ */
+export const getLandingOrderData = cache(
+  async (productId: unknown): Promise<LandingOrderData | null> => {
+    if (typeof productId !== "string" || !UUID_RE.test(productId)) return null;
+    try {
+      const supabase = publicSupabase();
+      const [
+        { data: product, error: productError },
+        { data: variants, error: variantsError },
+        { data: zones, error: zonesError },
+      ] = await Promise.all([
+          supabase
+            .from("products")
+            .select(
+              "id, name, base_price, discount_percentage, discount_amount, size_type"
+            )
+            .eq("id", productId)
+            .eq("is_active", true)
+            .maybeSingle(),
+          supabase
+            .from("product_variants")
+            .select("id, color, color_hex, size, price, stock_quantity, is_active")
+            .eq("product_id", productId)
+            .eq("is_active", true),
+          supabase
+            .from("delivery_zones")
+            .select(
+              "wilaya_code, name_ar, name_fr, home_price, office_price, is_active"
+            )
+            .eq("is_active", true)
+            .order("wilaya_code", { ascending: true }),
+        ]);
+      if (productError || variantsError || zonesError) return null;
+      return shapeLandingOrderData(
+        product as Record<string, unknown> | null,
+        (variants ?? []) as Array<Record<string, unknown>>,
+        (zones ?? []) as Array<Record<string, unknown>>
+      );
+    } catch {
+      return null;
     }
   }
 );

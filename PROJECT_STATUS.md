@@ -31,13 +31,18 @@ Supabase project: `fvvretvbeiovjozpqbyk` (project URL `https://fvvretvbeiovjozpq
 
 ## 2. WHAT'S DONE
 
-### Backend schema (tracked as migration files — apply 0001 → 0002 → 0003 in order to `fvvretvbeiovjozpqbyk`)
+### Backend schema (tracked as migration files — apply 0001 → 0010 in order to `fvvretvbeiovjozpqbyk`)
 
 - **Migration 1** `supabase/migrations/0001_initial_schema.sql` — 6 tables (`products`, `product_images`, `product_variants`, `orders`, `order_items`, `reviews`), RLS enabled on all, `place_guest_order()` and `submit_review()` functions, indexes, `set_updated_at()` trigger helper.
 - **Migration 2** `supabase/migrations/0002_order_tracking_and_rating.sql` — `orders.confirmation_token` column, updated `place_guest_order()` (returns token), `get_order_by_token()` function, `recalculate_product_rating()` trigger function + `reviews_rating_trigger` (AFTER INSERT/UPDATE/DELETE on `reviews`).
 - **Migration 3** `supabase/migrations/0003_grant_read_privileges.sql` — table-level `SELECT` grants to `anon`/`authenticated` (RLS alone was insufficient; `orders`/`order_items` intentionally omitted).
 - **Migration 4** `supabase/migrations/0004_order_hardening.sql` — hardened `place_guest_order()` (active-only, caps, phone/email/`cod` validation, idempotency key + `orders.idempotency_key`), `submit_review()` guards, `reviews` length CHECKs, `restore_stock_on_cancel()` trigger.
 - **Migration 5** `supabase/migrations/0005_admin_users.sql` — `admin_users` table (RLS on, no public policies) + `is_admin()` helper for the `/admin` Auth gate.
+- **Migration 6** `supabase/migrations/0006_product_management.sql` — admin product/image/variant management writes.
+- **Migration 7** `supabase/migrations/0007_delivery_and_order_status.sql` — delivery zones/pricing, `returned` status, hardened `place_guest_order()`, `restore_stock_on_cancel()` restores on cancelled/returned.
+- **Migration 8** `supabase/migrations/0008_store_settings.sql` — `store_settings` table + RPCs.
+- **Migration 9** `supabase/migrations/0009_delivered_return_stock.sql` (2026-10-19, applied) — `restore_stock_on_cancel()` now also restores from `delivered`, matching the app's new `delivered → returned` edge. Reopen guard and once-only restore unchanged; `delivered → cancelled` stays disallowed in the app.
+- **Migration 10** `supabase/migrations/0010_index_cleanup.sql` (2026-10-19, applied) — dropped `idx_orders_status` (prefix of `idx_orders_status_created`), the broken `product_variants_unique_variant` constraint (NULL-distinct, never enforced), and `idx_product_variants_product` (prefix of `uq_variants_product_color_size`).
 
 See section 7 for the full schema summary.
 
@@ -72,6 +77,8 @@ Commits `8b311db`–`5661b77`.
 - `tsc --noEmit` passes; `next build` succeeds (7 admin routes + all storefront routes).
 - Rating trigger verified end-to-end (`4.70 → 4.70 pending → 3.80 approved → 4.70 cleanup`).
 - Order status update and product active-toggle verified against the live DB.
+- Hardening pass 2026-10-19: `next lint` clean, `tsc --noEmit` clean, **141 Vitest tests / 18 files pass**, `next build` succeeds.
+- Throwaway test order verified the `delivered → returned` restore live: stock `100 → 99 (sale) → 99 (delivered order placed) → 100 (marked returned, trigger) → 100 (order deleted)`, history row `delivered → returned` logged, and `returned → pending` still rejected by the reopen guard. All test rows deleted afterwards.
 
 ---
 
@@ -83,9 +90,9 @@ Commits `8b311db`–`5661b77`.
 - **Real admin app** — the planned separate admin dashboard (a different frontend project, likely Flutter) that will connect to this same Supabase backend has **not** been built. The current `/admin` is a temporary internal tool.
 - **Hardcoded storefront content** — hero stats ("200+ brands", "2000+ products", "3000+ customers" via `AnimatedCounter`), the brand-logo marquee (Versace/Zara/Gucci/Prada/Calvin Klein — placeholder, `TODO`-flagged in `src/components/homepage/Brands/index.tsx`), and generic FAQs (`Tabs/FaqContent.tsx`).
 - **ESLint** — `next lint` passes cleanly (no interactive prompt); config lives in `package.json` (`next lint` defaults).
-- **Tests** — 107 Vitest unit tests (pricing, checkout validation, quantity clamp, order-form money math, i18n helpers) run via `npm test`; no integration/e2e yet.
+- **Tests** — 141 Vitest unit tests (pricing, checkout validation, quantity clamp, order-form money math, i18n helpers, order transitions, image dimension guard) run via `npm test`; no integration/e2e yet.
 - **Customer order read-back** — guests can only look up orders via the confirmation token (`get_order_by_token`); there is no account-based order history.
-- **Stock restocking on cancel** — handled by the `restore_stock_on_cancel()` trigger added in migration `0004`.
+- **Stock restocking on cancel/return** — handled by the `restore_stock_on_cancel()` trigger (added in `0004`, extended in `0007` and `0009` to cover `delivered → returned`).
 - **Denormalized product rating** — `products.rating` is maintained by the review trigger only; it is not recomputed retroactively if the trigger is dropped/recreated.
 - **`src/types/database.types.ts`** is generated but currently **unused** (the Supabase client is intentionally untyped to avoid strict generated-type friction).
 - **Sticky order bar spacing** — `Footer/LayoutSpacing.tsx` intentionally adds bottom padding on product pages so the fixed mobile "اطلب الآن" bar does not cover the footer.
@@ -219,8 +226,9 @@ Prerequisite: the database has seed data (see section 8) and `.env.local` is con
 
 ## 9. SECURITY NOTES / WARNINGS
 
-- **The `/admin` dashboard has NO authentication.** Anyone who can reach the URL can view/modify orders, products, and reviews. It is for local/internal testing only and **must not be deployed as-is**.
+- **Admin access control** — `/admin` requires Supabase Auth + `admin_users` membership (middleware redirect, `requireAdmin()` on every read/action, and — since 2026-10-19 — a `requireAdmin()` check in the dashboard layout that redirects signed-in non-admins to `/admin/login` with a friendly message instead of a 500). Review `admin_users` membership periodically.
 - **Service role key** (`SUPABASE_SERVICE_ROLE_KEY`) is stored in `.env.local` (gitignored) and used **server-side only** in `src/lib/supabase/admin.ts`. Never reference it in a client component or a `NEXT_PUBLIC_*` variable, and never commit it.
+- **Image uploads** — admin product image uploads now reject files whose PNG/JPEG/WebP headers are unreadable or exceed 8000×8000 px (`src/lib/admin/image-dimensions.ts`), before the file reaches Storage or the image optimizer.
 - **No rate limiting / bot protection** on guest order creation (no accounts, no captcha).
 - **No server-side validation beyond the Postgres functions** — the functions recompute prices/stock server-side (good), but the client form is the only thing validating field presence/format.
 - **`opencode.json`** (gitignored) contains the Supabase MCP access token used by this development environment; do not commit it.

@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signInAdmin } from "@/app/admin/actions";
 import { BRAND_NAME } from "@/lib/config";
 import { ar } from "@/lib/admin/i18n-ar";
 
-export default function AdminLoginPage() {
+function LoginPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Set by the dashboard layout when a signed-in non-admin hits /admin/*.
+  const deniedByLayout = searchParams.get("reason") === "no-access";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,6 +53,12 @@ export default function AdminLoginPage() {
           <p className="text-sm text-black/60">{ar.login.subtitle}</p>
         </div>
 
+        {deniedByLayout && (
+          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm">
+            {ar.messages.notAdmin}
+          </div>
+        )}
+
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
             {error}
@@ -91,5 +100,14 @@ export default function AdminLoginPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+// useSearchParams requires a Suspense boundary during prerendering.
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPanel />
+    </Suspense>
   );
 }

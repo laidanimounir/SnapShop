@@ -18,7 +18,7 @@ describe("order transitions", () => {
     expect(allowedTransitions("confirmed")).toEqual(["shipped", "cancelled"]);
     expect(allowedTransitions("no_answer")).toEqual(["confirmed", "cancelled"]);
     expect(allowedTransitions("shipped")).toEqual(["delivered", "returned"]);
-    expect(allowedTransitions("delivered")).toEqual([]);
+    expect(allowedTransitions("delivered")).toEqual(["returned"]);
     expect(allowedTransitions("cancelled")).toEqual([]);
     expect(allowedTransitions("returned")).toEqual([]);
   });
@@ -27,6 +27,7 @@ describe("order transitions", () => {
     expect(allowedTransitions("bogus")).toEqual([]);
     expect(canTransition("shipped", "pending")).toBe(false);
     expect(canTransition("delivered", "cancelled")).toBe(false);
+    expect(canTransition("delivered", "pending")).toBe(false);
     expect(canTransition("cancelled", "confirmed")).toBe(false);
     expect(canTransition("returned", "pending")).toBe(false);
     expect(canTransition("pending", "shipped")).toBe(false);
@@ -38,10 +39,11 @@ describe("order transitions", () => {
     expect(canTransition("confirmed", "shipped")).toBe(true);
     expect(canTransition("shipped", "delivered")).toBe(true);
     expect(canTransition("shipped", "returned")).toBe(true);
+    expect(canTransition("delivered", "returned")).toBe(true);
   });
 
   it("marks terminal statuses", () => {
-    expect(isTerminalStatus("delivered")).toBe(true);
+    expect(isTerminalStatus("delivered")).toBe(false);
     expect(isTerminalStatus("cancelled")).toBe(true);
     expect(isTerminalStatus("returned")).toBe(true);
     expect(isTerminalStatus("pending")).toBe(false);
@@ -53,7 +55,7 @@ describe("order transitions", () => {
     expect(transitionRestoresStock("confirmed", "cancelled")).toBe(true);
     expect(transitionRestoresStock("no_answer", "cancelled")).toBe(true);
     expect(transitionRestoresStock("shipped", "returned")).toBe(true);
-    expect(transitionRestoresStock("delivered", "returned")).toBe(false);
+    expect(transitionRestoresStock("delivered", "returned")).toBe(true);
     expect(transitionRestoresStock("delivered", "cancelled")).toBe(false);
     expect(transitionRestoresStock("pending", "confirmed")).toBe(false);
     expect(transitionRestoresStock("shipped", "delivered")).toBe(false);

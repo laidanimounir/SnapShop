@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/supabase/admin";
+import { ADMIN_LOGIN_PATH } from "@/lib/admin/access";
 import { signOutAdmin } from "@/app/admin/actions";
 import { cairo } from "@/styles/fonts";
 import { ar } from "@/lib/admin/i18n-ar";
@@ -23,15 +25,17 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // requireAdmin() verifies the session AND admin_users membership
+  // server-side. A signed-in non-admin used to fall through to the
+  // page's data function and hit a raw 500 — now they get a friendly
+  // redirect to the login page, which (per getAdminAccessDecision)
+  // keeps signed-in non-admins on the login screen without looping.
   let email: string | null = null;
   try {
-    const supabase = createServerSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    email = user?.email ?? null;
+    const session = await requireAdmin();
+    email = session.email;
   } catch {
-    email = null;
+    redirect(`${ADMIN_LOGIN_PATH}?reason=no-access`);
   }
 
   return (

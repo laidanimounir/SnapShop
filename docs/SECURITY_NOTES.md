@@ -36,3 +36,44 @@ Generated from `npm audit` (read-only, nothing fixed) on 2026-10-15.
   (Cloudflare / Turnstile / Supabase Edge) for real rate limiting —
   see README.
 - Legal pages are placeholder templates — review with a legal advisor.
+
+## Hardening pass (2026-10-19)
+
+Applied to the `khaled-ecommerce` project (`fvvretvbeiovjozpqbyk`) and this repo:
+
+- **Admin layout access check** — `src/app/admin/(dashboard)/layout.tsx` now
+  calls `requireAdmin()`; signed-in non-admins are redirected to
+  `/admin/login?reason=no-access` and shown `ar.messages.notAdmin` (login page
+  reads the param via `useSearchParams` inside a `<Suspense>` boundary). No
+  redirect loop: `getAdminAccessDecision` deliberately keeps signed-in
+  non-admins on the login screen.
+- **Image dimension guard** — `uploadProductImageAction` rejects uploads whose
+  PNG/JPEG/WebP header dimensions are unreadable or exceed 8000×8000 px
+  (`src/lib/admin/image-dimensions.ts`, header-only parser, no pixel decoding).
+  Covered by `image-dimensions.test.ts` with real generated fixtures
+  (encoder-produced PNGs; JPEG with EXIF thumbnail + FF-fill segments; all
+  three WebP chunk flavours; truncated/oversized cases).
+- **Migration 0009** — `restore_stock_on_cancel()` restores stock for
+  `delivered → returned` (verified live: 100 → 99 → 100, test rows deleted).
+  `delivered → cancelled` remains blocked **app-side only**
+  (`order-transitions.ts`); the DB trigger would still restore if called
+  directly — service-role callers are trusted, but note it.
+- **Migration 0010** — dropped `idx_orders_status`,
+  `product_variants_unique_variant` (constraint; NULL-distinct so it never
+  enforced uniqueness), and `idx_product_variants_product`.
+- **Leaked-password protection** — NOT available: it requires the Pro plan
+  (https://supabase.com/docs/guides/auth/password-security) and this
+  organization is on the **free** plan. Click path when you upgrade:
+  Supabase Dashboard → project → **Authentication → Sign In / Providers →
+  Email** (`/dashboard/project/_/auth/providers?provider=Email`) → enable
+  **Prevent use of leaked passwords**.
+
+### Found but NOT fixed (needs its own pass)
+
+- `npm audit` still reports **20 vulnerabilities (3 critical, 12 high,
+  5 moderate)** as of 2026-10-19 despite `next` being `^14.2.35` — the
+  framework/dependency upgrade (Next 15.x / `npm audit fix` for nanoid /
+  tailwindcss 4 for braces) is deliberately out of scope here.
+- Session lifetime limits (time-box / inactivity timeout / single session)
+  are also Pro-only — unavailable on the free plan.
+- Browser-called RPCs still need an edge rate-limiting layer.

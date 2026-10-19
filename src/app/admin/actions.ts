@@ -429,6 +429,15 @@ export async function uploadProductImageAction(
       };
     }
 
+    // Reject dimension bombs before the file ever reaches storage or
+    // the image optimizer (a 5 MB PNG can decode to gigapixels).
+    const { readImageDimensions, withinDimensionLimit } = await import(
+      "@/lib/admin/image-dimensions"
+    );
+    if (!withinDimensionLimit(readImageDimensions(bytes))) {
+      return { ok: false, error: ar.messages.imageDimensions };
+    }
+
     const { data: existing } = await supabase
       .from("product_images")
       .select("id, position")

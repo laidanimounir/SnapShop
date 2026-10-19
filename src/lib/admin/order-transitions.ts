@@ -15,7 +15,6 @@ export const ORDER_STATUSES = [
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const TERMINAL_STATUSES: readonly OrderStatus[] = [
-  "delivered",
   "cancelled",
   "returned",
 ];
@@ -25,7 +24,10 @@ const TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   confirmed: ["shipped", "cancelled"],
   no_answer: ["confirmed", "cancelled"],
   shipped: ["delivered", "returned"],
-  delivered: [],
+  // A customer returning goods after receiving them: the only edge out
+  // of delivered. delivered -> cancelled stays disallowed on purpose
+  // (a post-delivery reversal is a "returned", never a "cancelled").
+  delivered: ["returned"],
   cancelled: [],
   returned: [],
 };
@@ -35,6 +37,7 @@ const STOCK_HOLDING: readonly OrderStatus[] = [
   "confirmed",
   "no_answer",
   "shipped",
+  "delivered",
 ];
 
 export const STATUS_LABELS: Record<OrderStatus, string> = {

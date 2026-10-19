@@ -338,6 +338,7 @@ export const ar = {
     imageSize: "يجب ألا يتجاوز حجم الصورة 5 ميغابايت.",
     imageType: "يُسمح فقط بصور JPEG وPNG وWebP.",
     imageReal: "هذا الملف ليس صورة JPEG أو PNG أو WebP حقيقية.",
+    imageDimensions: "أبعاد الصورة غير صالحة. الحد الأقصى 8000×8000 بكسل.",
     apiKeyTooLong: "مفتاح API طويل جدًا.",
     maxImages: "بحد أقصى {n} صور لكل منتج (صورة رئيسية + حتى 3 إضافية).",
   },

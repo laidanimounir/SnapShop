@@ -362,7 +362,7 @@ export async function saveDraftAsTemplateAction(input: {
 export async function renameTemplateAction(input: {
   id: unknown;
   name: unknown;
-}): Promise<ActionResult<{ id: string }>> {
+}): Promise<ActionResult<{ id: string; name: string; updatedAt: string }>> {
   try {
     const { userId, supabase } = await requireAdmin();
     enforceAdminRateLimit(userId, "renameTemplate");
@@ -386,14 +386,21 @@ export async function renameTemplateAction(input: {
     }
     if (templateNameKey(name.value) === templateNameKey((existing as { name: string }).name)) {
       // Same name (ignoring case/spaces): nothing to change.
-      return { ok: true, id };
+      const { data: same, error: sameError } = await supabase
+        .from("landing_page_templates")
+        .select("name, updated_at")
+        .eq("id", id)
+        .single();
+      if (sameError) throw new Error(sameError.message);
+      const row = same as { name: string; updated_at: string };
+      return { ok: true, id, name: row.name, updatedAt: row.updated_at };
     }
 
     const { data, error } = await supabase
       .from("landing_page_templates")
       .update({ name: name.value })
       .eq("id", id)
-      .select("id")
+      .select("id, name, updated_at")
       .single();
     if (error) {
       if (isDuplicateNameError(error)) {
@@ -403,7 +410,8 @@ export async function renameTemplateAction(input: {
     }
 
     revalidatePath("/admin/landing-templates");
-    return { ok: true, id: (data as { id: string }).id };
+    const row = data as { id: string; name: string; updated_at: string };
+    return { ok: true, id: row.id, name: row.name, updatedAt: row.updated_at };
   } catch (error) {
     return actionError(error);
   }

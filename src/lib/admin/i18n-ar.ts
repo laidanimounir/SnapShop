@@ -8,6 +8,7 @@ export const ar = {
     products: "المنتجات",
     delivery: "التوصيل",
     reviews: "التقييمات",
+    templates: "قوالب الصفحات",
     settings: "الإعدادات",
     signOut: "تسجيل الخروج",
     signedInAs: "مسجل الدخول باسم",
@@ -419,6 +420,20 @@ export const ar = {
       copyConfirm: "سيستبدل النسخ محتوى المسودة الحالية. هل تريد المتابعة؟",
       copySection: "نسخ",
       noResults: "لا توجد نتائج مطابقة.",
+    },
+    templatesPage: {
+      title: "قوالب الصفحات",
+      intro:
+        "القوالب تُحفظ من محرّر الصفحات ويمكن تطبيقها على أي صفحة. الحذف لا يؤثر على الصفحات التي استخدمت القالب.",
+      empty: "لا توجد قوالب بعد. افتح محرّر صفحة واحفظ مسودتها كقالب.",
+      name: "الاسم",
+      description: "الوصف",
+      sections: "الأقسام",
+      updatedAt: "آخر تحديث",
+      rename: "تعديل الاسم",
+      renameSave: "حفظ الاسم",
+      deleteConfirm: "سيتم حذف هذا القالب نهائيًا. هل تريد المتابعة؟",
+      noDescription: "—",
     },
     sectionTypes: {
       hero: "القسم الرئيسي",

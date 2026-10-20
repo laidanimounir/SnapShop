@@ -3,6 +3,7 @@
 // invisible to anon via RLS; writes live in the server actions.
 
 import { requireAdmin } from "@/lib/supabase/admin";
+import { parsePageContent } from "@/lib/landing/content";
 
 export type LandingPageStatus = "draft" | "published" | "unpublished";
 
@@ -205,6 +206,32 @@ export async function getTemplate(
     .maybeSingle();
   if (error) throw new Error(error.message);
   return (data as AdminTemplate | null) ?? null;
+}
+
+export type AdminTemplateDetail = AdminTemplateSummary & {
+  sectionCount: number;
+};
+
+// Templates management page: name, description, dates and how many
+// sections each template contains (content is parsed defensively).
+export async function listTemplatesDetailed(): Promise<AdminTemplateDetail[]> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("landing_page_templates")
+    .select("id, name, description, content, created_at, updated_at")
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as AdminTemplate[]).map((row) => {
+    const parsed = parsePageContent(row.content);
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      sectionCount: parsed.sections.length,
+    };
+  });
 }
 
 // All template names (for the client-side duplicate pre-check before the

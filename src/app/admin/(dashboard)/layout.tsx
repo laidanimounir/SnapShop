@@ -16,6 +16,7 @@ const navItems = [
   { href: "/admin/orders", label: ar.nav.orders },
   { href: "/admin/products", label: ar.nav.products },
   { href: "/admin/landing-pages", label: ar.landing.title },
+  { href: "/admin/landing-templates", label: ar.nav.templates },
   { href: "/admin/delivery", label: ar.nav.delivery },
   { href: "/admin/reviews", label: ar.nav.reviews },
   { href: "/admin/settings", label: ar.nav.settings },

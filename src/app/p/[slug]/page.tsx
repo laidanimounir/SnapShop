@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SectionRenderer from "@/components/landing/SectionRenderer";
+import LandingPixels from "@/components/landing/LandingPixels";
 import { getPublishedLandingPage, getLandingOrderData } from "@/lib/landing/api";
 import {
   LANDING_HEADING_FONT_CSS,
@@ -78,6 +79,10 @@ export default async function ProductLandingPage({
       {/* Static server-generated rule (no user input) so headings use the
           theme's heading font instead of the body font. */}
       <style dangerouslySetInnerHTML={{ __html: LANDING_HEADING_FONT_CSS }} />
+      <LandingPixels
+        facebookPixelId={page.facebookPixelId}
+        tiktokPixelId={page.tiktokPixelId}
+      />
       <SectionRenderer sections={page.content.sections} order={order} />
     </main>
   );

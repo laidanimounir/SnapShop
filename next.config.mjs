@@ -13,11 +13,11 @@ const SUPABASE_ORIGIN = supabaseOrigin();
 const csp = [
   "default-src 'self'",
   // Next.js needs 'unsafe-inline' (+ 'unsafe-eval' in dev) for its scripts.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://analytics.tiktok.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co",
+  "img-src 'self' data: blob: https://*.supabase.co https://www.facebook.com https://analytics.tiktok.com",
   "font-src 'self' data:",
-  `connect-src 'self' ${SUPABASE_ORIGIN} https://*.supabase.co wss://*.supabase.co`,
+  `connect-src 'self' ${SUPABASE_ORIGIN} https://*.supabase.co wss://*.supabase.co https://www.facebook.com https://analytics.tiktok.com https://business-api.tiktok.com`,
   "frame-ancestors 'self'",
   "form-action 'self'",
   "base-uri 'self'",

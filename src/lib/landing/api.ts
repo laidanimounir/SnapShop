@@ -10,6 +10,8 @@ export type PublishedLandingPage = {
   seoDescription: string | null;
   ogImageUrl: string | null;
   productName: string | null;
+  facebookPixelId: string | null;
+  tiktokPixelId: string | null;
   content: PageContent;
 };
 
@@ -39,6 +41,8 @@ type LandingPageRow = {
   seo_title: string | null;
   seo_description: string | null;
   og_image_url: string | null;
+  facebook_pixel_id: string | null;
+  tiktok_pixel_id: string | null;
   products: { name?: string | null } | null;
 };
 
@@ -52,7 +56,7 @@ export const getPublishedLandingPage = cache(
       const { data, error } = await publicSupabase()
         .from("product_landing_pages")
         .select(
-          "slug, product_id, published_content, seo_title, seo_description, og_image_url, products(name)"
+          "slug, product_id, published_content, seo_title, seo_description, og_image_url, facebook_pixel_id, tiktok_pixel_id, products(name)"
         )
         .eq("slug", slug)
         .eq("status", "published")
@@ -66,6 +70,8 @@ export const getPublishedLandingPage = cache(
         seoDescription: row.seo_description ?? null,
         ogImageUrl: row.og_image_url ?? null,
         productName: row.products?.name ?? null,
+        facebookPixelId: row.facebook_pixel_id ?? null,
+        tiktokPixelId: row.tiktok_pixel_id ?? null,
         content: parsePageContent(row.published_content),
       };
     } catch {

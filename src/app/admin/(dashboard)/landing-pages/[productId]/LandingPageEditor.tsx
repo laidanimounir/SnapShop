@@ -84,7 +84,6 @@ export function LandingPageEditor({
 
   const [status, setStatus] = useState<LandingPageStatus>(page.status);
   const [updatedAt, setUpdatedAt] = useState(page.updated_at);
-  const [publishedAt, setPublishedAt] = useState(page.published_at);
 
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -205,7 +204,7 @@ export function LandingPageEditor({
       return;
     }
     setStatus("published");
-    setPublishedAt(new Date().toISOString());
+    setUpdatedAt(new Date().toISOString());
     showToast(ar.landing.publishedMsg);
     router.refresh();
   };
@@ -231,102 +230,79 @@ export function LandingPageEditor({
 
   return (
     <div>
-      <Link
-        href="/admin/landing-pages"
-        onClick={goBack}
-        className="text-sm text-black/60 hover:underline"
-      >
-        ← {ar.landing.backToList}
-      </Link>
-
-      <div className="flex flex-wrap items-start justify-between gap-3 mt-2 mb-4">
-        <div>
-          <h1 className="text-2xl font-bold">{productName}</h1>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
+      <header className="sticky top-0 z-30 -mx-6 -mt-6 mb-4 border-b border-black/10 bg-gray-50/95 px-6 py-3 backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <Link
+              href="/admin/landing-pages"
+              onClick={goBack}
+              className="shrink-0 text-sm text-black/60 hover:underline"
+            >
+              ← {ar.landing.backToList}
+            </Link>
+            <h1 className="truncate text-lg font-bold">{productName}</h1>
             <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}
+              className={`shrink-0 inline-block px-3 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}
             >
               {statusLabel(status)}
             </span>
-            <span
-              dir="ltr"
-              className="text-xs text-black/50 font-mono"
-            >
+            <span dir="ltr" className="shrink-0 text-xs text-black/50 font-mono">
               /p/{page.slug}
             </span>
+            <span className="shrink-0 text-xs text-black/50">
+              {ar.landing.lastSaved}:{" "}
+              {new Date(updatedAt).toLocaleDateString("en-GB")}
+            </span>
             {dirty && (
-              <span className="text-xs text-amber-700 font-medium">
+              <span className="shrink-0 text-xs text-amber-700 font-medium">
                 {ar.landing.unsaved}
               </span>
             )}
           </div>
-          <div className="text-xs text-black/50 mt-1">
-            {ar.landing.lastSaved}:{" "}
-            {new Date(updatedAt).toLocaleDateString("en-GB")}
-            {publishedAt &&
-              ` • ${ar.landing.publishedAt}: ${new Date(
-                publishedAt
-              ).toLocaleDateString("en-GB")}`}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={saving}
+              className="px-4 py-2 rounded-full text-sm font-medium bg-black text-white hover:bg-black/80 disabled:opacity-50"
+            >
+              {saving ? ar.landing.saving : ar.landing.saveDraft}
+            </button>
+            {status === "published" ? (
+              <a
+                href={`/p/${page.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 bg-white hover:bg-gray-100"
+              >
+                {ar.landing.view}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={onPublish}
+                disabled={publishing}
+                className="px-4 py-2 rounded-full bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {publishing ? ar.landing.publishing : ar.landing.publish}
+              </button>
+            )}
+            <HeaderMoreMenu
+              published={status === "published"}
+              pageId={page.id}
+              productId={page.product_id}
+              templates={templates}
+              templateNames={templateNames}
+              copySources={copySources}
+              currentContent={{ theme, sections }}
+              onLoadContent={loadContent}
+              onUnpublish={onUnpublish}
+              unpublishing={publishing}
+            />
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <TemplatesMenu
-            pageId={page.id}
-            templates={templates}
-            templateNames={templateNames}
-            copySources={copySources}
-            currentContent={{ theme, sections }}
-            onLoadContent={loadContent}
-          />
-          {status === "published" ? (
-            <a
-              href={`/p/${page.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 hover:bg-gray-100"
-            >
-              {ar.landing.view}
-            </a>
-          ) : (
-            <Link
-              href={`/admin/landing-pages/${page.product_id}/preview`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 hover:bg-gray-100"
-            >
-              {ar.landing.viewDraft}
-            </Link>
-          )}
-          <button
-            type="button"
-            onClick={onSave}
-            disabled={saving}
-            className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 hover:bg-gray-100 disabled:opacity-50"
-          >
-            {saving ? ar.landing.saving : ar.landing.saveDraft}
-          </button>
-          {status === "published" ? (
-            <button
-              type="button"
-              onClick={onUnpublish}
-              disabled={publishing}
-              className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 text-red-600 hover:bg-red-50 disabled:opacity-50"
-            >
-              {publishing ? ar.landing.unpublishing : ar.landing.unpublish}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onPublish}
-              disabled={publishing}
-              className="px-4 py-2 rounded-full bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
-            >
-              {publishing ? ar.landing.publishing : ar.landing.publish}
-            </button>
-          )}
-        </div>
-      </div>
+      </header>
 
       {status !== "published" && (
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-4">
@@ -385,6 +361,96 @@ export function LandingPageEditor({
           }`}
         >
           {toast.msg}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// The "⋯" menu in the top bar: templates (save / apply / copy), a link to
+// the draft preview when the page isn't published, and unpublish for a
+// published page. Kept separate so the top bar stays uncluttered.
+function HeaderMoreMenu({
+  published,
+  pageId,
+  productId,
+  templates,
+  templateNames,
+  copySources,
+  currentContent,
+  onLoadContent,
+  onUnpublish,
+  unpublishing,
+}: {
+  published: boolean;
+  pageId: string;
+  productId: string;
+  templates: AdminTemplateSummary[];
+  templateNames: string[];
+  copySources: {
+    productId: string;
+    productName: string;
+    slug: string;
+    updatedAt: string;
+  }[];
+  currentContent: PageContent;
+  onLoadContent: (content: PageContent) => void;
+  onUnpublish: () => void;
+  unpublishing: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = () => setOpen(false);
+    window.addEventListener("click", handler);
+    return () => window.removeEventListener("click", handler);
+  }, [open]);
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        aria-label={ar.landing.moreActions}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="px-3 py-2 rounded-full text-sm font-medium border border-black/15 bg-white hover:bg-gray-100"
+      >
+        ⋯
+      </button>
+      {open && (
+        <div className="absolute end-0 mt-2 z-40 flex w-64 flex-col gap-2 rounded-xl border border-black/10 bg-white p-3 shadow-xl">
+          <TemplatesMenu
+            pageId={pageId}
+            templates={templates}
+            templateNames={templateNames}
+            copySources={copySources}
+            currentContent={currentContent}
+            onLoadContent={onLoadContent}
+          />
+          <Link
+            href={`/admin/landing-pages/${productId}/preview`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 text-center hover:bg-gray-100"
+          >
+            {ar.landing.viewDraft}
+          </Link>
+          {published ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (!window.confirm(ar.landing.unpublishConfirm)) return;
+                setOpen(false);
+                onUnpublish();
+              }}
+              disabled={unpublishing}
+              className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              {unpublishing ? ar.landing.unpublishing : ar.landing.unpublish}
+            </button>
+          ) : null}
         </div>
       )}
     </div>

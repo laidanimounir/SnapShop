@@ -370,6 +370,7 @@ export const ar = {
     maxSections: "بحد أقصى {n} قسمًا لكل صفحة.",
     deleteSection: "حذف",
     duplicateSection: "نسخ",
+    sectionActions: "خيارات القسم",
     hideSection: "إخفاء",
     showSection: "إظهار",
     hiddenBadge: "مخفي",

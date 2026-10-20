@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -31,8 +31,6 @@ import {
 import { ar } from "@/lib/admin/i18n-ar";
 
 const selectCls = "px-3 py-2 border border-black/15 rounded-lg text-sm";
-const iconBtnCls =
-  "px-2 py-1 rounded border border-black/15 text-xs hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent";
 
 // One draggable row. Keyboard users get dnd-kit's arrow-key sorting, and
 // the ↑/↓ buttons below stay as a plain fallback for everyone else.
@@ -82,7 +80,7 @@ function SortableRow({
     <li
       ref={setNodeRef}
       style={style}
-      className={`border rounded-lg p-3 ${
+      className={`border rounded-lg p-2.5 ${
         isDragging
           ? "relative z-10 border-black/40 bg-white shadow-lg"
           : isSelected
@@ -90,95 +88,174 @@ function SortableRow({
             : "border-black/10"
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center gap-2">
         <button
           ref={setActivatorNodeRef}
           type="button"
           title={ar.landing.dragHandle}
           aria-label={ar.landing.dragHandle}
           style={{ touchAction: "none" }}
-          className="shrink-0 px-1.5 py-1 rounded text-lg leading-none text-black/35 hover:text-black hover:bg-gray-100 cursor-grab active:cursor-grabbing"
+          className="shrink-0 px-1 py-1 rounded leading-none text-black/35 hover:text-black hover:bg-gray-100 cursor-grab active:cursor-grabbing"
           {...attributes}
           {...listeners}
         >
           <span aria-hidden="true">⠿</span>
         </button>
+
         <button
           type="button"
           onClick={() => onSelect(section.id)}
-          className="text-start flex-1"
+          className="flex min-w-0 flex-1 items-center gap-2 text-start"
         >
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-black/40">{index + 1}</span>
-            <span className="text-sm font-medium">
-              {sectionTypeLabel(section)}
+          <span className="shrink-0 text-xs text-black/40">{index + 1}</span>
+          <span className="truncate text-sm font-medium">
+            {sectionTypeLabel(section)}
+          </span>
+          {section.hidden && (
+            <span className="shrink-0 px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-600">
+              {ar.landing.hiddenBadge}
             </span>
-            {section.hidden && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-600">
-                {ar.landing.hiddenBadge}
-              </span>
-            )}
-            {!valid && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
-                {ar.landing.incompleteBadge}
-              </span>
-            )}
-          </div>
-          {summary && (
-            <div className="text-xs text-black/50 mt-1 truncate max-w-md">
-              {summary}
-            </div>
+          )}
+          {!valid && (
+            <span className="shrink-0 px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
+              {ar.landing.incompleteBadge}
+            </span>
           )}
         </button>
-        <div className="flex items-center gap-1 shrink-0">
+
+        <RowMenu
+          hidden={section.hidden}
+          canMoveUp={index !== 0}
+          canMoveDown={index !== total - 1}
+          onMoveUp={() => onMove(section.id, -1)}
+          onMoveDown={() => onMove(section.id, 1)}
+          onDuplicate={() => onDuplicate(section.id)}
+          onToggleHidden={() => onToggleHidden(section.id)}
+          onRemove={() => onRemove(section.id)}
+        />
+      </div>
+
+      {summary && (
+        <div className="mt-1 ps-6 text-xs text-black/50 truncate">
+          {summary}
+        </div>
+      )}
+
+      {isSelected && editor}
+    </li>
+  );
+}
+
+// Per-card "⋯" menu holding the row actions so the card stays compact and
+// nothing gets clipped. Closes on outside click, Escape or an action.
+function RowMenu({
+  hidden,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onToggleHidden,
+  onRemove,
+}: {
+  hidden: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDuplicate: () => void;
+  onToggleHidden: () => void;
+  onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("mousedown", onPointer);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onPointer);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const run = (fn: () => void) => () => {
+    setOpen(false);
+    fn();
+  };
+
+  const itemCls =
+    "w-full text-start px-3 py-2 rounded-lg text-sm hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent";
+
+  return (
+    <div ref={containerRef} className="relative shrink-0">
+      <button
+        type="button"
+        aria-label={ar.landing.sectionActions}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="px-2 py-1 rounded border border-black/15 text-sm leading-none hover:bg-gray-100"
+      >
+        ⋯
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute end-0 mt-1 z-40 w-44 rounded-xl border border-black/10 bg-white p-1 shadow-xl"
+        >
           <button
             type="button"
-            title={ar.landing.moveUp}
-            aria-label={ar.landing.moveUp}
-            disabled={index === 0}
-            onClick={() => onMove(section.id, -1)}
-            className={iconBtnCls}
+            role="menuitem"
+            disabled={!canMoveUp}
+            onClick={run(onMoveUp)}
+            className={itemCls}
           >
-            ↑
+            {ar.landing.moveUp}
           </button>
           <button
             type="button"
-            title={ar.landing.moveDown}
-            aria-label={ar.landing.moveDown}
-            disabled={index === total - 1}
-            onClick={() => onMove(section.id, 1)}
-            className={iconBtnCls}
+            role="menuitem"
+            disabled={!canMoveDown}
+            onClick={run(onMoveDown)}
+            className={itemCls}
           >
-            ↓
+            {ar.landing.moveDown}
           </button>
           <button
             type="button"
-            onClick={() => onToggleHidden(section.id)}
-            className={iconBtnCls}
-          >
-            {section.hidden
-              ? ar.landing.showSection
-              : ar.landing.hideSection}
-          </button>
-          <button
-            type="button"
-            onClick={() => onDuplicate(section.id)}
-            className={iconBtnCls}
+            role="menuitem"
+            onClick={run(onDuplicate)}
+            className={itemCls}
           >
             {ar.landing.duplicateSection}
           </button>
           <button
             type="button"
-            onClick={() => onRemove(section.id)}
-            className={`${iconBtnCls} text-red-600`}
+            role="menuitem"
+            onClick={run(onToggleHidden)}
+            className={itemCls}
+          >
+            {hidden ? ar.landing.showSection : ar.landing.hideSection}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={run(onRemove)}
+            className={`${itemCls} text-red-600`}
           >
             {ar.landing.deleteSection}
           </button>
         </div>
-      </div>
-
-      {isSelected && editor}
-    </li>
+      )}
+    </div>
   );
 }
 

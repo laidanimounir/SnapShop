@@ -38,6 +38,14 @@ const STATUS_STYLES: Record<LandingPageStatus, string> = {
   unpublished: "bg-gray-200 text-gray-600",
 };
 
+type NarrowPane = "sections" | "settings" | "preview";
+
+const NARROW_TABS: { key: NarrowPane; label: string }[] = [
+  { key: "sections", label: ar.landing.responsiveSections },
+  { key: "settings", label: ar.landing.responsiveSettings },
+  { key: "preview", label: ar.landing.responsivePreview },
+];
+
 function statusLabel(status: LandingPageStatus): string {
   if (status === "published") return ar.landing.published;
   if (status === "unpublished") return ar.landing.unpublished;
@@ -75,6 +83,7 @@ export function LandingPageEditor({
     initial.sections[0]?.id ?? null
   );
   const [activeTab, setActiveTab] = useState<InspectorTab>("section");
+  const [narrowPane, setNarrowPane] = useState<NarrowPane>("sections");
   const [fields, setFields] = useState<SettingsFields>({
     seoTitle: page.seo_title ?? "",
     seoDescription: page.seo_description ?? "",
@@ -116,6 +125,7 @@ export function LandingPageEditor({
   const selectSection = (id: string) => {
     setSelectedId(id);
     setActiveTab("section");
+    setNarrowPane("settings");
   };
 
   const loadContent = (content: PageContent) => {
@@ -316,25 +326,53 @@ export function LandingPageEditor({
         </p>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 xl:items-start gap-4">
-        <SectionsPanel
-          sections={sections}
-          selectedId={selectedId}
-          onSelect={selectSection}
-          onAdd={onAddSection}
-          onRemove={onRemoveSection}
-          onDuplicate={onDuplicateSection}
-          onMove={(id, dir) => {
-            setSections((prev) => moveSection(prev, id, dir));
-            touch();
-          }}
-          onReorder={onReorderSections}
-          onToggleHidden={(id) => {
-            setSections((prev) => toggleSectionHidden(prev, id));
-            touch();
-          }}
-        />
-        <div>
+      <div
+        role="tablist"
+        className="flex xl:hidden gap-1 mb-4 rounded-full border border-black/10 bg-white p-1"
+      >
+        {NARROW_TABS.map((t) => {
+          const active = t.key === narrowPane;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => {
+                setNarrowPane(t.key);
+                if (t.key !== "sections") setActiveTab("section");
+              }}
+              className={`flex-1 px-3 py-1.5 rounded-full text-sm font-medium ${
+                active ? "bg-black text-white" : "hover:bg-gray-100"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 xl:items-start gap-4">
+        <div className={narrowPane === "sections" ? "block" : "hidden xl:block"}>
+          <SectionsPanel
+            sections={sections}
+            selectedId={selectedId}
+            onSelect={selectSection}
+            onAdd={onAddSection}
+            onRemove={onRemoveSection}
+            onDuplicate={onDuplicateSection}
+            onMove={(id, dir) => {
+              setSections((prev) => moveSection(prev, id, dir));
+              touch();
+            }}
+            onReorder={onReorderSections}
+            onToggleHidden={(id) => {
+              setSections((prev) => toggleSectionHidden(prev, id));
+              touch();
+            }}
+          />
+        </div>
+        <div className={narrowPane === "settings" ? "block" : "hidden xl:block"}>
           <InspectorPanel
             pageId={page.id}
             tab={activeTab}
@@ -353,7 +391,13 @@ export function LandingPageEditor({
             onField={updateField}
           />
         </div>
-        <div className="xl:sticky xl:top-16 xl:h-[calc(100vh-5rem)]">
+        <div
+          className={
+            narrowPane === "preview"
+              ? "block"
+              : "hidden xl:block xl:sticky xl:top-16 xl:h-[calc(100vh-5rem)]"
+          }
+        >
           <LivePreview theme={theme} sections={sections} order={order} />
         </div>
       </div>

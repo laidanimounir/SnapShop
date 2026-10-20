@@ -316,7 +316,7 @@ export function LandingPageEditor({
         </p>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 xl:items-start gap-4">
         <SectionsPanel
           sections={sections}
           selectedId={selectedId}
@@ -353,7 +353,7 @@ export function LandingPageEditor({
             onField={updateField}
           />
         </div>
-        <div className="xl:sticky xl:top-4 xl:self-start">
+        <div className="xl:sticky xl:top-16 xl:h-[calc(100vh-5rem)]">
           <LivePreview theme={theme} sections={sections} order={order} />
         </div>
       </div>

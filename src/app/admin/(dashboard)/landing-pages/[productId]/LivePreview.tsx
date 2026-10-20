@@ -40,7 +40,7 @@ export function LivePreview({
   } as React.CSSProperties;
 
   return (
-    <div className="bg-white border border-black/10 rounded-lg p-4 mb-4">
+    <div className="bg-white border border-black/10 rounded-lg p-4 flex h-full flex-col">
       <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
         <h2 className="font-bold">{ar.landing.preview}</h2>
         <div className="flex items-center gap-1">
@@ -81,7 +81,7 @@ export function LivePreview({
         </p>
       ) : null}
 
-      <div className="bg-gray-100 rounded-lg p-3 overflow-hidden">
+      <div className="bg-gray-100 rounded-lg p-3 flex-1 min-h-0 overflow-y-auto">
         <div
           dir="rtl"
           style={frameStyle}

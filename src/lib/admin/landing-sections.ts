@@ -135,6 +135,25 @@ export function addSection(
   return [...sections, newSection(type, { ...opts, id })];
 }
 
+// A friendly starting layout for a brand-new page so the editor isn't
+// empty: hero, gallery, features, order form and a mobile sticky CTA.
+// Every section is built from the same defaults the editor uses, so the
+// result already passes the strict content schema.
+export function starterSections(opts: NewSectionOptions = {}): Section[] {
+  const order: SectionType[] = [
+    "hero",
+    "gallery",
+    "features",
+    "order_form",
+    "sticky_cta",
+  ];
+  const out: Section[] = [];
+  for (const type of order) {
+    out.push(newSection(type, { ...opts, id: nextSectionId(type, out) }));
+  }
+  return out;
+}
+
 export function duplicateSection(sections: Section[], id: string): Section[] {
   const index = sections.findIndex((s) => s.id === id);
   if (index === -1) return sections;

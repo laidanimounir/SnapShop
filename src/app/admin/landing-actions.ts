@@ -19,6 +19,7 @@ import {
 } from "@/lib/admin/landing-validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { fallbackPageContent } from "@/lib/landing/content";
+import { starterSections } from "@/lib/admin/landing-sections";
 import { requireAdmin } from "@/lib/supabase/admin";
 
 export type ActionResult<T = object> =
@@ -65,7 +66,7 @@ export async function createLandingPageAction(input: {
 
     const { data: product, error: productError } = await supabase
       .from("products")
-      .select("id")
+      .select("id, name")
       .eq("id", productId)
       .maybeSingle();
     if (productError) throw new Error(productError.message);
@@ -92,13 +93,28 @@ export async function createLandingPageAction(input: {
     if (clashError) throw new Error(clashError.message);
     if (clash) return { ok: false, error: ar.messages.slugTaken };
 
+    const { data: imageRows, error: imageError } = await supabase
+      .from("product_images")
+      .select("url, position")
+      .eq("product_id", productId)
+      .order("position", { ascending: true })
+      .limit(1);
+    if (imageError) throw new Error(imageError.message);
+    const imageUrl = ((imageRows ?? []) as { url: string }[])[0]?.url;
+
+    const starter = starterSections({ imageUrl });
+    const content = {
+      ...fallbackPageContent(),
+      sections: starter,
+    };
+
     const { data: created, error } = await supabase
       .from("product_landing_pages")
       .insert({
         product_id: productId,
         slug: slug.value,
         status: "draft",
-        draft_content: fallbackPageContent(),
+        draft_content: content,
       })
       .select("id, slug")
       .single();

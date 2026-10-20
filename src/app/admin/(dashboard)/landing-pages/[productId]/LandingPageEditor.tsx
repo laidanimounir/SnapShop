@@ -288,7 +288,16 @@ export function LandingPageEditor({
             >
               {ar.landing.view}
             </a>
-          ) : null}
+          ) : (
+            <Link
+              href={`/admin/landing-pages/${page.product_id}/preview`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 hover:bg-gray-100"
+            >
+              {ar.landing.viewDraft}
+            </Link>
+          )}
           <button
             type="button"
             onClick={onSave}

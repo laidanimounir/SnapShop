@@ -18,6 +18,9 @@ export const ar = {
     notFoundTitle: "الصفحة غير موجودة",
     notFoundText: "الصفحة التي تبحث عنها غير موجودة.",
     notFoundCta: "العودة إلى الرئيسية",
+    offerNotFoundTitle: "العرض غير متوفر",
+    offerNotFoundText: "هذا العرض غير متوفر حاليًا أو تم إيقافه.",
+    offerNotFoundCta: "تصفّح المنتجات",
   },
   nav: {
     shop: "تسوّق",

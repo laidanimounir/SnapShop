@@ -12,6 +12,7 @@ import {
   removeSection,
   sectionSummary,
   sectionTypeLabel,
+  starterSections,
   toggleSectionHidden,
   updateSectionProps,
 } from "../landing-sections";
@@ -168,5 +169,27 @@ describe("updateSectionProps / sectionSummary", () => {
   it("labels the section type in arabic", () => {
     expect(sectionTypeLabel(newSection("hero"))).toBe("القسم الرئيسي");
     expect(sectionTypeLabel(newSection("sticky_cta"))).toBe("زر ثابت");
+  });
+});
+
+describe("starterSections", () => {
+  it("builds the expected ordered layout with unique ids", () => {
+    const sections = starterSections({ imageUrl: IMAGE });
+    expect(sections.map((s) => s.type)).toEqual([
+      "hero",
+      "gallery",
+      "features",
+      "order_form",
+      "sticky_cta",
+    ]);
+    const ids = new Set(sections.map((s) => s.id));
+    expect(ids.size).toBe(sections.length);
+  });
+
+  it("produces only valid sections when an image is available", () => {
+    const sections = starterSections({ imageUrl: IMAGE });
+    for (const section of sections) {
+      expect(isSectionValid(section)).toBe(true);
+    }
   });
 });

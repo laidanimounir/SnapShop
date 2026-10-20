@@ -464,6 +464,36 @@ export async function getTemplateContentAction(
   }
 }
 
+// Returns a source product's current draft content so the editor can load
+// it after a copy. Read-only; never writes.
+export async function getDraftContentForProductAction(
+  productId: string
+): Promise<ActionResult<{ content: unknown }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "getDraftContentForProduct");
+
+    if (typeof productId !== "string" || productId === "") {
+      return { ok: false, error: ar.messages.landingNotFound };
+    }
+
+    const { data, error } = await supabase
+      .from("product_landing_pages")
+      .select("draft_content")
+      .eq("product_id", productId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return { ok: false, error: ar.messages.landingNotFound };
+
+    return {
+      ok: true,
+      content: (data as { draft_content: unknown }).draft_content,
+    };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
 // Replaces the target page's draft_content with a template's content. The
 // published snapshot is never touched. The template content is re-validated
 // before the write, so a bad stored template cannot corrupt the draft.

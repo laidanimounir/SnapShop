@@ -2,7 +2,10 @@ import { notFound } from "next/navigation";
 
 import {
   getLandingPageForProduct,
+  listPagesForCopy,
   listTakenSlugs,
+  listTemplateNames,
+  listTemplates,
 } from "@/lib/api/landing-admin";
 import { getLandingOrderData } from "@/lib/landing/api";
 import { ensureUniqueSlug, suggestSlug } from "@/lib/admin/landing-validation";
@@ -40,6 +43,11 @@ export default async function AdminLandingPageEditorPage({
       productName={data.product.name}
       imageUrls={data.imageUrls}
       order={await getLandingOrderData(data.product.id)}
+      templates={await listTemplates()}
+      templateNames={await listTemplateNames()}
+      copySources={(await listPagesForCopy()).filter(
+        (s) => s.productId !== data.product.id
+      )}
     />
   );
 }

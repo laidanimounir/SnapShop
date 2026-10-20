@@ -22,14 +22,15 @@ import {
   type SectionType,
 } from "@/lib/admin/landing-sections";
 import { ar, formatAr } from "@/lib/admin/i18n-ar";
-import type { AdminLandingPage, LandingPageStatus } from "@/lib/api/landing-admin";
-import { MAX_SECTIONS, parsePageContent } from "@/lib/landing/content";
+import type { AdminLandingPage, AdminTemplateSummary, LandingPageStatus } from "@/lib/api/landing-admin";
+import { MAX_SECTIONS, parsePageContent, type PageContent } from "@/lib/landing/content";
 import type { LandingOrderData } from "@/lib/landing/order-data";
 import type { Theme } from "@/lib/landing/theme";
 import { LivePreview } from "./LivePreview";
 import { SectionFields } from "./SectionFields";
 import { SectionsPanel } from "./SectionsPanel";
 import { SettingsPanel, type SettingsFields } from "./SettingsPanel";
+import { TemplatesMenu } from "./TemplatesMenu";
 
 const STATUS_STYLES: Record<LandingPageStatus, string> = {
   draft: "bg-amber-100 text-amber-800",
@@ -48,11 +49,22 @@ export function LandingPageEditor({
   productName,
   imageUrls,
   order,
+  templates,
+  templateNames,
+  copySources,
 }: {
   page: AdminLandingPage;
   productName: string;
   imageUrls: string[];
   order?: LandingOrderData | null;
+  templates: AdminTemplateSummary[];
+  templateNames: string[];
+  copySources: {
+    productId: string;
+    productName: string;
+    slug: string;
+    updatedAt: string;
+  }[];
 }) {
   const router = useRouter();
 
@@ -100,6 +112,13 @@ export function LandingPageEditor({
   const showToast = (msg: string, error = false) => setToast({ msg, error });
 
   const touch = () => setDirty(true);
+
+  const loadContent = (content: PageContent) => {
+    setTheme(content.theme);
+    setSections(content.sections);
+    setSelectedId(content.sections[0]?.id ?? null);
+    setDirty(true);
+  };
 
   const updateTheme = (patch: Partial<Theme>) => {
     setTheme((prev) => ({ ...prev, ...patch }));
@@ -252,6 +271,14 @@ export function LandingPageEditor({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <TemplatesMenu
+            pageId={page.id}
+            templates={templates}
+            templateNames={templateNames}
+            copySources={copySources}
+            currentContent={{ theme, sections }}
+            onLoadContent={loadContent}
+          />
           {status === "published" ? (
             <a
               href={`/p/${page.slug}`}

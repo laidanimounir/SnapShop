@@ -16,6 +16,15 @@ describe("resolveLandingPixels", () => {
     ).toEqual({ facebook: "1234567890123456", tiktok: "9876543210" });
   });
 
+  it("keeps alphanumeric tiktok ids but not for facebook", () => {
+    expect(
+      resolveLandingPixels({
+        facebookPixelId: "CABC123XYZ",
+        tiktokPixelId: "CABC123XYZ",
+      })
+    ).toEqual({ facebook: null, tiktok: "CABC123XYZ" });
+  });
+
   it("treats empty and unsafe values as absent", () => {
     expect(
       resolveLandingPixels({

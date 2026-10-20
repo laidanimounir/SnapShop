@@ -6,6 +6,7 @@ import {
   pageContentSchema,
   parsePageContent,
   parsePixelId,
+  parseTiktokPixelId,
 } from "../content";
 
 const heroSection = {
@@ -142,5 +143,22 @@ describe("parsePixelId", () => {
     expect(parsePixelId("")).toBe(null);
     expect(parsePixelId(null)).toBe(null);
     expect(parsePixelId(12345)).toBe(null);
+  });
+});
+
+describe("parseTiktokPixelId", () => {
+  it("accepts alphanumeric ids in range", () => {
+    expect(parseTiktokPixelId("12345")).toBe("12345");
+    expect(parseTiktokPixelId("abc12DE")).toBe("abc12DE");
+    expect(parseTiktokPixelId("A".repeat(30))).toBe("A".repeat(30));
+  });
+
+  it("rejects anything else", () => {
+    expect(parseTiktokPixelId("1234")).toBe(null);
+    expect(parseTiktokPixelId("abc-123")).toBe(null);
+    expect(parseTiktokPixelId("a".repeat(31))).toBe(null);
+    expect(parseTiktokPixelId("")).toBe(null);
+    expect(parseTiktokPixelId(null)).toBe(null);
+    expect(parseTiktokPixelId(12345)).toBe(null);
   });
 });

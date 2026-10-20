@@ -1,9 +1,9 @@
 // Facebook / TikTok pixel snippets for published landing pages.
-// Pixel ids are stored as digits only (parsePixelId), so the only value
-// interpolated into the inline scripts is a literal number string — never
-// raw admin input.
+// Facebook ids are digits only and TikTok ids are alphanumeric (see
+// parsePixelId / parseTiktokPixelId), so the only value interpolated into
+// the inline scripts is a validated id string — never raw admin input.
 
-import { parsePixelId } from "./content";
+import { parsePixelId, parseTiktokPixelId } from "./content";
 
 export type LandingPixelIds = {
   facebook: string | null;
@@ -16,7 +16,7 @@ export function resolveLandingPixels(input: {
 }): LandingPixelIds {
   return {
     facebook: parsePixelId(input.facebookPixelId),
-    tiktok: parsePixelId(input.tiktokPixelId),
+    tiktok: parseTiktokPixelId(input.tiktokPixelId),
   };
 }
 

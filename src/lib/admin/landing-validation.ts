@@ -7,6 +7,7 @@ import {
   isValidSlug,
   pageContentSchema,
   parsePixelId,
+  parseTiktokPixelId,
   type PageContent,
 } from "@/lib/landing/content";
 
@@ -148,17 +149,17 @@ export function validatePixelsInput(
   const tiktok = asString(input?.tiktokPixelId);
 
   if (facebook !== "" && parsePixelId(facebook) === null) {
-    return { ok: false, error: ar.validation.pixelId };
+    return { ok: false, error: ar.validation.facebookPixelId };
   }
-  if (tiktok !== "" && parsePixelId(tiktok) === null) {
-    return { ok: false, error: ar.validation.pixelId };
+  if (tiktok !== "" && parseTiktokPixelId(tiktok) === null) {
+    return { ok: false, error: ar.validation.tiktokPixelId };
   }
 
   return {
     ok: true,
     value: {
       facebook_pixel_id: facebook === "" ? null : facebook,
-      tiktok_pixel_id: tiktok === "" ? null : tiktok,
+      tiktok_pixel_id: tiktok === "" ? null : tiktok.toLowerCase(),
     },
   };
 }

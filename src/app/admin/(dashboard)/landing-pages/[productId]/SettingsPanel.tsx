@@ -212,10 +212,9 @@ export function SettingsPanel({
             <input
               className={`${inputCls} font-mono`}
               dir="ltr"
-              inputMode="numeric"
               value={fields.tiktokPixelId}
               onChange={(e) => onField("tiktokPixelId", e.target.value)}
-              maxLength={20}
+              maxLength={30}
             />
           </div>
         </div>

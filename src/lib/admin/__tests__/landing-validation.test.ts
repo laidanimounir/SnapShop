@@ -146,21 +146,25 @@ describe("validatePixelsInput", () => {
     });
   });
 
-  it("accepts digits only, 5-20 chars", () => {
+  it("accepts a digits-only facebook id and an alphanumeric tiktok id", () => {
     const result = validatePixelsInput({
       facebookPixelId: "1234567890",
-      tiktokPixelId: "98765",
+      tiktokPixelId: "CABC123XYZ",
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.facebook_pixel_id).toBe("1234567890");
-      expect(result.value.tiktok_pixel_id).toBe("98765");
+      expect(result.value.tiktok_pixel_id).toBe("cabc123xyz");
     }
   });
 
-  it("rejects non-digits and too-short ids", () => {
+  it("rejects non-digit facebook ids", () => {
     expect(validatePixelsInput({ facebookPixelId: "12ab34" }).ok).toBe(false);
+  });
+
+  it("rejects tiktok ids that are too short or use bad characters", () => {
     expect(validatePixelsInput({ tiktokPixelId: "123" }).ok).toBe(false);
+    expect(validatePixelsInput({ tiktokPixelId: "abc-123" }).ok).toBe(false);
   });
 });
 

@@ -92,10 +92,16 @@ export function isValidSlug(slug: unknown): slug is string {
   );
 }
 
-// Digits only, same rule as the pixel CHECKs in migration 0011.
+// Facebook pixel ids: digits only, 5–20 chars (matches its CHECK in migration 0011).
 export function parsePixelId(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   return /^[0-9]{5,20}$/.test(raw) ? raw : null;
+}
+
+// TikTok pixel ids: letters and digits, 5–30 chars (matches its CHECK in migration 0013).
+export function parseTiktokPixelId(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  return /^[A-Za-z0-9]{5,30}$/.test(raw) ? raw : null;
 }
 
 export type { Theme };

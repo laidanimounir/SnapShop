@@ -23,6 +23,7 @@ import {
 } from "@/lib/delivery";
 import type { LandingOrderData, LandingVariant } from "@/lib/landing/order-data";
 import { orderFormSectionSchema } from "@/lib/landing/sections";
+import { trackPixelEvent } from "@/lib/landing/tracking";
 import { createIdempotencyKey } from "@/lib/idempotency";
 import {
   getDiscountAmount,
@@ -197,6 +198,9 @@ export default function OrderFormSection({
     variantId: string;
     quantity: number;
   } | null>(null);
+  // Remembers the order the pixels already reported, so a re-render never
+  // fires a second Purchase for the same placed order.
+  const [trackedOrder, setTrackedOrder] = useState<string | null>(null);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -218,6 +222,19 @@ export default function OrderFormSection({
   const discountTotal = round2(unitDiscount * quantity);
   const deliveryPrice = getDeliveryPrice(selectedZone, effectiveDeliveryType);
   const orderTotal = getOrderTotal(subtotal, discountTotal, deliveryPrice);
+
+  // Funnel events for the configured pixels. The admin preview must not
+  // pollute real ad data, so nothing is sent from there.
+  useEffect(() => {
+    if (!preview) trackPixelEvent("ViewContent");
+  }, [preview]);
+
+  useEffect(() => {
+    if (placed && placed.confirmation_token !== trackedOrder) {
+      trackPixelEvent("Purchase", { value: placed.total, quantity });
+      setTrackedOrder(placed.confirmation_token);
+    }
+  }, [placed, trackedOrder, quantity]);
 
   const errors: FieldErrors = {
     customerName: touched.customerName ? validateName(customerName) : undefined,
@@ -286,6 +303,12 @@ export default function OrderFormSection({
 
     setIsSubmitting(true);
     setSubmitError(null);
+    if (!preview) {
+      trackPixelEvent("InitiateCheckout", {
+        value: orderTotal,
+        quantity,
+      });
+    }
     try {
       // Reuse the key while the payload is unchanged; regenerate when the
       // variant or quantity changed since the failed attempt.

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { ar } from "@/lib/admin/i18n-ar";
 import { LANDING_FONTS, type Theme } from "@/lib/landing/theme";
 import { ImageUploadButton } from "./ImageUploadButton";
@@ -24,27 +26,39 @@ const COLOR_FIELDS: { key: keyof Theme; label: string }[] = [
   { key: "buttonTextColor", label: ar.landing.buttonTextColor },
 ];
 
-const NUMBER_FIELDS: {
-  key: "buttonRadius" | "baseFontSize" | "sectionSpacing";
-  label: string;
-  min: number;
-  max: number;
-}[] = [
-  { key: "buttonRadius", label: ar.landing.buttonRadius, min: 0, max: 40 },
-  { key: "baseFontSize", label: ar.landing.baseFontSize, min: 14, max: 28 },
-  {
-    key: "sectionSpacing",
-    label: ar.landing.sectionSpacing,
-    min: 0,
-    max: 160,
-  },
-];
-
 const FONT_LABELS: Record<(typeof LANDING_FONTS)[number], string> = {
   cairo: "Cairo",
   tajawal: "Tajawal",
   almarai: "Almarai",
 };
+
+function CollapsibleGroup({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-black/10 rounded-lg">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium text-start hover:bg-gray-50"
+      >
+        <span>{title}</span>
+        <span aria-hidden="true" className="text-black/40">
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+      {open && <div className="border-t border-black/10 p-3">{children}</div>}
+    </div>
+  );
+}
 
 export function ThemeFields({
   theme,
@@ -57,11 +71,8 @@ export function ThemeFields({
     /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h3 className="text-sm font-medium text-black/60 mb-2">
-          {ar.landing.colors}
-        </h3>
+    <div className="space-y-2">
+      <CollapsibleGroup title={ar.landing.colors} defaultOpen>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {COLOR_FIELDS.map((field) => (
             <div key={field.key}>
@@ -88,67 +99,87 @@ export function ThemeFields({
             </div>
           ))}
         </div>
-      </div>
+      </CollapsibleGroup>
 
-      <div>
-        <h3 className="text-sm font-medium text-black/60 mb-2">
-          {ar.landing.groupButtons}
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {NUMBER_FIELDS.map((field) => (
-            <div key={field.key}>
-              <label className={labelCls}>{field.label}</label>
-              <input
-                type="number"
-                min={field.min}
-                max={field.max}
-                className={inputCls}
-                value={Number(theme[field.key])}
-                onChange={(e) =>
-                  onTheme({
-                    [field.key]: Number(e.target.value),
-                  } as Partial<Theme>)
-                }
-              />
-            </div>
-          ))}
+      <CollapsibleGroup title={ar.landing.groupButtons}>
+        <div>
+          <label className={labelCls}>{ar.landing.buttonRadius}</label>
+          <input
+            type="number"
+            min={0}
+            max={40}
+            className={inputCls}
+            value={Number(theme.buttonRadius)}
+            onChange={(e) =>
+              onTheme({ buttonRadius: Number(e.target.value) })
+            }
+          />
         </div>
-      </div>
+      </CollapsibleGroup>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className={labelCls}>{ar.landing.headingFont}</label>
-          <select
-            className={inputCls}
-            value={theme.headingFont}
-            onChange={(e) =>
-              onTheme({ headingFont: e.target.value as Theme["headingFont"] })
-            }
-          >
-            {LANDING_FONTS.map((font) => (
-              <option key={font} value={font}>
-                {FONT_LABELS[font]}
-              </option>
-            ))}
-          </select>
+      <CollapsibleGroup title={ar.landing.groupTypography}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className={labelCls}>{ar.landing.headingFont}</label>
+            <select
+              className={inputCls}
+              value={theme.headingFont}
+              onChange={(e) =>
+                onTheme({ headingFont: e.target.value as Theme["headingFont"] })
+              }
+            >
+              {LANDING_FONTS.map((font) => (
+                <option key={font} value={font}>
+                  {FONT_LABELS[font]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>{ar.landing.bodyFont}</label>
+            <select
+              className={inputCls}
+              value={theme.bodyFont}
+              onChange={(e) =>
+                onTheme({ bodyFont: e.target.value as Theme["bodyFont"] })
+              }
+            >
+              {LANDING_FONTS.map((font) => (
+                <option key={font} value={font}>
+                  {FONT_LABELS[font]}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div>
-          <label className={labelCls}>{ar.landing.bodyFont}</label>
-          <select
+          <label className={labelCls}>{ar.landing.baseFontSize}</label>
+          <input
+            type="number"
+            min={14}
+            max={28}
             className={inputCls}
-            value={theme.bodyFont}
-            onChange={(e) =>
-              onTheme({ bodyFont: e.target.value as Theme["bodyFont"] })
-            }
-          >
-            {LANDING_FONTS.map((font) => (
-              <option key={font} value={font}>
-                {FONT_LABELS[font]}
-              </option>
-            ))}
-          </select>
+            value={Number(theme.baseFontSize)}
+            onChange={(e) => onTheme({ baseFontSize: Number(e.target.value) })}
+          />
         </div>
-      </div>
+      </CollapsibleGroup>
+
+      <CollapsibleGroup title={ar.landing.groupSpacing}>
+        <div>
+          <label className={labelCls}>{ar.landing.sectionSpacing}</label>
+          <input
+            type="number"
+            min={0}
+            max={160}
+            className={inputCls}
+            value={Number(theme.sectionSpacing)}
+            onChange={(e) =>
+              onTheme({ sectionSpacing: Number(e.target.value) })
+            }
+          />
+        </div>
+      </CollapsibleGroup>
     </div>
   );
 }

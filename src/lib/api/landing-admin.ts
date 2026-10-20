@@ -157,3 +157,117 @@ export async function listTakenSlugs(): Promise<string[]> {
   if (error) throw new Error(error.message);
   return ((data ?? []) as { slug: string }[]).map((row) => row.slug);
 }
+
+// ------------------------------------------------------------
+// Templates
+// ------------------------------------------------------------
+
+export type AdminTemplate = {
+  id: string;
+  name: string;
+  description: string | null;
+  content: unknown;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminTemplateSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+const TEMPLATE_COLUMNS =
+  "id, name, description, content, created_at, updated_at";
+
+// Newest first, so the editor and the management page both show the most
+// recent templates at the top.
+export async function listTemplates(): Promise<AdminTemplateSummary[]> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("landing_page_templates")
+    .select("id, name, description, created_at, updated_at")
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AdminTemplateSummary[];
+}
+
+export async function getTemplate(
+  id: string
+): Promise<AdminTemplate | null> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("landing_page_templates")
+    .select(TEMPLATE_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as AdminTemplate | null) ?? null;
+}
+
+// All template names (for the client-side duplicate pre-check before the
+// unique index rejects the write).
+export async function listTemplateNames(): Promise<string[]> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("landing_page_templates")
+    .select("name");
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { name: string }[]).map((row) => row.name);
+}
+
+// Copies another product's current draft content straight from the DB
+// (used by the editor's "copy from another product" action).
+export async function getDraftContentForProduct(
+  productId: string
+): Promise<{ content: unknown; productName: string } | null> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("product_landing_pages")
+    .select("draft_content, products(name)")
+    .eq("product_id", productId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  const row = data as {
+    draft_content: unknown;
+    products: { name: string } | { name: string }[] | null;
+  };
+  const product = Array.isArray(row.products)
+    ? row.products[0] ?? null
+    : row.products;
+  return { content: row.draft_content, productName: product?.name ?? "" };
+}
+
+// Products that already have a landing page, for the "copy from another
+// product" searchable list.
+export async function listPagesForCopy(): Promise<
+  { productId: string; productName: string; slug: string; updatedAt: string }[]
+> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("product_landing_pages")
+    .select("product_id, slug, updated_at, products(name)")
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (
+    (data ?? []) as {
+      product_id: string;
+      slug: string;
+      updated_at: string;
+      products: { name: string } | { name: string }[] | null;
+    }[]
+  ).map((row) => {
+    const product = Array.isArray(row.products)
+      ? row.products[0] ?? null
+      : row.products;
+    return {
+      productId: row.product_id,
+      productName: product?.name ?? "",
+      slug: row.slug,
+      updatedAt: row.updated_at,
+    };
+  });
+}

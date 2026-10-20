@@ -4,11 +4,15 @@ import {
   buildPublishUpdate,
   buildUnpublishUpdate,
   ensureUniqueSlug,
+  isTemplateNameTaken,
   suggestSlug,
+  templateNameKey,
   validateContentInput,
   validatePixelsInput,
   validateSeoInput,
   validateSlugInput,
+  validateTemplateInput,
+  validateTemplateName,
 } from "../landing-validation";
 
 const hero = (id: string) => ({
@@ -192,5 +196,95 @@ describe("buildPublishUpdate", () => {
 describe("buildUnpublishUpdate", () => {
   it("returns the unpublished status", () => {
     expect(buildUnpublishUpdate()).toEqual({ status: "unpublished" });
+  });
+});
+
+describe("validateTemplateInput", () => {
+  it("trims the name and keeps an optional description", () => {
+    const result = validateTemplateInput({
+      name: "  عرض الخريف ",
+      description: " قالب جاهز ",
+      content: { sections: [hero("hero-1")] },
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.name).toBe("عرض الخريف");
+      expect(result.value.description).toBe("قالب جاهز");
+      expect(result.value.content.sections).toHaveLength(1);
+    }
+  });
+
+  it("maps an empty description to null", () => {
+    const result = validateTemplateInput({
+      name: "قالب",
+      description: "",
+      content: { sections: [] },
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.description).toBeNull();
+  });
+
+  it("rejects an empty or too-long name", () => {
+    expect(
+      validateTemplateInput({ name: "   ", content: { sections: [] } }).ok
+    ).toBe(false);
+    expect(
+      validateTemplateInput({
+        name: "x".repeat(81),
+        content: { sections: [] },
+      }).ok
+    ).toBe(false);
+  });
+
+  it("rejects a too-long description", () => {
+    expect(
+      validateTemplateInput({
+        name: "قالب",
+        description: "x".repeat(301),
+        content: { sections: [] },
+      }).ok
+    ).toBe(false);
+  });
+
+  it("rejects invalid content", () => {
+    expect(
+      validateTemplateInput({
+        name: "قالب",
+        content: { sections: [hero("dup"), hero("dup")] },
+      }).ok
+    ).toBe(false);
+  });
+});
+
+describe("validateTemplateName", () => {
+  it("accepts a trimmed name in range", () => {
+    const result = validateTemplateName("  قالب جديد ");
+    expect(result).toEqual({ ok: true, value: "قالب جديد" });
+  });
+
+  it("rejects empty and too-long names", () => {
+    expect(validateTemplateName("").ok).toBe(false);
+    expect(validateTemplateName("x".repeat(81)).ok).toBe(false);
+  });
+});
+
+describe("template name uniqueness", () => {
+  it("keys names ignoring case and surrounding spaces", () => {
+    expect(templateNameKey("  Summer Deal ")).toBe("summer deal");
+  });
+
+  it("detects a collision differing only by case or spaces", () => {
+    const taken = ["Summer Deal", "عرض"];
+    expect(isTemplateNameTaken("  summer   deal", taken)).toBe(false);
+    expect(isTemplateNameTaken(" summer deal ", taken)).toBe(true);
+    expect(isTemplateNameTaken("عرض ", taken)).toBe(true);
+    expect(isTemplateNameTaken("جديد", taken)).toBe(false);
+  });
+
+  it("can ignore the template being renamed", () => {
+    const taken = ["Summer Deal"];
+    expect(isTemplateNameTaken("summer deal", taken, "Summer Deal")).toBe(
+      false
+    );
   });
 });

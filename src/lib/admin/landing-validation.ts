@@ -197,3 +197,76 @@ export type UnpublishUpdate = { status: "unpublished" };
 export function buildUnpublishUpdate(): UnpublishUpdate {
   return { status: "unpublished" };
 }
+
+// ------------------------------------------------------------
+// Templates
+// ------------------------------------------------------------
+
+export const TEMPLATE_NAME_MAX = 80;
+export const TEMPLATE_DESCRIPTION_MAX = 300;
+
+export type TemplateInput = {
+  name: string;
+  description: string | null;
+  content: PageContent;
+};
+
+// Name is trimmed and must be 1-80 chars; description is optional and
+// capped at 300. Content reuses the same strict page validator as writes.
+export function validateTemplateInput(raw: {
+  name?: unknown;
+  description?: unknown;
+  content?: unknown;
+}): ValidationResult<TemplateInput> {
+  const name = asString(raw?.name);
+  if (name === "" || name.length > TEMPLATE_NAME_MAX) {
+    return { ok: false, error: ar.validation.templateName };
+  }
+
+  const description = asString(raw?.description);
+  if (description.length > TEMPLATE_DESCRIPTION_MAX) {
+    return { ok: false, error: ar.validation.templateDescription };
+  }
+
+  const content = validateContentInput(raw?.content);
+  if (!content.ok) return content;
+
+  return {
+    ok: true,
+    value: {
+      name,
+      description: description === "" ? null : description,
+      content: content.value,
+    },
+  };
+}
+
+// Just the name (used by rename).
+export function validateTemplateName(raw: unknown): ValidationResult<string> {
+  const name = asString(raw);
+  if (name === "" || name.length > TEMPLATE_NAME_MAX) {
+    return { ok: false, error: ar.validation.templateName };
+  }
+  return { ok: true, value: name };
+}
+
+// Names are unique ignoring case and surrounding spaces (matches the
+// uq_landing_template_name index from migration 0014). Pure helper so
+// the caller can pre-check against a known list before hitting the DB.
+export function templateNameKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+export function isTemplateNameTaken(
+  name: string,
+  taken: Iterable<string>,
+  ignore?: string
+): boolean {
+  const key = templateNameKey(name);
+  const ignoreKey = ignore === undefined ? null : templateNameKey(ignore);
+  for (const candidate of Array.from(taken)) {
+    const candidateKey = templateNameKey(candidate);
+    if (candidateKey === key && candidateKey !== ignoreKey) return true;
+  }
+  return false;
+}

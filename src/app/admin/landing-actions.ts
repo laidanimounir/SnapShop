@@ -66,11 +66,15 @@ export async function createLandingPageAction(input: {
 
     const { data: product, error: productError } = await supabase
       .from("products")
-      .select("id, name")
+      .select("id, name, description")
       .eq("id", productId)
       .maybeSingle();
     if (productError) throw new Error(productError.message);
     if (!product) return { ok: false, error: ar.messages.productNotFound };
+    const productRow = product as {
+      name: string;
+      description: string | null;
+    };
 
     // Idempotent: if a page already exists for this product, return it
     // instead of failing on the UNIQUE(product_id) constraint.
@@ -97,12 +101,21 @@ export async function createLandingPageAction(input: {
       .from("product_images")
       .select("url, position")
       .eq("product_id", productId)
-      .order("position", { ascending: true })
-      .limit(1);
+      .order("position", { ascending: true });
     if (imageError) throw new Error(imageError.message);
-    const imageUrl = ((imageRows ?? []) as { url: string }[])[0]?.url;
+    const images = ((imageRows ?? []) as { url: string }[]).map(
+      (row) => row.url
+    );
 
-    const starter = starterSections({ imageUrl });
+    const description = productRow.description?.trim() ?? "";
+    const productName = productRow.name.trim();
+    const starter = starterSections({
+      imageUrl: images[0],
+      images,
+      title: productName.slice(0, 120),
+      subtitle: description.slice(0, 300),
+      text: description.slice(0, 4000),
+    });
     const content = {
       ...fallbackPageContent(),
       sections: starter,

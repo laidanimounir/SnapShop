@@ -20,6 +20,12 @@ export type NewSectionOptions = {
   // Used to prefill the first image slot of image-bearing sections
   // (galleries, before/after) with the product's own photo, if any.
   imageUrl?: string;
+  // Product-level defaults used when seeding a brand-new page so the
+  // starter layout already carries the real product copy.
+  title?: string;
+  subtitle?: string;
+  images?: string[];
+  text?: string;
 };
 
 function make(
@@ -38,16 +44,19 @@ export function defaultSectionProps(
   switch (type) {
     case "hero":
       return {
-        title: "عنوان رئيسي",
-        subtitle: "",
+        title: opts.title ?? "عنوان رئيسي",
+        subtitle: opts.subtitle ?? "",
         ctaText: "اطلب الآن",
         ...(imageUrl ? { imageUrl } : {}),
       };
-    case "gallery":
-      return {
-        images: imageUrl ? [{ imageUrl, alt: "" }] : [],
-        colorName: "",
-      };
+    case "gallery": {
+      const images = opts.images?.length
+        ? opts.images.map((url) => ({ imageUrl: url, alt: "" }))
+        : imageUrl
+          ? [{ imageUrl, alt: "" }]
+          : [];
+      return { images, colorName: "" };
+    }
     case "features":
       return { title: "", items: [{ title: "ميزة", text: "" }] };
     case "size_guide":
@@ -82,7 +91,7 @@ export function defaultSectionProps(
         note: "",
       };
     case "rich_text":
-      return { title: "", text: "نص توضيحي" };
+      return { title: opts.title ?? "", text: opts.text ?? "نص توضيحي" };
     case "order_form":
       return {
         title: "",
@@ -136,19 +145,23 @@ export function addSection(
 }
 
 // A friendly starting layout for a brand-new page so the editor isn't
-// empty: hero, gallery, features, order form and a mobile sticky CTA.
-// Every section is built from the same defaults the editor uses, so the
-// result already passes the strict content schema.
+// empty. It seeds the real product copy when available: the hero uses
+// the product name/description, the gallery uses all product photos and
+// a rich-text block carries the full description. Falls back to the
+// generic starter when there is no product data. Every section is built
+// from the same defaults the editor uses.
 export function starterSections(opts: NewSectionOptions = {}): Section[] {
   const order: SectionType[] = [
     "hero",
     "gallery",
+    "rich_text",
     "features",
     "order_form",
     "sticky_cta",
   ];
   const out: Section[] = [];
   for (const type of order) {
+    if (type === "rich_text" && !opts.text) continue;
     out.push(newSection(type, { ...opts, id: nextSectionId(type, out) }));
   }
   return out;

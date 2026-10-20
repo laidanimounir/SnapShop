@@ -192,4 +192,36 @@ describe("starterSections", () => {
       expect(isSectionValid(section)).toBe(true);
     }
   });
+
+  it("seeds the product copy when provided", () => {
+    const sections = starterSections({
+      images: [IMAGE, "https://cdn.example.com/b.jpg"],
+      title: "فستان صيفي",
+      subtitle: "وصف قصير",
+      text: "وصف كامل للمنتج",
+    });
+    expect(sections.map((s) => s.type)).toEqual([
+      "hero",
+      "gallery",
+      "rich_text",
+      "features",
+      "order_form",
+      "sticky_cta",
+    ]);
+    const hero = sections[0].props as { title: string; subtitle: string };
+    expect(hero.title).toBe("فستان صيفي");
+    expect(hero.subtitle).toBe("وصف قصير");
+    const gallery = sections[1].props as { images: unknown[] };
+    expect(gallery.images).toHaveLength(2);
+    const rich = sections[2].props as { text: string };
+    expect(rich.text).toBe("وصف كامل للمنتج");
+    for (const section of sections) {
+      expect(isSectionValid(section)).toBe(true);
+    }
+  });
+
+  it("omits the rich-text block when there is no description", () => {
+    const sections = starterSections({ title: "منتج" });
+    expect(sections.some((s) => s.type === "rich_text")).toBe(false);
+  });
 });

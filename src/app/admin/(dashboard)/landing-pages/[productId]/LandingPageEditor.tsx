@@ -27,9 +27,9 @@ import { MAX_SECTIONS, parsePageContent, type PageContent } from "@/lib/landing/
 import type { LandingOrderData } from "@/lib/landing/order-data";
 import type { Theme } from "@/lib/landing/theme";
 import { LivePreview } from "./LivePreview";
-import { SectionFields } from "./SectionFields";
+import { InspectorPanel, type InspectorTab } from "./InspectorPanel";
 import { SectionsPanel } from "./SectionsPanel";
-import { SettingsPanel, type SettingsFields } from "./SettingsPanel";
+import type { SettingsFields } from "./SettingsPanel";
 import { TemplatesMenu } from "./TemplatesMenu";
 
 const STATUS_STYLES: Record<LandingPageStatus, string> = {
@@ -74,6 +74,7 @@ export function LandingPageEditor({
   const [selectedId, setSelectedId] = useState<string | null>(
     initial.sections[0]?.id ?? null
   );
+  const [activeTab, setActiveTab] = useState<InspectorTab>("section");
   const [fields, setFields] = useState<SettingsFields>({
     seoTitle: page.seo_title ?? "",
     seoDescription: page.seo_description ?? "",
@@ -111,6 +112,11 @@ export function LandingPageEditor({
   const showToast = (msg: string, error = false) => setToast({ msg, error });
 
   const touch = () => setDirty(true);
+
+  const selectSection = (id: string) => {
+    setSelectedId(id);
+    setActiveTab("section");
+  };
 
   const loadContent = (content: PageContent) => {
     setTheme(content.theme);
@@ -314,7 +320,7 @@ export function LandingPageEditor({
         <SectionsPanel
           sections={sections}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={selectSection}
           onAdd={onAddSection}
           onRemove={onRemoveSection}
           onDuplicate={onDuplicateSection}
@@ -327,22 +333,20 @@ export function LandingPageEditor({
             setSections((prev) => toggleSectionHidden(prev, id));
             touch();
           }}
-          renderEditor={(section) => (
-            <SectionFields
-              pageId={page.id}
-              section={section}
-              onChange={(props) => {
-                setSections((prev) =>
-                  updateSectionProps(prev, section.id, props)
-                );
-                touch();
-              }}
-            />
-          )}
         />
         <div>
-          <SettingsPanel
+          <InspectorPanel
             pageId={page.id}
+            tab={activeTab}
+            onTab={setActiveTab}
+            section={sections.find((s) => s.id === selectedId) ?? null}
+            onSectionChange={(props) => {
+              if (!selectedId) return;
+              setSections((prev) =>
+                updateSectionProps(prev, selectedId, props)
+              );
+              touch();
+            }}
             theme={theme}
             onTheme={updateTheme}
             fields={fields}

@@ -41,7 +41,6 @@ function SortableRow({
   isSelected,
   valid,
   summary,
-  editor,
   onSelect,
   onRemove,
   onDuplicate,
@@ -54,7 +53,6 @@ function SortableRow({
   isSelected: boolean;
   valid: boolean;
   summary: string;
-  editor: React.ReactNode;
   onSelect: (id: string) => void;
   onRemove: (id: string) => void;
   onDuplicate: (id: string) => void;
@@ -140,8 +138,6 @@ function SortableRow({
           {summary}
         </div>
       )}
-
-      {isSelected && editor}
     </li>
   );
 }
@@ -269,7 +265,6 @@ export function SectionsPanel({
   onMove,
   onReorder,
   onToggleHidden,
-  renderEditor,
 }: {
   sections: Section[];
   selectedId: string | null;
@@ -280,7 +275,6 @@ export function SectionsPanel({
   onMove: (id: string, dir: -1 | 1) => void;
   onReorder: (activeId: string, overId: string) => void;
   onToggleHidden: (id: string) => void;
-  renderEditor?: (section: Section) => React.ReactNode;
 }) {
   const [newType, setNewType] = useState<SectionType>("hero");
 
@@ -365,21 +359,6 @@ export function SectionsPanel({
                     isSelected={isSelected}
                     valid={valid}
                     summary={sectionSummary(section)}
-                    editor={
-                      isSelected && renderEditor ? (
-                        <div className="mt-3 pt-3 border-t border-black/10">
-                          <h3 className="text-sm font-medium mb-3">
-                            {ar.landing.sectionSettings}
-                          </h3>
-                          {!valid && (
-                            <p className="text-sm text-red-600 mb-3">
-                              {ar.landing.invalidSection}
-                            </p>
-                          )}
-                          {renderEditor(section)}
-                        </div>
-                      ) : null
-                    }
                     onSelect={onSelect}
                     onRemove={onRemove}
                     onDuplicate={onDuplicate}

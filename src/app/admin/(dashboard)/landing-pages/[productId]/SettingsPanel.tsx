@@ -6,7 +6,6 @@ import { ImageUploadButton } from "./ImageUploadButton";
 
 const inputCls = "w-full px-3 py-2 border border-black/15 rounded-lg text-sm";
 const labelCls = "block text-sm font-medium mb-1";
-const cardCls = "bg-white border border-black/10 rounded-lg p-5 mb-4";
 
 export type SettingsFields = {
   seoTitle: string;
@@ -47,30 +46,23 @@ const FONT_LABELS: Record<(typeof LANDING_FONTS)[number], string> = {
   almarai: "Almarai",
 };
 
-export function SettingsPanel({
-  pageId,
+export function ThemeFields({
   theme,
   onTheme,
-  fields,
-  onField,
 }: {
-  pageId: string;
   theme: Theme;
   onTheme: (patch: Partial<Theme>) => void;
-  fields: SettingsFields;
-  onField: (key: keyof SettingsFields, value: string) => void;
 }) {
   const colorValue = (value: string) =>
     /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
 
   return (
-    <div>
-      <section className={cardCls}>
-        <h2 className="font-bold mb-3">{ar.landing.theme}</h2>
+    <div className="space-y-5">
+      <div>
         <h3 className="text-sm font-medium text-black/60 mb-2">
           {ar.landing.colors}
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {COLOR_FIELDS.map((field) => (
             <div key={field.key}>
               <label className={labelCls}>{field.label}</label>
@@ -96,8 +88,13 @@ export function SettingsPanel({
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+      <div>
+        <h3 className="text-sm font-medium text-black/60 mb-2">
+          {ar.landing.groupButtons}
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {NUMBER_FIELDS.map((field) => (
             <div key={field.key}>
               <label className={labelCls}>{field.label}</label>
@@ -116,84 +113,95 @@ export function SettingsPanel({
             </div>
           ))}
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>{ar.landing.headingFont}</label>
-            <select
-              className={inputCls}
-              value={theme.headingFont}
-              onChange={(e) =>
-                onTheme({ headingFont: e.target.value as Theme["headingFont"] })
-              }
-            >
-              {LANDING_FONTS.map((font) => (
-                <option key={font} value={font}>
-                  {FONT_LABELS[font]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelCls}>{ar.landing.bodyFont}</label>
-            <select
-              className={inputCls}
-              value={theme.bodyFont}
-              onChange={(e) =>
-                onTheme({ bodyFont: e.target.value as Theme["bodyFont"] })
-              }
-            >
-              {LANDING_FONTS.map((font) => (
-                <option key={font} value={font}>
-                  {FONT_LABELS[font]}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>{ar.landing.headingFont}</label>
+          <select
+            className={inputCls}
+            value={theme.headingFont}
+            onChange={(e) =>
+              onTheme({ headingFont: e.target.value as Theme["headingFont"] })
+            }
+          >
+            {LANDING_FONTS.map((font) => (
+              <option key={font} value={font}>
+                {FONT_LABELS[font]}
+              </option>
+            ))}
+          </select>
         </div>
-      </section>
-
-      <section className={cardCls}>
-        <h2 className="font-bold mb-3">{ar.landing.seo}</h2>
-        <div className="space-y-4">
-          <div>
-            <label className={labelCls}>{ar.landing.seoTitle}</label>
-            <input
-              className={inputCls}
-              value={fields.seoTitle}
-              onChange={(e) => onField("seoTitle", e.target.value)}
-              maxLength={200}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>{ar.landing.seoDescription}</label>
-            <textarea
-              className={inputCls}
-              rows={3}
-              value={fields.seoDescription}
-              onChange={(e) => onField("seoDescription", e.target.value)}
-              maxLength={400}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>{ar.landing.ogImage}</label>
-            <input
-              className={`${inputCls} font-mono`}
-              dir="ltr"
-              value={fields.ogImageUrl}
-              onChange={(e) => onField("ogImageUrl", e.target.value)}
-              maxLength={2048}
-            />
-            <ImageUploadButton
-              pageId={pageId}
-              onUploaded={(url) => onField("ogImageUrl", url)}
-            />
-          </div>
+        <div>
+          <label className={labelCls}>{ar.landing.bodyFont}</label>
+          <select
+            className={inputCls}
+            value={theme.bodyFont}
+            onChange={(e) =>
+              onTheme({ bodyFont: e.target.value as Theme["bodyFont"] })
+            }
+          >
+            {LANDING_FONTS.map((font) => (
+              <option key={font} value={font}>
+                {FONT_LABELS[font]}
+              </option>
+            ))}
+          </select>
         </div>
-      </section>
+      </div>
+    </div>
+  );
+}
 
-      <section className={cardCls}>
-        <h2 className="font-bold mb-1">{ar.landing.pixels}</h2>
+export function SeoFields({
+  pageId,
+  fields,
+  onField,
+}: {
+  pageId: string;
+  fields: SettingsFields;
+  onField: (key: keyof SettingsFields, value: string) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <div className="space-y-4">
+        <div>
+          <label className={labelCls}>{ar.landing.seoTitle}</label>
+          <input
+            className={inputCls}
+            value={fields.seoTitle}
+            onChange={(e) => onField("seoTitle", e.target.value)}
+            maxLength={200}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>{ar.landing.seoDescription}</label>
+          <textarea
+            className={inputCls}
+            rows={3}
+            value={fields.seoDescription}
+            onChange={(e) => onField("seoDescription", e.target.value)}
+            maxLength={400}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>{ar.landing.ogImage}</label>
+          <input
+            className={`${inputCls} font-mono`}
+            dir="ltr"
+            value={fields.ogImageUrl}
+            onChange={(e) => onField("ogImageUrl", e.target.value)}
+            maxLength={2048}
+          />
+          <ImageUploadButton
+            pageId={pageId}
+            onUploaded={(url) => onField("ogImageUrl", url)}
+          />
+        </div>
+      </div>
+
+      <div className="border-t border-black/10 pt-5">
+        <h3 className="font-medium mb-1">{ar.landing.pixels}</h3>
         <p className="text-xs text-black/50 mb-3">{ar.landing.pixelsHelp}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -218,7 +226,7 @@ export function SettingsPanel({
             />
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

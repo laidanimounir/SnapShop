@@ -338,6 +338,10 @@ export const ar = {
     notPublishedYet: "لم تُنشر بعد — العملاء لا يرون هذه الصفحة.",
     publish: "نشر",
     publishing: "جارٍ النشر…",
+    updatePublish: "تحديث النشر",
+    noChanges: "لا توجد تغييرات",
+    noChangesHint:
+      "المسودة مطابقة للنسخة المنشورة. لا يوجد ما يمكن نشره حتى الآن.",
     unpublish: "إلغاء النشر",
     unpublishing: "جارٍ إلغاء النشر…",
     unpublishConfirm:

@@ -198,6 +198,34 @@ export function buildUnpublishUpdate(): UnpublishUpdate {
   return { status: "unpublished" };
 }
 
+// Stable stringify (object keys sorted, array order preserved) so two
+// page-content objects can be compared regardless of key insertion order.
+// Array order matters — it is the section order.
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  if (typeof value === "object" && value !== null) {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`);
+    return `{${entries.join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+// True when the draft equals the published snapshot, i.e. there is nothing
+// new to publish. Used to decide between "publish", "update the published
+// page" and a disabled "no changes" state in the editor.
+export function contentEquals(a: unknown, b: unknown): boolean {
+  const left = validateContentInput(a);
+  const right = validateContentInput(b);
+  if (left.ok && right.ok) {
+    return stableStringify(left.value) === stableStringify(right.value);
+  }
+  return stableStringify(a) === stableStringify(b);
+}
+
 // ------------------------------------------------------------
 // Templates
 // ------------------------------------------------------------

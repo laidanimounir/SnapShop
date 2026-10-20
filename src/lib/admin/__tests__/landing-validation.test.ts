@@ -4,6 +4,7 @@ import {
   buildApplyTemplateUpdate,
   buildPublishUpdate,
   buildUnpublishUpdate,
+  contentEquals,
   ensureUniqueSlug,
   isTemplateNameTaken,
   suggestSlug,
@@ -197,6 +198,37 @@ describe("buildPublishUpdate", () => {
 describe("buildUnpublishUpdate", () => {
   it("returns the unpublished status", () => {
     expect(buildUnpublishUpdate()).toEqual({ status: "unpublished" });
+  });
+});
+
+describe("contentEquals", () => {
+  it("treats identical content as equal regardless of key order", () => {
+    const draft = {
+      sections: [{ props: { title: "أ", subtitle: "ب" }, id: "s-1", type: "hero" }],
+      theme: { primaryColor: "#000000" },
+    };
+    const published = {
+      theme: { primaryColor: "#000000" },
+      sections: [{ type: "hero", id: "s-1", props: { subtitle: "ب", title: "أ" } }],
+    };
+    expect(contentEquals(draft, published)).toBe(true);
+  });
+
+  it("detects a changed section order", () => {
+    const a = { sections: [hero("hero-1"), hero("hero-2")] };
+    const b = { sections: [hero("hero-2"), hero("hero-1")] };
+    expect(contentEquals(a, b)).toBe(false);
+  });
+
+  it("detects a changed field", () => {
+    expect(
+      contentEquals({ sections: [hero("hero-1")] }, { sections: [] })
+    ).toBe(false);
+  });
+
+  it("compares raw values when either side is not valid content", () => {
+    expect(contentEquals([1, 2, 3], [1, 2, 3])).toBe(true);
+    expect(contentEquals([1, 2, 3], [1, 2, 4])).toBe(false);
   });
 });
 

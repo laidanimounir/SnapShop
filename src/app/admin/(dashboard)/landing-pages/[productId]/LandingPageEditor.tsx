@@ -22,6 +22,7 @@ import {
   type SectionType,
 } from "@/lib/admin/landing-sections";
 import { ar, formatAr } from "@/lib/admin/i18n-ar";
+import { contentEquals } from "@/lib/admin/landing-validation";
 import type { AdminLandingPage, AdminTemplateSummary, LandingPageStatus } from "@/lib/api/landing-admin";
 import { MAX_SECTIONS, parsePageContent, type PageContent } from "@/lib/landing/content";
 import type { LandingOrderData } from "@/lib/landing/order-data";
@@ -94,6 +95,15 @@ export function LandingPageEditor({
 
   const [status, setStatus] = useState<LandingPageStatus>(page.status);
   const [updatedAt, setUpdatedAt] = useState(page.updated_at);
+  const [publishedContent, setPublishedContent] = useState<unknown>(
+    page.published_content
+  );
+
+  // Server props change after router.refresh(); keep the published snapshot
+  // in sync so the primary button label stays correct.
+  useEffect(() => {
+    setPublishedContent(page.published_content);
+  }, [page.published_content]);
 
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -103,6 +113,11 @@ export function LandingPageEditor({
   );
 
   const hasInvalidSection = sections.some((s) => !isSectionValid(s));
+
+  // The published snapshot only exists once the page has been published.
+  const hasUnpublishedChanges =
+    status !== "published" ||
+    !contentEquals({ theme, sections }, publishedContent);
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -220,6 +235,7 @@ export function LandingPageEditor({
       return;
     }
     setStatus("published");
+    setPublishedContent({ theme, sections });
     setUpdatedAt(new Date().toISOString());
     showToast(ar.landing.publishedMsg);
     router.refresh();
@@ -234,6 +250,7 @@ export function LandingPageEditor({
       return;
     }
     setStatus("unpublished");
+    setPublishedContent(null);
     showToast(ar.landing.unpublishedMsg);
     router.refresh();
   };
@@ -285,7 +302,7 @@ export function LandingPageEditor({
             >
               {saving ? ar.landing.saving : ar.landing.saveDraft}
             </button>
-            {status === "published" ? (
+            {status === "published" && (
               <a
                 href={`/p/${page.slug}`}
                 target="_blank"
@@ -294,16 +311,28 @@ export function LandingPageEditor({
               >
                 {ar.landing.view}
               </a>
-            ) : (
-              <button
-                type="button"
-                onClick={onPublish}
-                disabled={publishing}
-                className="px-4 py-2 rounded-full bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {publishing ? ar.landing.publishing : ar.landing.publish}
-              </button>
             )}
+            <button
+              type="button"
+              onClick={onPublish}
+              disabled={publishing || !hasUnpublishedChanges}
+              title={
+                !hasUnpublishedChanges ? ar.landing.noChangesHint : undefined
+              }
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
+                hasUnpublishedChanges
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                  : "bg-emerald-600/40 text-white/80 cursor-not-allowed"
+              } disabled:opacity-70`}
+            >
+              {publishing
+                ? ar.landing.publishing
+                : !hasUnpublishedChanges
+                  ? ar.landing.noChanges
+                  : status === "published"
+                    ? ar.landing.updatePublish
+                    : ar.landing.publish}
+            </button>
             <HeaderMoreMenu
               published={status === "published"}
               pageId={page.id}

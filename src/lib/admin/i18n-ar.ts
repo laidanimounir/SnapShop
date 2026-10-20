@@ -13,6 +13,8 @@ export const ar = {
     signOut: "تسجيل الخروج",
     signedInAs: "مسجل الدخول باسم",
     loginRequired: "مطلوب تسجيل الدخول إلى لوحة الإدارة",
+    collapseSidebar: "طيّ القائمة",
+    expandSidebar: "توسيع القائمة",
   },
   statuses: {
     pending: "جديد",

@@ -352,7 +352,7 @@ export function LandingPageEditor({
         })}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 xl:items-start gap-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[280px_360px_minmax(0,1fr)] xl:items-start">
         <div className={narrowPane === "sections" ? "block" : "hidden xl:block"}>
           <SectionsPanel
             sections={sections}

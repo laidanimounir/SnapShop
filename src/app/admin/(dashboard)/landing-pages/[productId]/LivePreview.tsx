@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import SectionRenderer from "@/components/landing/SectionRenderer";
 import { buildPreviewContent } from "@/lib/admin/landing-preview";
@@ -15,6 +15,14 @@ import type { Theme } from "@/lib/landing/theme";
 import { almarai, cairo, tajawal } from "@/styles/fonts";
 
 type Device = "mobile" | "desktop";
+
+// Logical device widths. The frame always renders at these widths and is
+// scaled down with a CSS transform so the real layout stays intact even
+// though the admin column is much narrower.
+const DEVICE_WIDTH: Record<Device, number> = {
+  mobile: 390,
+  desktop: 1100,
+};
 
 // Live preview of the unsaved draft, rendered with the real section
 // components and theme variables. Incomplete sections are filtered out by
@@ -31,12 +39,44 @@ export function LivePreview({
   const [device, setDevice] = useState<Device>("mobile");
   const preview = buildPreviewContent({ theme, sections });
 
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const update = () => setAvailableWidth(el.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const update = () => setContentHeight(el.scrollHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [device]);
+
+  const frameWidth = DEVICE_WIDTH[device];
+  // Never scale up: only shrink until the logical frame fits the column.
+  const scale =
+    availableWidth > 0 ? Math.min(1, availableWidth / frameWidth) : 1;
+
   const frameStyle = {
     ...safeThemeToCssVariables(preview.theme),
     fontFamily: "var(--font-body)",
+    width: frameWidth,
+    transform: `scale(${scale})`,
+    transformOrigin: "top center",
     // Makes the frame a containing block so position:fixed bits (like the
     // sticky order button) stay inside the preview instead of the window.
-    transform: "translateZ(0)",
   } as React.CSSProperties;
 
   return (
@@ -81,32 +121,44 @@ export function LivePreview({
         </p>
       ) : null}
 
-      <div className="bg-gray-100 rounded-lg p-3 flex-1 min-h-0 overflow-y-auto">
+      <div
+        ref={viewportRef}
+        className="bg-gray-100 rounded-lg p-3 flex-1 min-h-0 overflow-y-auto"
+      >
+        {/* Reserves the scaled footprint: the transform below doesn't
+            affect layout, so the wrapper carries the visible size. */}
         <div
-          dir="rtl"
-          style={frameStyle}
-          className={`mx-auto overflow-hidden rounded-lg border border-black/10 bg-[var(--lp-bg)] text-[var(--lp-text)] ${
-            device === "mobile" ? "w-[380px] max-w-full" : "w-full"
-          }`}
+          style={{
+            width: frameWidth * scale,
+            height: contentHeight * scale,
+            marginInline: "auto",
+          }}
         >
           <div
-            data-landing-page
-            className={`${cairo.variable} ${tajawal.variable} ${almarai.variable}`}
+            ref={frameRef}
+            dir="rtl"
+            style={frameStyle}
+            className="overflow-hidden rounded-lg border border-black/10 bg-[var(--lp-bg)] text-[var(--lp-text)] shadow-sm"
           >
-            <style
-              dangerouslySetInnerHTML={{ __html: LANDING_HEADING_FONT_CSS }}
-            />
-            {preview.sections.length === 0 ? (
-              <p className="p-6 text-center text-sm text-black/40">
-                {ar.landing.previewEmpty}
-              </p>
-            ) : (
-              <SectionRenderer
-                sections={preview.sections}
-                order={order}
-                preview
+            <div
+              data-landing-page
+              className={`${cairo.variable} ${tajawal.variable} ${almarai.variable}`}
+            >
+              <style
+                dangerouslySetInnerHTML={{ __html: LANDING_HEADING_FONT_CSS }}
               />
-            )}
+              {preview.sections.length === 0 ? (
+                <p className="p-6 text-center text-sm text-black/40">
+                  {ar.landing.previewEmpty}
+                </p>
+              ) : (
+                <SectionRenderer
+                  sections={preview.sections}
+                  order={order}
+                  preview
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

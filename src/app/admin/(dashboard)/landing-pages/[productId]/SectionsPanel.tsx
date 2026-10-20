@@ -32,6 +32,38 @@ import { ar } from "@/lib/admin/i18n-ar";
 
 const selectCls = "px-3 py-2 border border-black/15 rounded-lg text-sm";
 
+// Small line icon per section type so the list is scannable at a glance.
+// Inline SVG (no icon dependency) with stroke following the current color.
+function SectionTypeIcon({ type }: { type: SectionType }) {
+  const paths: Record<SectionType, string> = {
+    hero: "M3 5h18v14H3zM3 10h18",
+    gallery: "M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6",
+    features: "M4 6h16M4 12h16M4 18h10",
+    size_guide: "M4 4h16v16H4zM4 9h16M9 4v16",
+    before_after: "M12 3v18M3 7h6v10H3zM15 7h6v10h-6z",
+    testimonials: "M4 5h16v10H8l-4 4z",
+    faq: "M12 4a8 8 0 100 16 8 8 0 000-16zM12 9v.01M11 12h1v4h1",
+    countdown: "M12 4a8 8 0 100 16 8 8 0 000-16zM12 4V2M10 2h4M12 8v4l3 2",
+    rich_text: "M4 6h16M4 12h16M4 18h10",
+    order_form: "M6 3h9l3 3v15H6zM9 8h6M9 12h6M9 16h4",
+    sticky_cta: "M4 12h16M15 7l5 5-5 5",
+  };
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+    >
+      <path d={paths[type]} />
+    </svg>
+  );
+}
+
 // One draggable row. Keyboard users get dnd-kit's arrow-key sorting, and
 // the ↑/↓ buttons below stay as a plain fallback for everyone else.
 function SortableRow({
@@ -69,6 +101,11 @@ function SortableRow({
     isDragging,
   } = useSortable({ id: section.id });
 
+  const label = sectionTypeLabel(section);
+  // Skip the subtitle when it just repeats the type label.
+  const showSummary =
+    summary.trim() !== "" && summary.trim() !== label.trim();
+
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -105,10 +142,10 @@ function SortableRow({
           onClick={() => onSelect(section.id)}
           className="flex min-w-0 flex-1 items-center gap-2 text-start"
         >
-          <span className="shrink-0 text-xs text-black/40">{index + 1}</span>
-          <span className="truncate text-sm font-medium">
-            {sectionTypeLabel(section)}
+          <span className="shrink-0 text-black/40">
+            <SectionTypeIcon type={section.type} />
           </span>
+          <span className="truncate text-sm font-medium">{label}</span>
           {section.hidden && (
             <span className="shrink-0 px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-600">
               {ar.landing.hiddenBadge}
@@ -133,7 +170,7 @@ function SortableRow({
         />
       </div>
 
-      {summary && (
+      {showSummary && (
         <div className="mt-1 ps-6 text-xs text-black/50 truncate">
           {summary}
         </div>

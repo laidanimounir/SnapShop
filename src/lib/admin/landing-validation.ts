@@ -270,3 +270,23 @@ export function isTemplateNameTaken(
   }
   return false;
 }
+
+export type DraftUpdate = {
+  draft_content: PageContent;
+  updated_at: string;
+};
+
+// Applying a template only ever rewrites draft_content (never the
+// published snapshot). The template's content is re-validated so a bad
+// stored template cannot corrupt the draft. `now` is injectable for tests.
+export function buildApplyTemplateUpdate(
+  templateContent: unknown,
+  now: Date = new Date()
+): ValidationResult<DraftUpdate> {
+  const content = validateContentInput(templateContent);
+  if (!content.ok) return content;
+  return {
+    ok: true,
+    value: { draft_content: content.value, updated_at: now.toISOString() },
+  };
+}

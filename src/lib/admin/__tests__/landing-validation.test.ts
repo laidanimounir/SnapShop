@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildApplyTemplateUpdate,
   buildPublishUpdate,
   buildUnpublishUpdate,
   ensureUniqueSlug,
@@ -286,5 +287,32 @@ describe("template name uniqueness", () => {
     expect(isTemplateNameTaken("summer deal", taken, "Summer Deal")).toBe(
       false
     );
+  });
+});
+
+describe("buildApplyTemplateUpdate", () => {
+  const now = new Date("2026-01-01T00:00:00.000Z");
+
+  it("writes only draft_content, never a published field", () => {
+    const result = buildApplyTemplateUpdate(
+      { sections: [hero("hero-1")] },
+      now
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(Object.keys(result.value).sort()).toEqual([
+        "draft_content",
+        "updated_at",
+      ]);
+      expect(result.value.draft_content.sections).toHaveLength(1);
+      expect(result.value.updated_at).toBe("2026-01-01T00:00:00.000Z");
+    }
+  });
+
+  it("rejects invalid template content", () => {
+    const result = buildApplyTemplateUpdate({
+      sections: [hero("dup"), hero("dup")],
+    });
+    expect(result.ok).toBe(false);
   });
 });

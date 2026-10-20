@@ -5,12 +5,17 @@ import { revalidatePath } from "next/cache";
 import { ar } from "@/lib/admin/i18n-ar";
 import { normalizeActionError } from "@/lib/admin/action-errors";
 import {
+  buildApplyTemplateUpdate,
   buildPublishUpdate,
   buildUnpublishUpdate,
+  isTemplateNameTaken,
+  templateNameKey,
   validateContentInput,
   validatePixelsInput,
   validateSeoInput,
   validateSlugInput,
+  validateTemplateInput,
+  validateTemplateName,
 } from "@/lib/admin/landing-validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { fallbackPageContent } from "@/lib/landing/content";
@@ -297,6 +302,269 @@ export async function unpublishLandingPageAction(
 
     revalidateLandingPaths(slug);
     return { ok: true, slug };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+// ------------------------------------------------------------
+// Templates
+// ------------------------------------------------------------
+
+// The unique index on the trimmed, lower-cased name raises a 23505 when a
+// template name collides; surface that as a friendly Arabic message.
+function isDuplicateNameError(error: { code?: string; message?: string }): boolean {
+  return (
+    error.code === "23505" ||
+    (typeof error.message === "string" &&
+      error.message.includes("uq_landing_template_name"))
+  );
+}
+
+// Saves the editor's current draft as a reusable template. The content is
+// validated with the same strict page schema as normal writes, so a
+// template can never hold broken sections.
+export async function saveDraftAsTemplateAction(input: {
+  content: unknown;
+  name?: unknown;
+  description?: unknown;
+}): Promise<ActionResult<{ id: string }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "saveDraftAsTemplate");
+
+    const validated = validateTemplateInput(input ?? {});
+    if (!validated.ok) return { ok: false, error: validated.error };
+
+    const { data, error } = await supabase
+      .from("landing_page_templates")
+      .insert({
+        name: validated.value.name,
+        description: validated.value.description,
+        content: validated.value.content,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      if (isDuplicateNameError(error)) {
+        return { ok: false, error: ar.messages.templateNameTaken };
+      }
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/admin/landing-templates");
+    return { ok: true, id: (data as { id: string }).id };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function renameTemplateAction(input: {
+  id: unknown;
+  name: unknown;
+}): Promise<ActionResult<{ id: string }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "renameTemplate");
+
+    const id = typeof input?.id === "string" ? input.id : "";
+    if (id === "") return { ok: false, error: ar.messages.templateNotFound };
+
+    const name = validateTemplateName(input?.name);
+    if (!name.ok) return { ok: false, error: name.error };
+
+    const { data: existing, error: existingError } = await supabase
+      .from("landing_page_templates")
+      .select("name")
+      .eq("id", id)
+      .maybeSingle();
+    if (existingError) throw new Error(existingError.message);
+    if (!existing) return { ok: false, error: ar.messages.templateNotFound };
+
+    if (isTemplateNameTaken(name.value, [(existing as { name: string }).name])) {
+      return { ok: false, error: ar.messages.templateNameTaken };
+    }
+    if (templateNameKey(name.value) === templateNameKey((existing as { name: string }).name)) {
+      // Same name (ignoring case/spaces): nothing to change.
+      return { ok: true, id };
+    }
+
+    const { data, error } = await supabase
+      .from("landing_page_templates")
+      .update({ name: name.value })
+      .eq("id", id)
+      .select("id")
+      .single();
+    if (error) {
+      if (isDuplicateNameError(error)) {
+        return { ok: false, error: ar.messages.templateNameTaken };
+      }
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/admin/landing-templates");
+    return { ok: true, id: (data as { id: string }).id };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+export async function deleteTemplateAction(
+  id: string
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "deleteTemplate");
+
+    if (typeof id !== "string" || id === "") {
+      return { ok: false, error: ar.messages.templateNotFound };
+    }
+
+    const { data, error } = await supabase
+      .from("landing_page_templates")
+      .delete()
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return { ok: false, error: ar.messages.templateNotFound };
+
+    revalidatePath("/admin/landing-templates");
+    return { ok: true, id: (data as { id: string }).id };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+// Returns a template's content so the editor can load it into local state.
+// The editor replaces its draft only after this call succeeds; the DB is
+// not touched until the admin presses Save.
+export async function getTemplateContentAction(
+  id: string
+): Promise<ActionResult<{ content: unknown }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "getTemplateContent");
+
+    if (typeof id !== "string" || id === "") {
+      return { ok: false, error: ar.messages.templateNotFound };
+    }
+
+    const { data, error } = await supabase
+      .from("landing_page_templates")
+      .select("content")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return { ok: false, error: ar.messages.templateNotFound };
+
+    return { ok: true, content: (data as { content: unknown }).content };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+// Replaces the target page's draft_content with a template's content. The
+// published snapshot is never touched. The template content is re-validated
+// before the write, so a bad stored template cannot corrupt the draft.
+export async function applyTemplateAction(input: {
+  pageId: unknown;
+  templateId: unknown;
+}): Promise<ActionResult<{ sections: number }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "applyTemplate");
+
+    const pageId = typeof input?.pageId === "string" ? input.pageId : "";
+    const templateId =
+      typeof input?.templateId === "string" ? input.templateId : "";
+    if (pageId === "") return { ok: false, error: ar.messages.landingNotFound };
+    if (templateId === "") {
+      return { ok: false, error: ar.messages.templateNotFound };
+    }
+
+    const { data: page, error: pageError } = await supabase
+      .from("product_landing_pages")
+      .select("id")
+      .eq("id", pageId)
+      .maybeSingle();
+    if (pageError) throw new Error(pageError.message);
+    if (!page) return { ok: false, error: ar.messages.landingNotFound };
+
+    const { data: template, error: templateError } = await supabase
+      .from("landing_page_templates")
+      .select("content")
+      .eq("id", templateId)
+      .maybeSingle();
+    if (templateError) throw new Error(templateError.message);
+    if (!template) return { ok: false, error: ar.messages.templateNotFound };
+
+    const update = buildApplyTemplateUpdate(
+      (template as { content: unknown }).content
+    );
+    if (!update.ok) return { ok: false, error: update.error };
+
+    const { error } = await supabase
+      .from("product_landing_pages")
+      .update(update.value)
+      .eq("id", pageId);
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/admin/landing-pages");
+    return { ok: true, sections: update.value.draft_content.sections.length };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+// Copies another product's current draft content into the target page's
+// draft. Only draft_content is written — published_content is never
+// touched, and the copied content is re-validated first.
+export async function copyDraftFromProductAction(input: {
+  pageId: unknown;
+  sourceProductId: unknown;
+}): Promise<ActionResult<{ sections: number }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "copyDraftFromProduct");
+
+    const pageId = typeof input?.pageId === "string" ? input.pageId : "";
+    const sourceProductId =
+      typeof input?.sourceProductId === "string" ? input.sourceProductId : "";
+    if (pageId === "") return { ok: false, error: ar.messages.landingNotFound };
+    if (sourceProductId === "") {
+      return { ok: false, error: ar.messages.productNotFound };
+    }
+
+    const { data: target, error: targetError } = await supabase
+      .from("product_landing_pages")
+      .select("id")
+      .eq("id", pageId)
+      .maybeSingle();
+    if (targetError) throw new Error(targetError.message);
+    if (!target) return { ok: false, error: ar.messages.landingNotFound };
+
+    const { data: source, error: sourceError } = await supabase
+      .from("product_landing_pages")
+      .select("draft_content")
+      .eq("product_id", sourceProductId)
+      .maybeSingle();
+    if (sourceError) throw new Error(sourceError.message);
+    if (!source) return { ok: false, error: ar.messages.landingNotFound };
+
+    const update = buildApplyTemplateUpdate(
+      (source as { draft_content: unknown }).draft_content
+    );
+    if (!update.ok) return { ok: false, error: update.error };
+
+    const { error } = await supabase
+      .from("product_landing_pages")
+      .update(update.value)
+      .eq("id", pageId);
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/admin/landing-pages");
+    return { ok: true, sections: update.value.draft_content.sections.length };
   } catch (error) {
     return actionError(error);
   }

@@ -10,6 +10,7 @@ import {
   type ProductPage,
 } from "@/lib/api/products";
 import { getActiveQuantityOffers } from "@/lib/api/offers";
+import { buildProductJsonLd } from "@/lib/seo/product-json-ld";
 import {
   getPublishedLandingSlugForProduct,
   getPublishedLandingSlugMap,
@@ -96,8 +97,27 @@ export default async function ProductPage({
     related = popular.filter((p) => p.id !== productId);
   }
 
+  // Structured data for search engines: mirrors exactly what the customer
+  // sees (real price/tiers, real stock, real reviews).
+  const jsonLd = buildProductJsonLd({
+    product,
+    offers,
+    reviewCount: reviews.length,
+    siteUrl: SITE_URL,
+    path: `/shop/product/${product.id}`,
+    breadcrumb: [
+      { name: ar.shop.home, url: "/" },
+      { name: ar.shop.title, url: "/shop" },
+      { name: product.name, url: `/shop/product/${product.id}` },
+    ],
+  });
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-frame mx-auto px-4 xl:px-0">
         <hr className="h-[1px] border-t-black/10 mb-4 sm:mb-6" />
         <BreadcrumbProduct title={product.name} />

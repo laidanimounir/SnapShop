@@ -195,6 +195,15 @@ export const ar = {
       addOffer: "+ إضافة عرض",
       removeOffer: "حذف العرض",
       maxOffers: "الحد الأقصى 3 عروض لهذا المنتج.",
+      offersMaxError: "الحد الأقصى {n} عروض لكل منتج.",
+      offersQuantityRange: "الكمية يجب أن تكون عددًا صحيحًا بين 1 و 10.",
+      offersQuantityUnique: "لا يمكن تكرار الكمية نفسها في منتج واحد.",
+      offersPricePositive: "السعر الإجمالي يجب أن يكون أكبر من 0.",
+      offersPriceTooHigh:
+        "السعر الإجمالي {total} دج أعلى من شراء {limit} دج (الكمية × السعر الأساسي).",
+      offersSaved: "تم حفظ {n} عرض.",
+      offersNotEnabledSave:
+        "عروض الكمية غير مفعّلة: جدول العروض غير مطبَّق في قاعدة البيانات، ولم يتم حفظ العروض.",
       name: "الاسم *",
       description: "الوصف",
       category: "الفئة",

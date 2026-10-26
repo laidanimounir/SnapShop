@@ -12,12 +12,14 @@ import {
   deleteProductAction,
   deleteProductImageAction,
   reorderImagesAction,
+  saveQuantityOffersAction,
   saveVariantsAction,
   setImageColorAction,
   setPrimaryImageAction,
   updateProductAction,
   uploadProductImageAction,
 } from "@/app/admin/actions";
+import { validateQuantityOffers } from "@/lib/admin/quantity-offers";
 import { buildVariantMatrix } from "@/lib/admin/variant-matrix";
 import { COMMON_COLORS, isValidHex, normalizeHex } from "@/lib/admin/colors";
 import {
@@ -290,6 +292,14 @@ export default function ProductEditor({
         return;
       }
     }
+    // Validate quantity offers before touching anything (server re-checks).
+    const offerValidation = offersEnabled
+      ? validateQuantityOffers(offerDrafts, Number(basePrice))
+      : null;
+    if (offerValidation && !offerValidation.ok) {
+      showToast(offerValidation.error, true);
+      return;
+    }
     setSaving(true);
     setToast(null);
     const basic = await updateProductAction(product.id, {
@@ -336,6 +346,20 @@ export default function ProductEditor({
       showToast(saved.error, true);
       return;
     }
+    let savedOffers = 0;
+    if (offersEnabled) {
+      setSaving(true);
+      const offersResult = await saveQuantityOffersAction(
+        product.id,
+        offerDrafts
+      );
+      setSaving(false);
+      if (!offersResult.ok) {
+        showToast(offersResult.error, true);
+        return;
+      }
+      savedOffers = offersResult.saved;
+    }
     setDirty(false);
     const parts = [
       formatAr(ar.products.editor.saved, { n: variantRows.length }),
@@ -343,6 +367,9 @@ export default function ProductEditor({
         ? formatAr(ar.products.editor.deactivatedHistory, {
             n: saved.deactivated,
           })
+        : "",
+      offersEnabled
+        ? formatAr(ar.products.editor.offersSaved, { n: savedOffers })
         : "",
     ]
       .filter(Boolean)

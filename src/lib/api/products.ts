@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { sanitizeSearchTerm } from "@/lib/search";
 import { isValidUuid } from "@/lib/uuid";
@@ -211,26 +212,30 @@ export async function getProducts(
   return { products, total: count ?? 0 };
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
-  // A non-uuid id makes Postgres throw a cast error (HTTP 500 on the page).
-  // Treat it as "not found" instead.
-  if (!isValidUuid(id)) return null;
-  const supabase = createServerSupabase();
-  const { data, error } = await supabase
-    .from("products")
-    .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at"
-    )
-    .eq("id", id)
-    .eq("is_active", true)
-    .maybeSingle();
+// cache(): generateMetadata and the page both ask for the same product in
+// one request, so the query (plus its variant/image queries) runs once.
+export const getProductById = cache(
+  async (id: string): Promise<Product | null> => {
+    // A non-uuid id makes Postgres throw a cast error (HTTP 500 on the page).
+    // Treat it as "not found" instead.
+    if (!isValidUuid(id)) return null;
+    const supabase = createServerSupabase();
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at"
+      )
+      .eq("id", id)
+      .eq("is_active", true)
+      .maybeSingle();
 
-  if (error) throw new Error(error.message);
-  if (!data) return null;
+    if (error) throw new Error(error.message);
+    if (!data) return null;
 
-  const [product] = await attachVariantsAndImages([data as Product]);
-  return product ?? null;
-}
+    const [product] = await attachVariantsAndImages([data as Product]);
+    return product ?? null;
+  }
+);
 
 export async function getApprovedReviews(productId: string): Promise<Review[]> {
   if (!isValidUuid(productId)) return [];

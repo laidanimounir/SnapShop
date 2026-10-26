@@ -15,3 +15,10 @@ export const PRIMARY_COLOR =
   process.env.NEXT_PUBLIC_PRIMARY_COLOR || "#1A1A1A";
 export const ACCENT_COLOR =
   process.env.NEXT_PUBLIC_ACCENT_COLOR || "#C9A24B";
+/**
+ * Quantity offers ship behind a flag: the RPC only understands p_offer_id
+ * after migrations 16-18 are applied, so the client keeps sending plain
+ * orders (no offer parameter) until this is switched on in Vercel.
+ * Default is OFF.
+ */
+export const ENABLE_OFFERS = process.env.NEXT_PUBLIC_ENABLE_OFFERS === "true";

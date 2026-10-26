@@ -76,13 +76,15 @@ export default function OrderForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [company, setCompany] = useState("");
-  // One key per (variant, quantity) attempt: reused across retries of the
-  // same payload so a retry returns the existing order instead of creating
-  // a duplicate; regenerated when the payload changes.
+  // One key per (variant, quantity, offer) attempt: reused across retries of
+  // the same payload so a retry returns the existing order instead of
+  // creating a duplicate; regenerated when the payload changes (including
+  // switching the selected quantity tier).
   const [idempotency, setIdempotency] = useState<{
     key: string;
     variantId: string;
     quantity: number;
+    offerId: string | null;
   } | null>(null);
 
   // Sticky-bar keyboard offset (visualViewport-aware; graceful fallback).
@@ -194,18 +196,20 @@ export default function OrderForm({
     setIsSubmitting(true);
     setError(null);
     try {
+      const offerId = offer?.id ?? null;
       // Reuse the key while the payload is unchanged; regenerate when the
-      // variant or quantity changed since the failed attempt.
+      // variant, quantity or selected tier changed since the failed attempt.
       let attemptKey: string;
       if (
         idempotency &&
         idempotency.variantId === variantId &&
-        idempotency.quantity === quantity
+        idempotency.quantity === quantity &&
+        idempotency.offerId === offerId
       ) {
         attemptKey = idempotency.key;
       } else {
         attemptKey = createIdempotencyKey();
-        setIdempotency({ key: attemptKey, variantId, quantity });
+        setIdempotency({ key: attemptKey, variantId, quantity, offerId });
       }
       const result = await placeGuestOrder({
         guest_name: customerName.trim(),
@@ -215,6 +219,7 @@ export default function OrderForm({
         idempotency_key: attemptKey,
         wilaya_code: Number(wilayaCode),
         delivery_type: deliveryType,
+        offer_id: offerId,
       });
       setIdempotency(null);
       router.push(`/order-confirmation/${result.confirmation_token}`);

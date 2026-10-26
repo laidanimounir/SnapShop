@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { ar } from "@/lib/store/i18n-ar";
+import { ENABLE_OFFERS } from "@/lib/config";
 
 export type OrderItemPayload = {
   variant_id: string;
@@ -50,8 +51,11 @@ export async function placeGuestOrder(input: {
   idempotency_key?: string;
   wilaya_code: number;
   delivery_type: "home" | "office";
+  /** Selected quantity tier. ONLY its id is ever sent - never a price:
+      the server reads the tier price from the database. */
+  offer_id?: string | null;
 }): Promise<PlaceOrderResult> {
-  const { data, error } = await supabase.rpc("place_guest_order", {
+  const params: Record<string, unknown> = {
     p_guest_name: input.guest_name,
     p_guest_phone: input.guest_phone,
     p_guest_address: input.guest_address,
@@ -62,7 +66,16 @@ export async function placeGuestOrder(input: {
     p_idempotency_key: input.idempotency_key ?? null,
     p_wilaya_code: input.wilaya_code,
     p_delivery_type: input.delivery_type,
-  });
+  };
+
+  // The RPC only knows p_offer_id after migrations 16-18 are applied, so the
+  // parameter is sent ONLY when the flag is on and a tier was selected.
+  // With the flag off the live site keeps ordering exactly as before.
+  if (ENABLE_OFFERS && input.offer_id) {
+    params.p_offer_id = input.offer_id;
+  }
+
+  const { data, error } = await supabase.rpc("place_guest_order", params);
 
   if (error) throw new Error(toUserFacingOrderError(error.message));
   return data as PlaceOrderResult;

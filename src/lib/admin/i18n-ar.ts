@@ -232,6 +232,8 @@ export const ar = {
       active: "نشط",
       noVariants: "فعّل الألوان أو المقاسات أعلاه لإنشاء المتغيرات.",
       saveAll: "حفظ كل التغييرات",
+      previewPage: "معاينة صفحة المنتج",
+      previewInactive: "المنتج غير مفعّل — لا تراه صفحة المتجر حتى تفعّله.",
       unsaved: "تغييرات غير محفوظة",
       deleteProduct: "حذف المنتج",
       deletePrompt: "حذف هذا المنتج؟",

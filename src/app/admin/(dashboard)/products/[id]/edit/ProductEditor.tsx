@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
   AdminProductDetail,
@@ -1097,6 +1098,19 @@ export default function ProductEditor({
         >
           {saving ? ar.common.saving : ar.products.editor.saveAll}
         </button>
+        <Link
+          href={`/shop/product/${product.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 py-2.5 rounded-full border border-black/15 text-sm font-medium hover:bg-gray-100"
+        >
+          {ar.products.editor.previewPage}
+        </Link>
+        {!isActive && (
+          <span className="text-xs text-black/50">
+            {ar.products.editor.previewInactive}
+          </span>
+        )}
         {dirty && !saving && (
           <span className="text-xs text-amber-700">
             {ar.products.editor.unsaved}

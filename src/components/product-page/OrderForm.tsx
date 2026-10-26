@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import Price from "@/components/common/Price";
 import { ar } from "@/lib/store/i18n-ar";
 import type { QuantityOffer } from "@/types/offer.types";
+import { quantityLabel } from "./QuantityOffers";
 import { trackPixelEvent } from "@/lib/landing/tracking";
 
 type OrderFormProps = {
@@ -291,8 +292,17 @@ export default function OrderForm({
               {[selectedColor, selectedSize].filter(Boolean).join(" / ")}
             </p>
           )}
+          {/* Selected quantity tier, or the plain quantity when no offers. */}
+          {offer ? (
+            <p className="text-xs text-brand-accent font-medium">
+              {quantityLabel(offer.quantity)}
+            </p>
+          ) : quantity > 1 ? (
+            <p className="text-xs text-black/60">{quantityLabel(quantity)}</p>
+          ) : null}
+          {/* Goods total, or the full order total once a wilaya is chosen. */}
           <p className="text-sm font-bold text-black">
-            <Price value={subtotal} />
+            <Price value={selectedZone ? orderTotal : goodsTotal} />
           </p>
         </div>
       </div>

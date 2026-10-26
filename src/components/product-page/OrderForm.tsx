@@ -199,6 +199,16 @@ export default function OrderForm({
     setError(null);
     try {
       const offerId = offer?.id ?? null;
+      // Funnel pixel: the customer committed to ordering. The wilaya was
+      // validated above, so the order total (goods + delivery) is real.
+      trackPixelEvent("InitiateCheckout", {
+        value: orderTotal,
+        quantity,
+        offerId,
+        offerQuantity: offer?.quantity,
+        contentIds: [product.id],
+        contentType: "product",
+      });
       // Reuse the key while the payload is unchanged; regenerate when the
       // variant, quantity or selected tier changed since the failed attempt.
       let attemptKey: string;

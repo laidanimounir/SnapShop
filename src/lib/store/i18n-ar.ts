@@ -145,6 +145,14 @@ export const ar = {
     },
     remainingStock: "المتبقي {n} قطعة",
     optionUnavailable: "{name} — نفدت الكمية",
+    trust: {
+      cod: "الدفع عند الاستلام",
+      codHint: "ادفع نقدًا عند وصول طلبك",
+      delivery: "توصيل حتى باب المنزل",
+      deliveryHint: "للمنزل أو المكتب حسب اختيارك",
+      returns: "الإرجاع والاستبدال",
+      returnsHint: "وفق شروط المتجر",
+    },
     previewNotice: "معاينة فقط: لا يمكن إرسال طلب من هنا.",
     youMightAlsoLike: "قد يعجبك أيضًا",
     details: {

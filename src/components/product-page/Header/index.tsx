@@ -20,6 +20,7 @@ import {
 import { sortSizes } from "@/lib/sizes";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
 import { IoMdCheckmark } from "react-icons/io";
+import { Truck, Wallet, RotateCcw } from "lucide-react";
 import Price from "@/components/common/Price";
 import {
   ar,
@@ -260,6 +261,28 @@ const Header = ({
               </>
             )}
           </div>
+          {/* Trust strip: honest, generic wording — no invented numbers. */}
+          <ul className="grid grid-cols-3 gap-2 border-y border-black/10 py-3 mb-4 sm:mb-5">
+            {[
+              { icon: Wallet, label: ar.product.trust.cod, hint: ar.product.trust.codHint },
+              { icon: Truck, label: ar.product.trust.delivery, hint: ar.product.trust.deliveryHint },
+              { icon: RotateCcw, label: ar.product.trust.returns, hint: ar.product.trust.returnsHint },
+            ].map(({ icon: Icon, label, hint }) => (
+              <li key={label} className="flex flex-col items-center text-center gap-1">
+                <Icon
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-brand-accent"
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                />
+                <span className="text-[11px] sm:text-xs font-medium text-black leading-tight">
+                  {label}
+                </span>
+                <span className="hidden sm:block text-[10px] text-black/45 leading-tight">
+                  {hint}
+                </span>
+              </li>
+            ))}
+          </ul>
           {product.description && (
             <p className="text-sm sm:text-base leading-relaxed text-black/60 mb-4 sm:mb-5">
               {product.description}

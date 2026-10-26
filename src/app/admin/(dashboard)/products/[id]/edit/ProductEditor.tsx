@@ -7,6 +7,7 @@ import type {
   AdminProductDetail,
   SizeType,
 } from "@/lib/api/admin";
+import type { QuantityOffer } from "@/types/offer.types";
 import {
   deleteProductAction,
   deleteProductImageAction,
@@ -25,6 +26,12 @@ import {
   moveImage,
   sortImages,
 } from "@/lib/admin/images";
+import {
+  MAX_OFFERS_PER_PRODUCT,
+  emptyOfferDraft,
+  toOfferDraft,
+} from "@/types/offer.types";
+import type { QuantityOfferDraft } from "@/types/offer.types";
 import { presetSizesFor } from "@/lib/sizes";
 import { ar, formatAr } from "@/lib/admin/i18n-ar";
 
@@ -44,8 +51,10 @@ const rowKey = (color: string | null, size: string | null) =>
 
 export default function ProductEditor({
   product,
+  offers,
 }: {
   product: AdminProductDetail;
+  offers: QuantityOffer[] | null;
 }) {
   const router = useRouter();
 
@@ -122,6 +131,50 @@ export default function ProductEditor({
   // Position-ordered view; position 0 is the primary image.
   const orderedImages = useMemo(() => sortImages(images), [images]);
   const imagesFull = orderedImages.length >= MAX_PRODUCT_IMAGES;
+
+  // ---- quantity offers (fixed total price per tier) ----
+  // offers === null means migration 0016 is not applied yet.
+  const offersEnabled = offers !== null;
+  const [offerDrafts, setOfferDrafts] = useState<QuantityOfferDraft[]>(
+    () => (offers ?? []).map(toOfferDraft)
+  );
+
+  const updateOffer = (index: number, patch: Partial<QuantityOfferDraft>) => {
+    setOfferDrafts((prev) =>
+      prev.map((o, i) => (i === index ? { ...o, ...patch } : o))
+    );
+    setDirty(true);
+  };
+
+  const addOffer = () => {
+    if (!offersEnabled || offerDrafts.length >= MAX_OFFERS_PER_PRODUCT) return;
+    setOfferDrafts((prev) => [...prev, emptyOfferDraft()]);
+    setDirty(true);
+  };
+
+  const removeOffer = (index: number) => {
+    setOfferDrafts((prev) => prev.filter((_, i) => i !== index));
+    setDirty(true);
+  };
+
+  const setDefaultOffer = (index: number) => {
+    setOfferDrafts((prev) =>
+      prev.map((o, i) => ({ ...o, is_default: i === index }))
+    );
+    setDirty(true);
+  };
+
+  // Derived, display only: price of ONE piece inside the tier.
+  const offerPerPiece = (offer: QuantityOfferDraft): string | null => {
+    const q = Number(offer.quantity);
+    const t = Number(offer.total_price);
+    if (!Number.isFinite(q) || q < 1 || !Number.isFinite(t) || t <= 0) {
+      return null;
+    }
+    return formatAr(ar.products.editor.offerPerPiece, {
+      price: (t / q).toFixed(0),
+    });
+  };
 
   // ---- misc ----
   const [dirty, setDirty] = useState(false);
@@ -551,7 +604,141 @@ export default function ProductEditor({
         </p>
       </section>
 
-      {/* 2. Images */}
+      {/* 2. Quantity offers */}
+      <section className={sectionCls}>
+        <h2 className="font-semibold mb-1">
+          {ar.products.editor.offersTitle}
+        </h2>
+        <p className="text-xs text-black/50 mb-3">
+          {ar.products.editor.offersHelp}
+        </p>
+        {!offersEnabled ? (
+          <div className="px-3 py-2 rounded-lg bg-amber-50 text-amber-800 text-sm">
+            {ar.products.editor.offersNotEnabled}
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-3">
+              {offerDrafts.map((offer, index) => (
+                <div
+                  key={offer.id ?? `new-${index}`}
+                  className="border border-black/10 rounded-lg p-3"
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1"
+                        htmlFor={`offer-qty-${index}`}
+                      >
+                        {ar.products.editor.offerQuantity}
+                      </label>
+                      <input
+                        id={`offer-qty-${index}`}
+                        className={inputCls}
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={offer.quantity}
+                        onChange={(e) =>
+                          updateOffer(index, { quantity: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1"
+                        htmlFor={`offer-price-${index}`}
+                      >
+                        {ar.products.editor.offerTotalPrice}
+                      </label>
+                      <input
+                        id={`offer-price-${index}`}
+                        className={inputCls}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={offer.total_price}
+                        onChange={(e) =>
+                          updateOffer(index, { total_price: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label
+                        className="block text-xs font-medium mb-1"
+                        htmlFor={`offer-badge-${index}`}
+                      >
+                        {ar.products.editor.offerBadge}
+                      </label>
+                      <input
+                        id={`offer-badge-${index}`}
+                        className={inputCls}
+                        maxLength={40}
+                        placeholder={ar.products.editor.offerBadgePlaceholder}
+                        value={offer.badge}
+                        onChange={(e) =>
+                          updateOffer(index, { badge: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="offer-default"
+                        checked={offer.is_default}
+                        onChange={() => setDefaultOffer(index)}
+                      />
+                      {ar.products.editor.offerDefault}
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={offer.is_active}
+                        onChange={(e) =>
+                          updateOffer(index, { is_active: e.target.checked })
+                        }
+                      />
+                      {ar.products.editor.offerActive}
+                    </label>
+                    {offerPerPiece(offer) && (
+                      <span className="text-xs text-black/50">
+                        {offerPerPiece(offer)}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="ms-auto px-2.5 py-1.5 text-xs rounded bg-red-50 text-red-700 hover:bg-red-100"
+                      aria-label={ar.products.editor.removeOffer}
+                      onClick={() => removeOffer(index)}
+                    >
+                      {ar.products.editor.removeOffer}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 mt-3">
+              <button
+                type="button"
+                className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-40"
+                disabled={offerDrafts.length >= MAX_OFFERS_PER_PRODUCT}
+                onClick={addOffer}
+              >
+                {ar.products.editor.addOffer}
+              </button>
+              {offerDrafts.length >= MAX_OFFERS_PER_PRODUCT && (
+                <span className="text-xs text-black/50">
+                  {ar.products.editor.maxOffers}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* 3. Images */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-1">
           {ar.products.editor.images} ({orderedImages.length}/{MAX_PRODUCT_IMAGES})
@@ -669,7 +856,7 @@ export default function ProductEditor({
         </div>
       </section>
 
-      {/* 3. Colors */}
+      {/* 4. Colors */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-3">{ar.products.editor.colors}</h2>
         <label className="flex items-center gap-2 text-sm mb-3">
@@ -814,7 +1001,7 @@ export default function ProductEditor({
         )}
       </section>
 
-      {/* 4. Sizes */}
+      {/* 5. Sizes */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-3">{ar.products.editor.sizes}</h2>
         {sizeType === "none" ? (
@@ -971,7 +1158,7 @@ export default function ProductEditor({
         )}
       </section>
 
-      {/* 5. Variants / stock */}
+      {/* 6. Variants / stock */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-1">
           {ar.products.editor.variants} ({matrix.length})

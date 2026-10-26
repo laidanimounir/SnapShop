@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAdminProductById } from "@/lib/api/admin";
+import { getAdminProductById, getAdminProductOffers } from "@/lib/api/admin";
 import { ar } from "@/lib/admin/i18n-ar";
 import ProductEditor from "./ProductEditor";
 
@@ -14,6 +14,9 @@ export default async function EditProductPage({
   const product = await getAdminProductById(params.id);
   if (!product) notFound();
 
+  // null = migration 0016 not applied yet -> editor shows "not enabled".
+  const offers = await getAdminProductOffers(params.id);
+
   return (
     <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-4">
@@ -24,7 +27,7 @@ export default async function EditProductPage({
           {ar.products.backToProducts}
         </Link>
       </div>
-      <ProductEditor product={product} />
+      <ProductEditor product={product} offers={offers} />
     </div>
   );
 }

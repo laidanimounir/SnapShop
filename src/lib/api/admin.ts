@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/supabase/admin";
 import { storagePathFromPublicUrl } from "@/lib/admin/product-validation";
 import { buildDeliveryZoneUpdates } from "@/lib/admin/delivery-updates";
 import { ar } from "@/lib/admin/i18n-ar";
+import type { QuantityOffer } from "@/types/offer.types";
 
 export type AdminOrder = {
   id: string;
@@ -362,6 +363,37 @@ export async function getAdminProductById(
     variants: (variants ?? []) as AdminVariant[],
     images: (images ?? []) as AdminImage[],
   };
+}
+
+const OFFER_COLUMNS =
+  "id, product_id, quantity, total_price, label, badge, is_default, position, is_active";
+
+/**
+ * All quantity offers of a product (service role, so inactive offers and
+ * inactive products are visible in the editor).
+ * Returns null when migration 0016 has not been applied yet: the caller
+ * then shows "offers not enabled" instead of crashing.
+ */
+export async function getAdminProductOffers(
+  productId: string
+): Promise<QuantityOffer[] | null> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("product_quantity_offers")
+    .select(OFFER_COLUMNS)
+    .eq("product_id", productId)
+    .order("position", { ascending: true })
+    .order("quantity", { ascending: true });
+
+  if (error) {
+    const missing =
+      error.code === "42P01" ||
+      error.message.includes("does not exist") ||
+      error.message.includes("missing FROM-clause entry");
+    if (missing) return null;
+    throw new Error(error.message);
+  }
+  return (data ?? []) as QuantityOffer[];
 }
 
 export type AdminReview = {

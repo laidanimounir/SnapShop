@@ -226,6 +226,7 @@ export async function createProductAction(input: {
   category?: string | null;
   brand?: string | null;
   base_price: number;
+  compare_at_price?: number | null;
   discount_percentage?: number;
   discount_amount?: number;
   is_active?: boolean;
@@ -257,6 +258,7 @@ export async function updateProductAction(
     category?: string | null;
     brand?: string | null;
     base_price: number;
+    compare_at_price?: number | null;
     discount_percentage?: number;
     discount_amount?: number;
     is_active?: boolean;

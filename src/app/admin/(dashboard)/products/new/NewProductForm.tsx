@@ -15,6 +15,7 @@ export default function NewProductForm() {
   const [category, setCategory] = useState("");
   const [brand, setBrand] = useState("");
   const [basePrice, setBasePrice] = useState("0");
+  const [oldPrice, setOldPrice] = useState("");
   const [sizeType, setSizeType] = useState("none");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export default function NewProductForm() {
       category: category || null,
       brand: brand || null,
       base_price: Number(basePrice),
+      compare_at_price: oldPrice.trim() === "" ? null : Number(oldPrice),
       is_active: false,
       size_type: sizeType as "none" | "clothing" | "shoes" | "custom",
     });
@@ -101,6 +103,20 @@ export default function NewProductForm() {
             value={basePrice}
             onChange={(e) => setBasePrice(e.target.value)}
             required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            {ar.products.oldPrice}
+          </label>
+          <input
+            className={inputCls}
+            type="number"
+            min="0"
+            step="0.01"
+            value={oldPrice}
+            placeholder={ar.products.oldPriceHint}
+            onChange={(e) => setOldPrice(e.target.value)}
           />
         </div>
         <div>

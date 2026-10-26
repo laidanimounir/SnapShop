@@ -55,6 +55,10 @@ export default function ProductEditor({
   const [category, setCategory] = useState(product.category ?? "");
   const [brand, setBrand] = useState(product.brand ?? "");
   const [basePrice, setBasePrice] = useState(String(product.base_price));
+  // Old "was" price (display only). Empty string == no old price (null).
+  const [compareAtPrice, setCompareAtPrice] = useState(
+    product.compare_at_price == null ? "" : String(product.compare_at_price)
+  );
   const [discountPct, setDiscountPct] = useState(
     String(product.discount_percentage)
   );
@@ -231,6 +235,11 @@ export default function ProductEditor({
       category: category || null,
       brand: brand || null,
       base_price: Number(basePrice),
+      // Empty input == no old price; the legacy discount values are still
+      // sent unchanged so nothing is wiped before the optional data
+      // migration converts them to compare_at_price.
+      compare_at_price:
+        compareAtPrice.trim() === "" ? null : Number(compareAtPrice),
       discount_percentage: Number(discountPct) || 0,
       discount_amount: Number(discountAmt) || 0,
       is_active: isActive,
@@ -500,33 +509,17 @@ export default function ProductEditor({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              {ar.products.editor.discountPct}
-            </label>
-            <input
-              className={inputCls}
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={discountPct}
-              onChange={(e) => {
-                setDiscountPct(e.target.value);
-                setDirty(true);
-              }}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {ar.products.editor.discountAmt}
+              {ar.products.editor.oldPriceRequired}
             </label>
             <input
               className={inputCls}
               type="number"
               min="0"
               step="0.01"
-              value={discountAmt}
+              value={compareAtPrice}
+              placeholder={ar.products.editor.oldPriceHint}
               onChange={(e) => {
-                setDiscountAmt(e.target.value);
+                setCompareAtPrice(e.target.value);
                 setDirty(true);
               }}
             />

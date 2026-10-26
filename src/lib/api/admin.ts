@@ -295,6 +295,8 @@ export type AdminProductDetail = {
   category: string | null;
   brand: string | null;
   base_price: number;
+  /** Old "was" price shown struck through; null when unset (display only). */
+  compare_at_price: number | null;
   discount_percentage: number;
   discount_amount: number;
   rating: number;
@@ -304,17 +306,38 @@ export type AdminProductDetail = {
   images: AdminImage[];
 };
 
+const PRODUCT_COLUMNS =
+  "id, name, description, category, brand, base_price, compare_at_price, discount_percentage, discount_amount, rating, is_active, size_type";
+const PRODUCT_COLUMNS_LEGACY =
+  "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type";
+
+/**
+ * True when PostgREST rejected the request because a column from
+ * migration 0015 is not in the live schema yet. Every read/write that
+ * touches compare_at_price goes through a retry without it, so the admin
+ * keeps working before the migration is applied.
+ */
+function isMissingCompareAtPrice(message: string | null | undefined): boolean {
+  return Boolean(message && message.includes("compare_at_price"));
+}
+
 export async function getAdminProductById(
   id: string
 ): Promise<AdminProductDetail | null> {
   const { supabase } = await requireAdmin();
-  const { data: product, error } = await supabase
+  let { data: product, error } = await supabase
     .from("products")
-    .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type"
-    )
+    .select(PRODUCT_COLUMNS)
     .eq("id", id)
     .maybeSingle();
+
+  if (error && isMissingCompareAtPrice(error.message)) {
+    ({ data: product, error } = await supabase
+      .from("products")
+      .select(PRODUCT_COLUMNS_LEGACY)
+      .eq("id", id)
+      .maybeSingle());
+  }
 
   if (error) throw new Error(error.message);
   if (!product) return null;
@@ -334,6 +357,8 @@ export async function getAdminProductById(
 
   return {
     ...(product as AdminProductDetail),
+    // Missing before migration 0015: report "no old price" instead of undefined.
+    compare_at_price: (product as { compare_at_price?: number | null }).compare_at_price ?? null,
     variants: (variants ?? []) as AdminVariant[],
     images: (images ?? []) as AdminImage[],
   };
@@ -383,6 +408,8 @@ export type ProductWriteInput = {
   category?: string | null;
   brand?: string | null;
   base_price: number;
+  /** Old "was" price (display only). Nullable: null means "no old price". */
+  compare_at_price?: number | null;
   discount_percentage?: number;
   discount_amount?: number;
   is_active?: boolean;
@@ -415,26 +442,37 @@ export async function createProduct(input: ProductWriteInput): Promise<{ id: str
     category = null,
     brand = null,
     base_price,
+    compare_at_price = null,
     discount_percentage = 0,
     discount_amount = 0,
     is_active = false,
     size_type = "none",
   } = input;
-  const { data, error } = await supabase
+  const row = {
+    name,
+    description,
+    category,
+    brand,
+    base_price,
+    compare_at_price,
+    discount_percentage,
+    discount_amount,
+    is_active,
+    size_type,
+  };
+  let { data, error } = await supabase
     .from("products")
-    .insert({
-      name,
-      description,
-      category,
-      brand,
-      base_price,
-      discount_percentage,
-      discount_amount,
-      is_active,
-      size_type,
-    })
+    .insert(row)
     .select("id")
     .single();
+  if (error && isMissingCompareAtPrice(error.message)) {
+    const { compare_at_price: _pending, ...legacyRow } = row;
+    ({ data, error } = await supabase
+      .from("products")
+      .insert(legacyRow)
+      .select("id")
+      .single());
+  }
   if (error) throw new Error(error.message);
   return { id: (data as { id: string }).id };
 }
@@ -444,7 +482,11 @@ export async function updateProduct(
   input: Partial<ProductWriteInput>
 ): Promise<void> {
   const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("products").update(input).eq("id", id);
+  let { error } = await supabase.from("products").update(input).eq("id", id);
+  if (error && isMissingCompareAtPrice(error.message)) {
+    const { compare_at_price: _pending, ...legacy } = input;
+    ({ error } = await supabase.from("products").update(legacy).eq("id", id));
+  }
   if (error) throw new Error(error.message);
 }
 

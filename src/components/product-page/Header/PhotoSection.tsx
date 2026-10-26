@@ -36,6 +36,7 @@ const PhotoSection = ({
                 src={photo}
                 width={152}
                 height={167}
+                sizes="(min-width: 1024px) 152px, 111px"
                 className="rounded-md w-full h-full object-cover hover:scale-110 transition-all duration-500"
                 alt={title}
               />
@@ -50,6 +51,7 @@ const PhotoSection = ({
             src={selected}
             width={444}
             height={530}
+            sizes="(min-width: 1024px) calc(50vw - 40px), 100vw"
             className="rounded-md w-full h-full object-cover hover:scale-110 transition-all duration-500"
             alt={title}
             priority

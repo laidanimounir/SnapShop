@@ -94,5 +94,21 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Nothing on this storefront may scroll the page sideways — the 360px
+       check in the design pass depends on it. */
+    overflow-x: hidden;
+  }
+}
+
+/* Respect the OS reduced-motion setting: no decorative animation or smooth
+   scrolling for customers who asked for it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

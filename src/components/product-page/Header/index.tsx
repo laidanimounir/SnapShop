@@ -189,7 +189,7 @@ const Header = ({
           <h1
             className={cn([
               cairo.className,
-              "text-2xl md:text-[40px] md:leading-[40px] mb-2 sm:mb-3 md:mb-3.5",
+              "text-2xl md:text-[40px] md:leading-[40px] mb-2 sm:mb-3 md:mb-3.5 break-words",
             ])}
           >
             {product.name}

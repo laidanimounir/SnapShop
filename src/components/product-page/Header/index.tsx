@@ -147,19 +147,21 @@ const Header = ({ product }: { product: Product }) => {
           >
             {product.name}
           </h1>
-          <div className="flex items-center mb-3 sm:mb-3.5">
-            <Rating
-              initialValue={product.rating}
-              allowFraction
-              SVGclassName="inline-block"
-              emptyClassName="fill-gray-50"
-              size={25}
-              readonly
-            />
-            <span className="text-black text-xs sm:text-sm ms-[11px] sm:ms-[13px] pb-0.5 sm:pb-0">
-              <bdi dir="ltr">{product.rating.toFixed(1)}/5</bdi>
-            </span>
-          </div>
+          {product.rating > 0 && (
+            <div className="flex items-center mb-3 sm:mb-3.5">
+              <Rating
+                initialValue={product.rating}
+                allowFraction
+                SVGclassName="inline-block"
+                emptyClassName="fill-gray-50"
+                size={25}
+                readonly
+              />
+              <span className="text-black text-xs sm:text-sm ms-[11px] sm:ms-[13px] pb-0.5 sm:pb-0">
+                <bdi dir="ltr">{product.rating.toFixed(1)}/5</bdi>
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-2.5 sm:gap-3 mb-5">
             <Price
               value={price}

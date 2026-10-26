@@ -18,6 +18,7 @@ import {
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { isValidUuid } from "@/lib/uuid";
+import { BRAND_NAME } from "@/lib/config";
 import { ar, truncateGraphemes } from "@/lib/store/i18n-ar";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -33,17 +34,28 @@ export async function generateMetadata({
   const primary =
     product.images.find((i) => i.is_primary) ?? product.images[0];
   const path = `/shop/product/${product.id}`;
+  const url = `${SITE_URL.replace(/\/$/, "")}${path}`;
+  const images = primary ? [{ url: primary.url }] : [];
   return {
     title: product.name,
     description,
     alternates: {
-      canonical: `${SITE_URL.replace(/\/$/, "")}${path}`,
+      canonical: url,
     },
     openGraph: {
+      type: "website",
+      url,
+      siteName: BRAND_NAME,
       title: product.name,
       description,
       locale: ar.meta.ogLocale,
-      ...(primary ? { images: [{ url: primary.url }] } : {}),
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: images.map((image) => image.url),
     },
   };
 }

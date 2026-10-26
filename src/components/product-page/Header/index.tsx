@@ -299,7 +299,7 @@ const Header = ({
                     key={color.name}
                     type="button"
                     aria-label={color.name}
-                    className="rounded-full w-9 sm:w-10 h-9 sm:h-10 flex items-center justify-center border border-black/10"
+                    className="rounded-full w-11 h-11 flex items-center justify-center border border-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2"
                     style={{
                       backgroundColor: color.hex || "#d1d5db",
                     }}
@@ -333,7 +333,7 @@ const Header = ({
                       type="button"
                       disabled={!!outOfStock}
                       className={cn([
-                        "bg-[#F0F0F0] flex items-center justify-center px-5 lg:px-6 py-2.5 lg:py-3 text-sm lg:text-base rounded-full m-1 lg:m-0 max-h-[46px]",
+                        "bg-[#F0F0F0] flex items-center justify-center px-5 lg:px-6 min-h-[44px] py-2.5 lg:py-3 text-sm lg:text-base rounded-full m-1 lg:m-0 max-h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2",
                         selectedSize === size && "bg-black font-medium text-white",
                         outOfStock && "opacity-40 cursor-not-allowed line-through",
                       ])}

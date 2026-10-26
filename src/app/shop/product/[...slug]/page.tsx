@@ -3,7 +3,12 @@ import BreadcrumbProduct from "@/components/product-page/BreadcrumbProduct";
 import Header from "@/components/product-page/Header";
 import Tabs from "@/components/product-page/Tabs";
 import ReviewsContent from "@/components/product-page/Tabs/ReviewsContent";
-import { getProductById, getProducts, getApprovedReviews } from "@/lib/api/products";
+import {
+  getProductById,
+  getProducts,
+  getApprovedReviews,
+  type ProductPage,
+} from "@/lib/api/products";
 import { getActiveQuantityOffers } from "@/lib/api/offers";
 import {
   getPublishedLandingSlugForProduct,
@@ -64,13 +69,32 @@ export default async function ProductPage({
     notFound();
   }
 
-  const [reviews, { products: related }, landingSlugs, offers] =
+  const [reviews, { products: categoryProducts }, landingSlugs, offers] =
     await Promise.all([
       getApprovedReviews(productId),
-      getProducts({ pageSize: 5, sort: "most-popular" }),
+      product.category
+        ? getProducts({
+            pageSize: 6,
+            sort: "most-popular",
+            category: product.category,
+          })
+        : Promise.resolve({ products: [], total: 0 } as ProductPage),
       getPublishedLandingSlugMap(),
       getActiveQuantityOffers(productId),
     ]);
+
+  // Related products: same category first, falling back to popular ones
+  // when the category has nothing else (or the product has none). The
+  // current product never shows in its own list; an empty list hides the
+  // whole section.
+  let related = categoryProducts.filter((p) => p.id !== productId);
+  if (related.length === 0) {
+    const { products: popular } = await getProducts({
+      pageSize: 6,
+      sort: "most-popular",
+    });
+    related = popular.filter((p) => p.id !== productId);
+  }
 
   return (
     <main>
@@ -91,13 +115,15 @@ export default async function ProductPage({
         </section>
         <Tabs product={product} />
       </div>
-      <div className="mb-[50px] sm:mb-20">
-        <ProductListSec
-          title={ar.product.youMightAlsoLike}
-          data={related.filter((p) => p.id !== productId)}
-          landingSlugs={landingSlugs}
-        />
-      </div>
+      {related.length > 0 && (
+        <div className="mb-[50px] sm:mb-20">
+          <ProductListSec
+            title={ar.product.youMightAlsoLike}
+            data={related}
+            landingSlugs={landingSlugs}
+          />
+        </div>
+      )}
     </main>
   );
 }

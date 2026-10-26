@@ -8,6 +8,8 @@
   --background-end-rgb: 255, 255, 255;
   --brand-primary: #1A1A1A;
   --brand-accent: #C9A24B;
+  /* Same gold, darkened for text: 6:1 contrast on white (WCAG AA). */
+  --brand-accent-ink: #7A5F1A;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -310,7 +310,7 @@ export default function OrderForm({
           )}
           {/* Selected quantity tier, or the plain quantity when no offers. */}
           {offer ? (
-            <p className="text-xs text-brand-accent font-medium">
+            <p className="text-xs text-[var(--brand-accent-ink)] font-medium">
               {quantityLabel(offer.quantity)}
             </p>
           ) : quantity > 1 ? (
@@ -351,7 +351,7 @@ export default function OrderForm({
           )}
         />
         {errors.customerName && (
-          <p className="text-xs text-red-500 mt-1">{errors.customerName}</p>
+          <p className="text-xs text-red-600 mt-1">{errors.customerName}</p>
         )}
       </div>
 
@@ -375,7 +375,7 @@ export default function OrderForm({
               : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10"
           )}
         />
-        {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+        {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
       </div>
 
       <h3 className="text-[13px] font-semibold text-black pt-3 border-t border-black/10">
@@ -410,8 +410,8 @@ export default function OrderForm({
             </option>
           ))}
         </select>
-        {errors.wilaya && <p className="text-xs text-red-500 mt-1">{errors.wilaya}</p>}
-        {zonesError && <p className="text-xs text-red-500 mt-1">{zonesError}</p>}
+        {errors.wilaya && <p className="text-xs text-red-600 mt-1">{errors.wilaya}</p>}
+        {zonesError && <p className="text-xs text-red-600 mt-1">{zonesError}</p>}
       </div>
 
       <div>
@@ -451,7 +451,7 @@ export default function OrderForm({
           })}
         </div>
         {!selectedZone && (
-          <p className="text-xs text-black/50 mt-1">{ar.checkout.selectWilayaHint}</p>
+          <p className="text-xs text-black/70 mt-1">{ar.checkout.selectWilayaHint}</p>
         )}
       </div>
 
@@ -474,7 +474,7 @@ export default function OrderForm({
           )}
         />
         {errors.address && (
-          <p className="text-xs text-red-500 mt-1">{errors.address}</p>
+          <p className="text-xs text-red-600 mt-1">{errors.address}</p>
         )}
       </div>
 
@@ -501,7 +501,7 @@ export default function OrderForm({
           <span>{ar.checkout.total}</span>
           <span>{selectedZone ? <Price value={orderTotal} /> : "—"}</span>
         </div>
-        <p className="text-[11px] text-black/50">{ar.checkout.codNote}</p>
+        <p className="text-[11px] text-black/70">{ar.checkout.codNote}</p>
       </div>
 
       {/* Honeypot field: hidden from humans, bots that fill it are rejected. */}
@@ -536,7 +536,7 @@ export default function OrderForm({
         }}
       >
         <div className="flex flex-col shrink-0 min-w-0">
-          <span className="text-[11px] text-black/50 leading-tight">
+          <span className="text-[11px] text-black/70 leading-tight">
             {selectedZone || offer
               ? ar.checkout.total
               : ar.checkout.subtotal}

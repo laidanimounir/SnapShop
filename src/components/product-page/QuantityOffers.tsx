@@ -46,7 +46,7 @@ export default function QuantityOffers({
           <span className="text-sm text-black/70 flex items-center gap-2 min-w-0">
             {quantityLabel(offer.quantity)}
             {offer.badge && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-accent/10 text-brand-accent shrink-0">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-accent/10 text-[var(--brand-accent-ink)] shrink-0">
                 {offer.badge}
               </span>
             )}
@@ -104,7 +104,7 @@ export default function QuantityOffers({
                   <span className="text-sm sm:text-base font-medium">
                     {quantityLabel(offer.quantity)}
                     {offer.badge && (
-                      <span className="ms-2 text-[10px] px-2 py-0.5 rounded-full bg-brand-accent/10 text-brand-accent font-normal">
+                      <span className="ms-2 text-[10px] px-2 py-0.5 rounded-full bg-brand-accent/10 text-[var(--brand-accent-ink)] font-normal">
                         {offer.badge}
                       </span>
                     )}
@@ -114,9 +114,9 @@ export default function QuantityOffers({
                     className="font-bold text-sm sm:text-base shrink-0"
                   />
                 </span>
-                <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-black/50">
+                <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-black/70">
                   {saving > 0 && (
-                    <span className="text-brand-accent font-medium">
+                    <span className="text-[var(--brand-accent-ink)] font-medium">
                       {formatAr(ar.product.offers.save, {
                         amount: formatStorePrice(saving),
                       })}

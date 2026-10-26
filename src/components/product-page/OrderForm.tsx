@@ -256,7 +256,7 @@ export default function OrderForm({
         "rounded-full text-white text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-brand-accent hover:bg-brand-accent/90",
         variant === "inline"
           ? "w-full py-3"
-          : "flex-1 py-3 min-h-[44px]"
+          : "flex-1 py-3 min-h-[48px] px-6"
       )}
     >
       {isSubmitting && (
@@ -509,21 +509,23 @@ export default function OrderForm({
           last field (LayoutSpacing covers the footer). */}
       <div className="md:hidden h-2" />
 
-      {/* Mobile: always-visible sticky action bar with live total. */}
+      {/* Mobile: always-visible sticky action bar with live total.
+          Clean two-part layout: price on the start side, button on the end
+          side, a hairline border and a soft shadow so it floats over content. */}
       <div
-        className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-black/10 px-4 pt-3 flex items-center gap-3"
+        className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-black/10 shadow-[0_-6px_20px_rgba(0,0,0,0.06)] px-4 pt-3 flex items-center gap-4"
         style={{
           paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 0.75rem)`,
           ...(keyboardOffset > 0 ? { bottom: keyboardOffset } : null),
         }}
       >
-        <div className="flex flex-col shrink-0">
+        <div className="flex flex-col shrink-0 min-w-0">
           <span className="text-[11px] text-black/50 leading-tight">
             {selectedZone || offer
               ? ar.checkout.total
               : ar.checkout.subtotal}
           </span>
-          <span className="font-bold text-base text-black leading-tight">
+          <span className="font-bold text-[15px] text-black leading-tight">
             {/* No wilaya yet: delivery is unknown, so show the goods
                 total instead of a dash. With a quantity tier selected that
                 is the tier's fixed total price. */}

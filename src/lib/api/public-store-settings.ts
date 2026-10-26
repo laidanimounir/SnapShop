@@ -10,11 +10,30 @@
 // degrades silently to "disabled": the layout then injects nothing, which
 // is exactly how the site behaves before migration 0019 is applied.
 
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { parsePixelId, parseTiktokPixelId } from "@/lib/landing/content";
 
 /** Same key the admin settings form writes (see store-settings.ts). */
 const PIXEL_SETTING_KEY = "tracking_pixel";
+
+// Cookie-free anon client: using the cookie-aware client would call
+// cookies() and force every storefront route to be dynamic. RLS plus the
+// row-limited policy (migration 0019) are what make this read public.
+let anonClient: SupabaseClient | null = null;
+function publicSupabase(): SupabaseClient {
+  if (anonClient) return anonClient;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error(
+      "Missing Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)"
+    );
+  }
+  anonClient = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return anonClient;
+}
 
 export type PublicPixelSettings = {
   enabled: boolean;
@@ -53,21 +72,27 @@ export function parseTrackingPixelSetting(
 }
 
 /**
- * Reads the tracking pixel setting for the current request with the anon
- * key. Never throws: returns disabled settings when the row is not
- * readable (public read policy not applied yet, network error, ...).
+ * Reads the tracking pixel setting with the anon key. Never throws:
+ * returns disabled settings when the row is not readable (public read
+ * policy not applied yet, network error, ...).
  */
 export async function getPublicPixelSettings(): Promise<PublicPixelSettings> {
+  // Hard 3s budget: this runs in the root layout, so a hung request must
+  // never stall the whole page.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3000);
   try {
-    const supabase = createServerSupabase();
-    const { data, error } = await supabase
+    const { data, error } = await publicSupabase()
       .from("store_settings")
       .select("value")
       .eq("key", PIXEL_SETTING_KEY)
+      .abortSignal(controller.signal)
       .maybeSingle();
     if (error || !data) return DISABLED_PIXEL_SETTINGS;
     return parseTrackingPixelSetting(data.value);
   } catch {
     return DISABLED_PIXEL_SETTINGS;
+  } finally {
+    clearTimeout(timer);
   }
 }

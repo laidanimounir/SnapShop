@@ -1,21 +1,26 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
   AdminProductDetail,
   SizeType,
 } from "@/lib/api/admin";
+import type { QuantityOffer } from "@/types/offer.types";
 import {
   deleteProductAction,
   deleteProductImageAction,
   reorderImagesAction,
+  saveQuantityOffersAction,
   saveVariantsAction,
   setImageColorAction,
   setPrimaryImageAction,
   updateProductAction,
   uploadProductImageAction,
 } from "@/app/admin/actions";
+import { validateQuantityOffers } from "@/lib/admin/quantity-offers";
+import { round2 } from "@/lib/pricing";
 import { buildVariantMatrix } from "@/lib/admin/variant-matrix";
 import { COMMON_COLORS, isValidHex, normalizeHex } from "@/lib/admin/colors";
 import {
@@ -24,6 +29,12 @@ import {
   moveImage,
   sortImages,
 } from "@/lib/admin/images";
+import {
+  MAX_OFFERS_PER_PRODUCT,
+  emptyOfferDraft,
+  toOfferDraft,
+} from "@/types/offer.types";
+import type { QuantityOfferDraft } from "@/types/offer.types";
 import { presetSizesFor } from "@/lib/sizes";
 import { ar, formatAr } from "@/lib/admin/i18n-ar";
 
@@ -43,8 +54,10 @@ const rowKey = (color: string | null, size: string | null) =>
 
 export default function ProductEditor({
   product,
+  offers,
 }: {
   product: AdminProductDetail;
+  offers: QuantityOffer[] | null;
 }) {
   const router = useRouter();
 
@@ -54,6 +67,10 @@ export default function ProductEditor({
   const [category, setCategory] = useState(product.category ?? "");
   const [brand, setBrand] = useState(product.brand ?? "");
   const [basePrice, setBasePrice] = useState(String(product.base_price));
+  // Old "was" price (display only). Empty string == no old price (null).
+  const [compareAtPrice, setCompareAtPrice] = useState(
+    product.compare_at_price == null ? "" : String(product.compare_at_price)
+  );
   const [discountPct, setDiscountPct] = useState(
     String(product.discount_percentage)
   );
@@ -117,6 +134,75 @@ export default function ProductEditor({
   // Position-ordered view; position 0 is the primary image.
   const orderedImages = useMemo(() => sortImages(images), [images]);
   const imagesFull = orderedImages.length >= MAX_PRODUCT_IMAGES;
+
+  // ---- quantity offers (fixed total price per tier) ----
+  // offers === null means migration 0016 is not applied yet.
+  const offersEnabled = offers !== null;
+  const [offerDrafts, setOfferDrafts] = useState<QuantityOfferDraft[]>(
+    () => (offers ?? []).map(toOfferDraft)
+  );
+
+  const updateOffer = (index: number, patch: Partial<QuantityOfferDraft>) => {
+    setOfferDrafts((prev) =>
+      prev.map((o, i) => (i === index ? { ...o, ...patch } : o))
+    );
+    setDirty(true);
+  };
+
+  const addOffer = () => {
+    if (!offersEnabled || offerDrafts.length >= MAX_OFFERS_PER_PRODUCT) return;
+    setOfferDrafts((prev) => [...prev, emptyOfferDraft()]);
+    setDirty(true);
+  };
+
+  // One-click preset: tiers for 1, 2 and 3 pieces at exactly the normal
+  // price. The merchant only lowers the totals to create a real offer.
+  const applyOfferPreset = () => {
+    const base = Number(basePrice);
+    if (!offersEnabled || !Number.isFinite(base) || base <= 0) return;
+    if (
+      offerDrafts.length > 0 &&
+      !window.confirm(ar.products.editor.offerPresetConfirm)
+    ) {
+      return;
+    }
+    setOfferDrafts(
+      [1, 2, 3].map((quantity, index) => ({
+        id: null,
+        quantity: String(quantity),
+        total_price: round2(base * quantity).toFixed(2),
+        label: "",
+        badge: "",
+        is_default: index === 0,
+        is_active: true,
+      }))
+    );
+    setDirty(true);
+  };
+
+  const removeOffer = (index: number) => {
+    setOfferDrafts((prev) => prev.filter((_, i) => i !== index));
+    setDirty(true);
+  };
+
+  const setDefaultOffer = (index: number) => {
+    setOfferDrafts((prev) =>
+      prev.map((o, i) => ({ ...o, is_default: i === index }))
+    );
+    setDirty(true);
+  };
+
+  // Derived, display only: price of ONE piece inside the tier.
+  const offerPerPiece = (offer: QuantityOfferDraft): string | null => {
+    const q = Number(offer.quantity);
+    const t = Number(offer.total_price);
+    if (!Number.isFinite(q) || q < 1 || !Number.isFinite(t) || t <= 0) {
+      return null;
+    }
+    return formatAr(ar.products.editor.offerPerPiece, {
+      price: (t / q).toFixed(0),
+    });
+  };
 
   // ---- misc ----
   const [dirty, setDirty] = useState(false);
@@ -222,6 +308,24 @@ export default function ProductEditor({
       showToast(ar.products.editor.colorNamesUnique, true);
       return;
     }
+    // Old price must be higher than the real price (server re-checks too).
+    const compareRaw = compareAtPrice.trim();
+    if (compareRaw !== "") {
+      const compareNum = Number(compareRaw);
+      const realNum = Number(basePrice);
+      if (!Number.isFinite(compareNum) || !Number.isFinite(realNum) || compareNum <= realNum) {
+        showToast(ar.validation.compareAtPrice, true);
+        return;
+      }
+    }
+    // Validate quantity offers before touching anything (server re-checks).
+    const offerValidation = offersEnabled
+      ? validateQuantityOffers(offerDrafts, Number(basePrice))
+      : null;
+    if (offerValidation && !offerValidation.ok) {
+      showToast(offerValidation.error, true);
+      return;
+    }
     setSaving(true);
     setToast(null);
     const basic = await updateProductAction(product.id, {
@@ -230,6 +334,11 @@ export default function ProductEditor({
       category: category || null,
       brand: brand || null,
       base_price: Number(basePrice),
+      // Empty input == no old price; the legacy discount values are still
+      // sent unchanged so nothing is wiped before the optional data
+      // migration converts them to compare_at_price.
+      compare_at_price:
+        compareAtPrice.trim() === "" ? null : Number(compareAtPrice),
       discount_percentage: Number(discountPct) || 0,
       discount_amount: Number(discountAmt) || 0,
       is_active: isActive,
@@ -263,6 +372,20 @@ export default function ProductEditor({
       showToast(saved.error, true);
       return;
     }
+    let savedOffers = 0;
+    if (offersEnabled) {
+      setSaving(true);
+      const offersResult = await saveQuantityOffersAction(
+        product.id,
+        offerDrafts
+      );
+      setSaving(false);
+      if (!offersResult.ok) {
+        showToast(offersResult.error, true);
+        return;
+      }
+      savedOffers = offersResult.saved;
+    }
     setDirty(false);
     const parts = [
       formatAr(ar.products.editor.saved, { n: variantRows.length }),
@@ -270,6 +393,9 @@ export default function ProductEditor({
         ? formatAr(ar.products.editor.deactivatedHistory, {
             n: saved.deactivated,
           })
+        : "",
+      offersEnabled
+        ? formatAr(ar.products.editor.offersSaved, { n: savedOffers })
         : "",
     ]
       .filter(Boolean)
@@ -499,33 +625,17 @@ export default function ProductEditor({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              {ar.products.editor.discountPct}
-            </label>
-            <input
-              className={inputCls}
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={discountPct}
-              onChange={(e) => {
-                setDiscountPct(e.target.value);
-                setDirty(true);
-              }}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {ar.products.editor.discountAmt}
+              {ar.products.editor.oldPriceRequired}
             </label>
             <input
               className={inputCls}
               type="number"
               min="0"
               step="0.01"
-              value={discountAmt}
+              value={compareAtPrice}
+              placeholder={ar.products.editor.oldPriceHint}
               onChange={(e) => {
-                setDiscountAmt(e.target.value);
+                setCompareAtPrice(e.target.value);
                 setDirty(true);
               }}
             />
@@ -547,7 +657,148 @@ export default function ProductEditor({
         </p>
       </section>
 
-      {/* 2. Images */}
+      {/* 2. Quantity offers */}
+      <section className={sectionCls}>
+        <h2 className="font-semibold mb-1">
+          {ar.products.editor.offersTitle}
+        </h2>
+        <p className="text-xs text-black/50 mb-3">
+          {ar.products.editor.offersHelp}
+        </p>
+        {!offersEnabled ? (
+          <div className="px-3 py-2 rounded-lg bg-amber-50 text-amber-800 text-sm">
+            {ar.products.editor.offersNotEnabled}
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-3">
+              {offerDrafts.map((offer, index) => (
+                <div
+                  key={offer.id ?? `new-${index}`}
+                  className="border border-black/10 rounded-lg p-3"
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1"
+                        htmlFor={`offer-qty-${index}`}
+                      >
+                        {ar.products.editor.offerQuantity}
+                      </label>
+                      <input
+                        id={`offer-qty-${index}`}
+                        className={inputCls}
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={offer.quantity}
+                        onChange={(e) =>
+                          updateOffer(index, { quantity: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1"
+                        htmlFor={`offer-price-${index}`}
+                      >
+                        {ar.products.editor.offerTotalPrice}
+                      </label>
+                      <input
+                        id={`offer-price-${index}`}
+                        className={inputCls}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={offer.total_price}
+                        onChange={(e) =>
+                          updateOffer(index, { total_price: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label
+                        className="block text-xs font-medium mb-1"
+                        htmlFor={`offer-badge-${index}`}
+                      >
+                        {ar.products.editor.offerBadge}
+                      </label>
+                      <input
+                        id={`offer-badge-${index}`}
+                        className={inputCls}
+                        maxLength={40}
+                        placeholder={ar.products.editor.offerBadgePlaceholder}
+                        value={offer.badge}
+                        onChange={(e) =>
+                          updateOffer(index, { badge: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="offer-default"
+                        checked={offer.is_default}
+                        onChange={() => setDefaultOffer(index)}
+                      />
+                      {ar.products.editor.offerDefault}
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={offer.is_active}
+                        onChange={(e) =>
+                          updateOffer(index, { is_active: e.target.checked })
+                        }
+                      />
+                      {ar.products.editor.offerActive}
+                    </label>
+                    {offerPerPiece(offer) && (
+                      <span className="text-xs text-black/50">
+                        {offerPerPiece(offer)}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="ms-auto px-2.5 py-1.5 text-xs rounded bg-red-50 text-red-700 hover:bg-red-100"
+                      aria-label={ar.products.editor.removeOffer}
+                      onClick={() => removeOffer(index)}
+                    >
+                      {ar.products.editor.removeOffer}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              <button
+                type="button"
+                className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-40"
+                disabled={offerDrafts.length >= MAX_OFFERS_PER_PRODUCT}
+                onClick={addOffer}
+              >
+                {ar.products.editor.addOffer}
+              </button>
+              <button
+                type="button"
+                className="px-3 py-2 rounded-lg border border-black/15 text-sm hover:bg-gray-100"
+                onClick={applyOfferPreset}
+              >
+                {ar.products.editor.offerPreset}
+              </button>
+              {offerDrafts.length >= MAX_OFFERS_PER_PRODUCT && (
+                <span className="text-xs text-black/50">
+                  {ar.products.editor.maxOffers}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* 3. Images */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-1">
           {ar.products.editor.images} ({orderedImages.length}/{MAX_PRODUCT_IMAGES})
@@ -665,7 +916,7 @@ export default function ProductEditor({
         </div>
       </section>
 
-      {/* 3. Colors */}
+      {/* 4. Colors */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-3">{ar.products.editor.colors}</h2>
         <label className="flex items-center gap-2 text-sm mb-3">
@@ -810,7 +1061,7 @@ export default function ProductEditor({
         )}
       </section>
 
-      {/* 4. Sizes */}
+      {/* 5. Sizes */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-3">{ar.products.editor.sizes}</h2>
         {sizeType === "none" ? (
@@ -967,7 +1218,7 @@ export default function ProductEditor({
         )}
       </section>
 
-      {/* 5. Variants / stock */}
+      {/* 6. Variants / stock */}
       <section className={sectionCls}>
         <h2 className="font-semibold mb-1">
           {ar.products.editor.variants} ({matrix.length})
@@ -1097,6 +1348,19 @@ export default function ProductEditor({
         >
           {saving ? ar.common.saving : ar.products.editor.saveAll}
         </button>
+        <Link
+          href={`/shop/product/${product.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 py-2.5 rounded-full border border-black/15 text-sm font-medium hover:bg-gray-100"
+        >
+          {ar.products.editor.previewPage}
+        </Link>
+        {!isActive && (
+          <span className="text-xs text-black/50">
+            {ar.products.editor.previewInactive}
+          </span>
+        )}
         {dirty && !saving && (
           <span className="text-xs text-amber-700">
             {ar.products.editor.unsaved}

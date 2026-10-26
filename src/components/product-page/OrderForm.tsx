@@ -15,6 +15,7 @@ import {
   validateWilaya,
   type FieldErrors,
 } from "@/lib/checkout/validation";
+import { normalizeDzPhone } from "@/lib/checkout/phone";
 import {
   DELIVERY_TYPE_LABEL,
   formatZoneLabel,
@@ -27,6 +28,9 @@ import { round2 } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import Price from "@/components/common/Price";
 import { ar } from "@/lib/store/i18n-ar";
+import type { QuantityOffer } from "@/types/offer.types";
+import { quantityLabel } from "./QuantityOffers";
+import { trackPixelEvent } from "@/lib/landing/tracking";
 
 type OrderFormProps = {
   variantId: string | null;
@@ -42,6 +46,10 @@ type OrderFormProps = {
   hasSizes: boolean;
   selectedColor: string | null;
   selectedSize: string | null;
+  /** Selected quantity tier (fixed total price), if the product has offers. */
+  offer?: QuantityOffer | null;
+  /** True when the product has quantity offers (tier picker replaces stepper). */
+  hasOffers?: boolean;
 };
 
 export default function OrderForm({
@@ -56,6 +64,8 @@ export default function OrderForm({
   hasSizes,
   selectedColor,
   selectedSize,
+  offer = null,
+  hasOffers = false,
 }: OrderFormProps) {
   const router = useRouter();
 
@@ -69,13 +79,15 @@ export default function OrderForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [company, setCompany] = useState("");
-  // One key per (variant, quantity) attempt: reused across retries of the
-  // same payload so a retry returns the existing order instead of creating
-  // a duplicate; regenerated when the payload changes.
+  // One key per (variant, quantity, offer) attempt: reused across retries of
+  // the same payload so a retry returns the existing order instead of
+  // creating a duplicate; regenerated when the payload changes (including
+  // switching the selected quantity tier).
   const [idempotency, setIdempotency] = useState<{
     key: string;
     variantId: string;
     quantity: number;
+    offerId: string | null;
   } | null>(null);
 
   // Sticky-bar keyboard offset (visualViewport-aware; graceful fallback).
@@ -110,7 +122,12 @@ export default function OrderForm({
   );
 
   const subtotal = round2(unitPrice * quantity);
-  const discountTotal = round2(unitDiscount * quantity);
+  // A quantity tier is a fixed TOTAL price: express it as a discount line so
+  // subtotal (reference) / discount / total keep their existing meaning.
+  const discountTotal = offer
+    ? Math.max(0, round2(subtotal - offer.total_price))
+    : round2(unitDiscount * quantity);
+  const goodsTotal = round2(subtotal - discountTotal);
   const deliveryPrice = getDeliveryPrice(selectedZone, deliveryType);
   const orderTotal = getOrderTotal(subtotal, discountTotal, deliveryPrice);
 
@@ -122,6 +139,9 @@ export default function OrderForm({
     if (!variantId) return ar.product.unavailable;
     if (hasColors && !selectedColor) return ar.product.pickColor;
     if (hasSizes && !selectedSize) return ar.product.pickSize;
+    // Offers exist but no tier fits the selected variant's stock: the
+    // stepper is hidden, so there is nothing else to order.
+    if (hasOffers && !offer) return ar.product.outOfStock;
     if (!quantityValid) return ar.product.outOfStock;
     if (zonesLoading) return ar.checkout.loadingWilayas;
     return null;
@@ -179,29 +199,56 @@ export default function OrderForm({
     setIsSubmitting(true);
     setError(null);
     try {
+      const offerId = offer?.id ?? null;
+      // Funnel pixel: the customer committed to ordering. The wilaya was
+      // validated above, so the order total (goods + delivery) is real.
+      trackPixelEvent("InitiateCheckout", {
+        value: orderTotal,
+        quantity,
+        offerId,
+        offerQuantity: offer?.quantity,
+        contentIds: [product.id],
+        contentType: "product",
+      });
       // Reuse the key while the payload is unchanged; regenerate when the
-      // variant or quantity changed since the failed attempt.
+      // variant, quantity or selected tier changed since the failed attempt.
       let attemptKey: string;
       if (
         idempotency &&
         idempotency.variantId === variantId &&
-        idempotency.quantity === quantity
+        idempotency.quantity === quantity &&
+        idempotency.offerId === offerId
       ) {
         attemptKey = idempotency.key;
       } else {
         attemptKey = createIdempotencyKey();
-        setIdempotency({ key: attemptKey, variantId, quantity });
+        setIdempotency({ key: attemptKey, variantId, quantity, offerId });
       }
       const result = await placeGuestOrder({
         guest_name: customerName.trim(),
-        guest_phone: phone.trim(),
+        guest_phone: normalizeDzPhone(phone) ?? phone.trim(),
         guest_address: address.trim(),
         items: [{ variant_id: variantId, quantity: clampQuantity(quantity) }],
         idempotency_key: attemptKey,
         wilaya_code: Number(wilayaCode),
         delivery_type: deliveryType,
+        offer_id: offerId,
       });
       setIdempotency(null);
+      // Funnel pixel: report the conversion with the selected tier (id +
+      // quantity, never a price) so ad reporting can tell which offer sold.
+      // No pixel is injected on this page yet - the call is a safe no-op.
+      trackPixelEvent("Purchase", {
+        value: result.total,
+        quantity,
+        offerId,
+        offerQuantity: offer?.quantity,
+        contentIds: [product.id],
+        contentType: "product",
+        // Dedup key: the order id lets Meta match this browser event with
+        // any server-side conversion for the same order.
+        eventId: result.order_id,
+      });
       router.push(`/order-confirmation/${result.confirmation_token}`);
     } catch (e) {
       // placeGuestOrder already maps server errors to user-facing Arabic text.
@@ -225,7 +272,7 @@ export default function OrderForm({
         "rounded-full text-white text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-brand-accent hover:bg-brand-accent/90",
         variant === "inline"
           ? "w-full py-3"
-          : "flex-1 py-3 min-h-[44px]"
+          : "flex-1 py-3 min-h-[48px] px-6"
       )}
     >
       {isSubmitting && (
@@ -261,8 +308,17 @@ export default function OrderForm({
               {[selectedColor, selectedSize].filter(Boolean).join(" / ")}
             </p>
           )}
+          {/* Selected quantity tier, or the plain quantity when no offers. */}
+          {offer ? (
+            <p className="text-xs text-[var(--brand-accent-ink)] font-medium">
+              {quantityLabel(offer.quantity)}
+            </p>
+          ) : quantity > 1 ? (
+            <p className="text-xs text-black/60">{quantityLabel(quantity)}</p>
+          ) : null}
+          {/* Goods total, or the full order total once a wilaya is chosen. */}
           <p className="text-sm font-bold text-black">
-            <Price value={subtotal} />
+            <Price value={selectedZone ? orderTotal : goodsTotal} />
           </p>
         </div>
       </div>
@@ -273,8 +329,11 @@ export default function OrderForm({
         </div>
       )}
 
+      {/* Visible group headings — labels stay visible above every field. */}
+      <h3 className="text-[13px] font-semibold text-black">{ar.checkout.yourInfo}</h3>
+
       <div>
-        <label className="block text-xs font-medium text-black mb-1">
+        <label className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.customerName}
         </label>
         <input
@@ -285,19 +344,19 @@ export default function OrderForm({
           onBlur={() => handleBlur("customerName")}
           placeholder={ar.checkout.fullName}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all",
             errors.customerName
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30"
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10"
           )}
         />
         {errors.customerName && (
-          <p className="text-xs text-red-500 mt-1">{errors.customerName}</p>
+          <p className="text-xs text-red-600 mt-1">{errors.customerName}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-black mb-1">
+        <label className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.phoneNumber}
         </label>
         <input
@@ -310,17 +369,21 @@ export default function OrderForm({
           onBlur={() => handleBlur("phone")}
           placeholder={ar.checkout.phonePlaceholder}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all text-start",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all text-start",
             errors.phone
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30"
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10"
           )}
         />
-        {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+        {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
       </div>
 
+      <h3 className="text-[13px] font-semibold text-black pt-3 border-t border-black/10">
+        {ar.checkout.shippingInfo}
+      </h3>
+
       <div>
-        <label htmlFor="order-wilaya" className="block text-xs font-medium text-black mb-1">
+        <label htmlFor="order-wilaya" className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.wilaya}
         </label>
         <select
@@ -331,10 +394,10 @@ export default function OrderForm({
           onBlur={() => handleBlur("wilaya")}
           disabled={zonesLoading || !!zonesError}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all bg-white",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all bg-white",
             errors.wilaya
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30",
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10",
             (zonesLoading || !!zonesError) && "opacity-60 cursor-not-allowed"
           )}
         >
@@ -347,12 +410,12 @@ export default function OrderForm({
             </option>
           ))}
         </select>
-        {errors.wilaya && <p className="text-xs text-red-500 mt-1">{errors.wilaya}</p>}
-        {zonesError && <p className="text-xs text-red-500 mt-1">{zonesError}</p>}
+        {errors.wilaya && <p className="text-xs text-red-600 mt-1">{errors.wilaya}</p>}
+        {zonesError && <p className="text-xs text-red-600 mt-1">{zonesError}</p>}
       </div>
 
       <div>
-        <span className="block text-xs font-medium text-black mb-1">
+        <span className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.deliveryMethod}
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -363,7 +426,7 @@ export default function OrderForm({
               <label
                 key={type}
                 className={cn(
-                  "flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border cursor-pointer text-sm transition-colors",
+                  "flex items-center justify-between gap-3 px-3 py-3 rounded-lg border cursor-pointer text-base transition-colors",
                   checked
                     ? "border-black bg-gray-50"
                     : "border-black/10 hover:border-black/30"
@@ -388,12 +451,12 @@ export default function OrderForm({
           })}
         </div>
         {!selectedZone && (
-          <p className="text-xs text-black/50 mt-1">{ar.checkout.selectWilayaHint}</p>
+          <p className="text-xs text-black/70 mt-1">{ar.checkout.selectWilayaHint}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-black mb-1">
+        <label className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.shippingAddress}
         </label>
         <textarea
@@ -404,14 +467,14 @@ export default function OrderForm({
           placeholder={ar.checkout.addressPlaceholder}
           rows={2}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all resize-none",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all resize-none",
             errors.address
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30"
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10"
           )}
         />
         {errors.address && (
-          <p className="text-xs text-red-500 mt-1">{errors.address}</p>
+          <p className="text-xs text-red-600 mt-1">{errors.address}</p>
         )}
       </div>
 
@@ -438,7 +501,7 @@ export default function OrderForm({
           <span>{ar.checkout.total}</span>
           <span>{selectedZone ? <Price value={orderTotal} /> : "—"}</span>
         </div>
-        <p className="text-[11px] text-black/50">{ar.checkout.codNote}</p>
+        <p className="text-[11px] text-black/70">{ar.checkout.codNote}</p>
       </div>
 
       {/* Honeypot field: hidden from humans, bots that fill it are rejected. */}
@@ -462,20 +525,27 @@ export default function OrderForm({
           last field (LayoutSpacing covers the footer). */}
       <div className="md:hidden h-2" />
 
-      {/* Mobile: always-visible sticky action bar with live total. */}
+      {/* Mobile: always-visible sticky action bar with live total.
+          Clean two-part layout: price on the start side, button on the end
+          side, a hairline border and a soft shadow so it floats over content. */}
       <div
-        className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-black/10 px-4 pt-3 flex items-center gap-3"
+        className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-black/10 shadow-[0_-6px_20px_rgba(0,0,0,0.06)] px-4 pt-3 flex items-center gap-4"
         style={{
           paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 0.75rem)`,
           ...(keyboardOffset > 0 ? { bottom: keyboardOffset } : null),
         }}
       >
-        <div className="flex flex-col shrink-0">
-          <span className="text-[11px] text-black/50 leading-tight">
-            {ar.checkout.total}
+        <div className="flex flex-col shrink-0 min-w-0">
+          <span className="text-[11px] text-black/70 leading-tight">
+            {selectedZone || offer
+              ? ar.checkout.total
+              : ar.checkout.subtotal}
           </span>
-          <span className="font-bold text-base text-black leading-tight">
-            {selectedZone ? <Price value={orderTotal} /> : "—"}
+          <span className="font-bold text-[15px] text-black leading-tight">
+            {/* No wilaya yet: delivery is unknown, so show the goods
+                total instead of a dash. With a quantity tier selected that
+                is the tier's fixed total price. */}
+            <Price value={selectedZone ? orderTotal : goodsTotal} />
           </span>
         </div>
         {submitButton("sticky")}

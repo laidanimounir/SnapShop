@@ -29,12 +29,16 @@ export type Product = {
   category: string | null;
   brand: string | null;
   base_price: number;
+  /** Old "was" price (display only). Absent/null = no old price. */
+  compare_at_price?: number | null;
   discount_percentage: number;
   discount_amount: number;
   rating: number;
   is_active: boolean;
   size_type: SizeType;
   created_at: string;
+  /** Present on rows fetched with updated_at (sitemap). */
+  updated_at?: string;
   images: ProductImage[];
   variants: ProductVariant[];
 };

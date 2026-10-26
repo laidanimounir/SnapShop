@@ -24,6 +24,16 @@ export type TrackValue = {
   currency?: string;
   /** Number of items the buyer took. */
   quantity?: number;
+  /** Selected quantity tier (offers feature): its id, never a price. */
+  offerId?: string | null;
+  /** Quantity of the selected tier (mirrors `quantity` when a tier is on). */
+  offerQuantity?: number;
+  /** Product ids the event is about (Meta/TikTok content_ids). */
+  contentIds?: string[];
+  /** Usually "product" for this store. */
+  contentType?: string;
+  /** Dedup key for server/pixel conversions (Meta event_id). */
+  eventId?: string;
 };
 
 function read(value: number | undefined): number | undefined {
@@ -38,6 +48,17 @@ function paramsOf(value: TrackValue | undefined): Record<string, unknown> {
   if (value_ !== undefined) params.value = value_;
   const quantity = read(value?.quantity);
   if (quantity !== undefined) params.quantity = quantity;
+  // Offer params are only meaningful together (and only when a tier exists).
+  if (value?.offerId) {
+    params.offer_id = value.offerId;
+    const offerQuantity = read(value.offerQuantity);
+    if (offerQuantity !== undefined) params.offer_quantity = offerQuantity;
+  }
+  if (Array.isArray(value?.contentIds) && value.contentIds.length > 0) {
+    params.content_ids = value.contentIds;
+  }
+  if (value?.contentType) params.content_type = value.contentType;
+  if (value?.eventId) params.event_id = value.eventId;
   return params;
 }
 

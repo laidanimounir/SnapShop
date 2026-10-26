@@ -226,6 +226,7 @@ export async function createProductAction(input: {
   category?: string | null;
   brand?: string | null;
   base_price: number;
+  compare_at_price?: number | null;
   discount_percentage?: number;
   discount_amount?: number;
   is_active?: boolean;
@@ -257,6 +258,7 @@ export async function updateProductAction(
     category?: string | null;
     brand?: string | null;
     base_price: number;
+    compare_at_price?: number | null;
     discount_percentage?: number;
     discount_amount?: number;
     is_active?: boolean;
@@ -363,6 +365,103 @@ export async function saveVariantsAction(
       deleted: result.deleted,
       deactivated: result.deactivated,
     };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+function isMissingOffersTable(error: {
+  code?: string;
+  message: string;
+}): boolean {
+  return (
+    error.code === "42P01" ||
+    error.message.includes("does not exist") ||
+    error.message.includes("missing FROM-clause entry")
+  );
+}
+
+/**
+ * Saves the quantity offers of one product (max 3 tiers, fixed total
+ * price per quantity). Reads/writes with the service-role client because
+ * the table intentionally has no write policies for anon/authenticated.
+ */
+export async function saveQuantityOffersAction(
+  productId: string,
+  drafts: import("@/types/offer.types").QuantityOfferDraft[]
+): Promise<ActionResult<{ saved: number }>> {
+  try {
+    const { userId, supabase } = await requireAdmin();
+    enforceAdminRateLimit(userId, "saveQuantityOffers");
+    const { validateQuantityOffers } = await import(
+      "@/lib/admin/quantity-offers"
+    );
+
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select("id, base_price")
+      .eq("id", productId)
+      .maybeSingle();
+    if (productError) throw new Error(productError.message);
+    if (!product) return { ok: false, error: ar.messages.productNotFound };
+
+    const validation = validateQuantityOffers(drafts, product.base_price);
+    if (!validation.ok) return { ok: false, error: validation.error };
+
+    const read = await supabase
+      .from("product_quantity_offers")
+      .select("id")
+      .eq("product_id", productId);
+    if (read.error) {
+      return {
+        ok: false,
+        error: isMissingOffersTable(read.error)
+          ? ar.products.editor.offersNotEnabledSave
+          : read.error.message,
+      };
+    }
+
+    // Simple and safe: replace the product's rows in one go (nothing
+    // references offer ids yet; order_items only keeps snapshots).
+    const existingIds = (read.data ?? []).map(
+      (row: { id: string }) => row.id
+    );
+    if (existingIds.length > 0) {
+      const { error } = await supabase
+        .from("product_quantity_offers")
+        .delete()
+        .in("id", existingIds);
+      if (error) {
+        return {
+          ok: false,
+          error: isMissingOffersTable(error)
+            ? ar.products.editor.offersNotEnabledSave
+            : error.message,
+        };
+      }
+    }
+
+    if (validation.offers.length > 0) {
+      const rows = validation.offers.map((offer, position) => ({
+        product_id: productId,
+        position,
+        ...offer,
+      }));
+      const { error } = await supabase
+        .from("product_quantity_offers")
+        .insert(rows);
+      if (error) {
+        return {
+          ok: false,
+          error: isMissingOffersTable(error)
+            ? ar.products.editor.offersNotEnabledSave
+            : error.message,
+        };
+      }
+    }
+
+    revalidateProductPaths(productId);
+    return { ok: true, saved: validation.offers.length };
   } catch (error) {
     return actionError(error);
   }

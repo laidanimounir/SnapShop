@@ -1,5 +1,7 @@
+import { cache } from "react";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { sanitizeSearchTerm } from "@/lib/search";
+import { isValidUuid } from "@/lib/uuid";
 import type { Product, ProductImage, ProductVariant } from "@/types/product.types";
 import type { Review } from "@/types/review.types";
 
@@ -151,7 +153,7 @@ export async function getProducts(
   let query: any = supabase
     .from("products")
     .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at",
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at, updated_at",
       { count: "exact" }
     )
     .eq("is_active", true);
@@ -210,25 +212,47 @@ export async function getProducts(
   return { products, total: count ?? 0 };
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
-  const supabase = createServerSupabase();
-  const { data, error } = await supabase
-    .from("products")
-    .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at"
-    )
-    .eq("id", id)
-    .eq("is_active", true)
-    .maybeSingle();
+// cache(): generateMetadata and the page both ask for the same product in
+// one request, so the query (plus its variant/image queries) runs once.
+const PRODUCT_COLUMNS =
+  "id, name, description, compare_at_price, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at";
+const PRODUCT_COLUMNS_LEGACY =
+  "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at";
 
-  if (error) throw new Error(error.message);
-  if (!data) return null;
+export const getProductById = cache(
+  async (id: string): Promise<Product | null> => {
+    // A non-uuid id makes Postgres throw a cast error (HTTP 500 on the page).
+    // Treat it as "not found" instead.
+    if (!isValidUuid(id)) return null;
+    const supabase = createServerSupabase();
+    let { data, error } = await supabase
+      .from("products")
+      .select(PRODUCT_COLUMNS)
+      .eq("id", id)
+      .eq("is_active", true)
+      .maybeSingle();
 
-  const [product] = await attachVariantsAndImages([data as Product]);
-  return product ?? null;
-}
+    // compare_at_price only exists after migration 0015: fall back to the
+    // legacy column set so the live page never breaks while it is pending.
+    if (error && error.message.includes("compare_at_price")) {
+      ({ data, error } = await supabase
+        .from("products")
+        .select(PRODUCT_COLUMNS_LEGACY)
+        .eq("id", id)
+        .eq("is_active", true)
+        .maybeSingle());
+    }
+
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    const [product] = await attachVariantsAndImages([data as Product]);
+    return product ?? null;
+  }
+);
 
 export async function getApprovedReviews(productId: string): Promise<Review[]> {
+  if (!isValidUuid(productId)) return [];
   const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("reviews")

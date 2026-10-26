@@ -42,3 +42,55 @@ export function getDiscountAmount(
 }
 
 export const formatPrice = (value: number) => `DA ${round2(value).toFixed(2)}`;
+
+/**
+ * Old ("was") price to show struck through next to the real price.
+ * Returns null when there is no old price or when it is not higher than
+ * the price the customer pays — display only, never used for charging.
+ */
+export function getCompareAtPrice(
+  compareAtPrice: number | null | undefined,
+  price: number
+): number | null {
+  if (compareAtPrice == null || !Number.isFinite(compareAtPrice)) return null;
+  if (compareAtPrice <= price) return null;
+  return round2(compareAtPrice);
+}
+
+/**
+ * Savings badge derived for display only (no math relationship is stored):
+ * how much is off and in which percent of the old price.
+ */
+export function getSavings(
+  compareAtPrice: number,
+  price: number
+): { amount: number; percent: number } {
+  const amount = round2(compareAtPrice - price);
+  const percent =
+    compareAtPrice > 0
+      ? Math.max(0, Math.round((amount / compareAtPrice) * 100))
+      : 0;
+  return { amount, percent };
+}
+
+/**
+ * Display numbers for a quantity offer card (all derived, never stored):
+ * - reference: what the same quantity would cost at the normal unit price
+ * - saving: reference - offer total (0 when the offer saves nothing)
+ * - perPiece: offer total divided by the quantity
+ */
+export function getOfferDisplay(
+  totalPrice: number,
+  quantity: number,
+  unitPrice: number
+): { reference: number; saving: number; perPiece: number } {
+  const qty = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+  const reference = round2(unitPrice * qty);
+  const total = round2(totalPrice);
+  const saving = round2(reference - total);
+  return {
+    reference,
+    saving: saving > 0 ? saving : 0,
+    perPiece: round2(total / qty),
+  };
+}

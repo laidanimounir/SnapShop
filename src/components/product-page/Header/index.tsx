@@ -217,24 +217,24 @@ const Header = ({
               )}
             </div>
           )}
-          <div className="flex items-center flex-wrap gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-2.5 mb-4 sm:mb-5">
             <Price
               value={price}
-              className="font-bold text-black text-2xl sm:text-[32px]"
+              className="font-bold text-black text-[26px] sm:text-[32px] leading-none"
             />
             {compareAt != null ? (
               <>
                 <Price
                   value={compareAt}
-                  className="font-bold text-black/40 line-through text-2xl sm:text-[32px]"
+                  className="font-medium text-black/40 line-through text-lg sm:text-xl leading-none"
                 />
                 {savings && savings.percent > 0 && (
-                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3 rounded-full bg-brand-accent/10 text-brand-accent">
                     <bdi dir="ltr">-{savings.percent}%</bdi>
                   </span>
                 )}
                 {savings && savings.amount > 0 && savings.percent <= 0 && (
-                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3 rounded-full bg-brand-accent/10 text-brand-accent">
                     <bdi dir="ltr">-{formatStorePrice(savings.amount)}</bdi>
                   </span>
                 )}
@@ -244,88 +244,84 @@ const Header = ({
                 {hasDiscount && (
                   <Price
                     value={basePrice}
-                    className="font-bold text-black/40 line-through text-2xl sm:text-[32px]"
+                    className="font-medium text-black/40 line-through text-lg sm:text-xl leading-none"
                   />
                 )}
                 {product.discount_percentage > 0 && (
-                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3 rounded-full bg-brand-accent/10 text-brand-accent">
                     <bdi dir="ltr">-{product.discount_percentage}%</bdi>
                   </span>
                 )}
                 {product.discount_amount > 0 && (
-                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3 rounded-full bg-brand-accent/10 text-brand-accent">
                     <bdi dir="ltr">-{formatStorePrice(discountAmount)}</bdi>
                   </span>
                 )}
               </>
             )}
           </div>
-          <p className="text-sm sm:text-base text-black/60 mb-4 sm:mb-5">
-            {product.description}
-          </p>
+          {product.description && (
+            <p className="text-sm sm:text-base leading-relaxed text-black/60 mb-4 sm:mb-5">
+              {product.description}
+            </p>
+          )}
           {hasColors && (
-            <>
-              <hr className="h-[1px] border-t-black/10 mb-5" />
-              <div className="flex flex-col">
-                <span className="text-sm sm:text-base text-black/60 mb-4">
-                  {ar.product.selectColors}
-                </span>
-                <div className="flex items-center flex-wrap gap-3 sm:gap-4">
-                  {colors.map((color) => (
-                    <button
-                      key={color.name}
-                      type="button"
-                      aria-label={color.name}
-                      className="rounded-full w-9 sm:w-10 h-9 sm:h-10 flex items-center justify-center border border-black/10"
-                      style={{
-                        backgroundColor: color.hex || "#d1d5db",
-                      }}
-                      onClick={() => setSelectedColor(color.name)}
-                    >
-                      {selectedColor === color.name && (
-                        <IoMdCheckmark className="text-base text-white" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+            <div className="border-t border-black/10 pt-5 flex flex-col">
+              <span className="text-sm sm:text-base font-medium text-black mb-4">
+                {ar.product.selectColors}
+              </span>
+              <div className="flex items-center flex-wrap gap-3 sm:gap-4">
+                {colors.map((color) => (
+                  <button
+                    key={color.name}
+                    type="button"
+                    aria-label={color.name}
+                    className="rounded-full w-9 sm:w-10 h-9 sm:h-10 flex items-center justify-center border border-black/10"
+                    style={{
+                      backgroundColor: color.hex || "#d1d5db",
+                    }}
+                    onClick={() => setSelectedColor(color.name)}
+                  >
+                    {selectedColor === color.name && (
+                      <IoMdCheckmark className="text-base text-white" />
+                    )}
+                  </button>
+                ))}
               </div>
-            </>
+            </div>
           )}
           {hasSizes && (
-            <>
-              <hr className="h-[1px] border-t-black/10 my-5" />
-              <div className="flex flex-col">
-                <span className="text-sm sm:text-base text-black/60 mb-4">
-                  {ar.product.chooseSize}
-                </span>
-                <div className="flex items-center flex-wrap lg:gap-3">
-                  {sizes.map((size) => {
-                    const variant = activeVariants.find(
-                      (v) =>
-                        (hasColors
-                          ? v.color === selectedColor
-                          : v.color == null) && v.size === size
-                    );
-                    const outOfStock = variant && variant.stock_quantity <= 0;
-                    return (
-                      <button
-                        key={size}
-                        type="button"
-                        disabled={!!outOfStock}
-                        className={cn([
-                          "bg-[#F0F0F0] flex items-center justify-center px-5 lg:px-6 py-2.5 lg:py-3 text-sm lg:text-base rounded-full m-1 lg:m-0 max-h-[46px]",
-                          selectedSize === size && "bg-black font-medium text-white",
-                          outOfStock && "opacity-40 cursor-not-allowed line-through",
-                        ])}
-                        onClick={() => setSelectedSize(size)}
-                      >
-                        {size}
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="border-t border-black/10 pt-5 mt-5 flex flex-col">
+              <span className="text-sm sm:text-base font-medium text-black mb-4">
+                {ar.product.chooseSize}
+              </span>
+              <div className="flex items-center flex-wrap lg:gap-3">
+                {sizes.map((size) => {
+                  const variant = activeVariants.find(
+                    (v) =>
+                      (hasColors
+                        ? v.color === selectedColor
+                        : v.color == null) && v.size === size
+                  );
+                  const outOfStock = variant && variant.stock_quantity <= 0;
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      disabled={!!outOfStock}
+                      className={cn([
+                        "bg-[#F0F0F0] flex items-center justify-center px-5 lg:px-6 py-2.5 lg:py-3 text-sm lg:text-base rounded-full m-1 lg:m-0 max-h-[46px]",
+                        selectedSize === size && "bg-black font-medium text-white",
+                        outOfStock && "opacity-40 cursor-not-allowed line-through",
+                      ])}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
               </div>
-            </>
+            </div>
           )}
           {activeOffers.length > 0 && (
             <QuantityOffers

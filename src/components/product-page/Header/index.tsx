@@ -328,27 +328,33 @@ const Header = ({
           )}
           <hr className="hidden md:block h-[1px] border-t-black/10 my-5" />
 
-          <div className="flex items-center justify-between sm:justify-start gap-3 mt-5">
-            <div className="bg-[#F0F0F0] rounded-full flex items-center justify-between min-w-[110px] px-4 py-3">
-              <button
-                type="button"
-                className="h-6 w-6 text-xl"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              >
-                -
-              </button>
-              <span className="font-medium text-sm sm:text-base">{quantity}</span>
-              <button
-                type="button"
-                className="h-6 w-6 text-xl"
-                onClick={() =>
-                  setQuantity((q) => Math.min(10, Math.max(1, stock), q + 1))
-                }
-              >
-                +
-              </button>
+          {/* Free stepper only when the product has no quantity offers:
+              with tiers, the customer picks a tier instead. */}
+          {activeOffers.length === 0 && (
+            <div className="flex items-center justify-between sm:justify-start gap-3 mt-5">
+              <div className="bg-[#F0F0F0] rounded-full flex items-center justify-between min-w-[110px] px-4 py-3">
+                <button
+                  type="button"
+                  className="h-6 w-6 text-xl"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                >
+                  -
+                </button>
+                <span className="font-medium text-sm sm:text-base">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  className="h-6 w-6 text-xl"
+                  onClick={() =>
+                    setQuantity((q) => Math.min(10, Math.max(1, stock), q + 1))
+                  }
+                >
+                  +
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <OrderForm
             variantId={selectedVariant?.id ?? null}

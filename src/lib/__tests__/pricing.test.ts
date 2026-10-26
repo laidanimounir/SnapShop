@@ -5,6 +5,7 @@ import {
   getDiscountAmount,
   getDiscountedPrice,
   getEffectivePrice,
+  getOfferDisplay,
   getSavings,
   round2,
 } from "../pricing";
@@ -64,5 +65,31 @@ describe("compare_at_price (old struck price, display only)", () => {
     expect(getSavings(600, 400)).toEqual({ amount: 200, percent: 33 });
     expect(getSavings(500, 500)).toEqual({ amount: 0, percent: 0 });
     expect(getSavings(450, 400)).toEqual({ amount: 50, percent: 11 });
+  });
+});
+
+describe("getOfferDisplay (quantity tiers, display only)", () => {
+  it("derives reference, saving and per-piece price", () => {
+    expect(getOfferDisplay(4500, 2, 2800)).toEqual({
+      reference: 5600,
+      saving: 1100,
+      perPiece: 2250,
+    });
+  });
+
+  it("shows no saving when the tier equals the normal price", () => {
+    expect(getOfferDisplay(5600, 2, 2800)).toEqual({
+      reference: 5600,
+      saving: 0,
+      perPiece: 2800,
+    });
+  });
+
+  it("never reports a negative saving (merchant priced above normal)", () => {
+    expect(getOfferDisplay(6000, 2, 2800).saving).toBe(0);
+  });
+
+  it("guards against a zero or invalid quantity", () => {
+    expect(getOfferDisplay(4500, 0, 2800).perPiece).toBe(4500);
   });
 });

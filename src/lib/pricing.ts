@@ -72,3 +72,25 @@ export function getSavings(
       : 0;
   return { amount, percent };
 }
+
+/**
+ * Display numbers for a quantity offer card (all derived, never stored):
+ * - reference: what the same quantity would cost at the normal unit price
+ * - saving: reference - offer total (0 when the offer saves nothing)
+ * - perPiece: offer total divided by the quantity
+ */
+export function getOfferDisplay(
+  totalPrice: number,
+  quantity: number,
+  unitPrice: number
+): { reference: number; saving: number; perPiece: number } {
+  const qty = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+  const reference = round2(unitPrice * qty);
+  const total = round2(totalPrice);
+  const saving = round2(reference - total);
+  return {
+    reference,
+    saving: saving > 0 ? saving : 0,
+    perPiece: round2(total / qty),
+  };
+}

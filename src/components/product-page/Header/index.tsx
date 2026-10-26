@@ -3,7 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PhotoSection from "./PhotoSection";
 import OrderForm from "../OrderForm";
+import QuantityOffers from "../QuantityOffers";
 import { Product } from "@/types/product.types";
+import type { QuantityOffer } from "@/types/offer.types";
 import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import Rating from "@/components/ui/Rating";
@@ -29,9 +31,11 @@ import {
 const Header = ({
   product,
   reviewCount = 0,
+  offers = [],
 }: {
   product: Product;
   reviewCount?: number;
+  offers?: QuantityOffer[];
 }) => {
   // Only active variants reach the storefront (filtered server-side),
   // but guard again so a stale prop never shows a dead variant.
@@ -144,6 +148,18 @@ const Header = ({
   const compareAt = getCompareAtPrice(product.compare_at_price, price);
   const savings = compareAt != null ? getSavings(compareAt, price) : null;
   const stock = selectedVariant?.stock_quantity ?? 0;
+
+  // ---- quantity offers (tiers replace the free stepper when they exist) ----
+  const activeOffers = useMemo(
+    () => offers.filter((offer) => offer.is_active),
+    [offers]
+  );
+  // The default tier is pre-selected; otherwise the first active tier.
+  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(() => {
+    if (activeOffers.length === 0) return null;
+    const fallback = activeOffers.find((offer) => offer.is_default);
+    return (fallback ?? activeOffers[0]).id;
+  });
 
   const [quantity, setQuantity] = useState(1);
 
@@ -300,6 +316,15 @@ const Header = ({
                 </div>
               </div>
             </>
+          )}
+          {activeOffers.length > 0 && (
+            <QuantityOffers
+              offers={activeOffers}
+              unitPrice={price}
+              stock={stock}
+              selectedId={selectedOfferId}
+              onChange={setSelectedOfferId}
+            />
           )}
           <hr className="hidden md:block h-[1px] border-t-black/10 my-5" />
 

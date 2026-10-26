@@ -3,6 +3,7 @@ import BreadcrumbProduct from "@/components/product-page/BreadcrumbProduct";
 import Header from "@/components/product-page/Header";
 import Tabs from "@/components/product-page/Tabs";
 import { getProductById, getProducts, getApprovedReviews } from "@/lib/api/products";
+import { getActiveQuantityOffers } from "@/lib/api/offers";
 import {
   getPublishedLandingSlugForProduct,
   getPublishedLandingSlugMap,
@@ -62,11 +63,13 @@ export default async function ProductPage({
     notFound();
   }
 
-  const [reviews, { products: related }, landingSlugs] = await Promise.all([
-    getApprovedReviews(productId),
-    getProducts({ pageSize: 5, sort: "most-popular" }),
-    getPublishedLandingSlugMap(),
-  ]);
+  const [reviews, { products: related }, landingSlugs, offers] =
+    await Promise.all([
+      getApprovedReviews(productId),
+      getProducts({ pageSize: 5, sort: "most-popular" }),
+      getPublishedLandingSlugMap(),
+      getActiveQuantityOffers(productId),
+    ]);
 
   return (
     <main>
@@ -74,7 +77,11 @@ export default async function ProductPage({
         <hr className="h-[1px] border-t-black/10 mb-5 sm:mb-6" />
         <BreadcrumbProduct title={product.name} />
         <section className="mb-11">
-          <Header product={product} reviewCount={reviews.length} />
+          <Header
+            product={product}
+            reviewCount={reviews.length}
+            offers={offers}
+          />
         </section>
         <Tabs reviews={reviews} product={product} />
       </div>

@@ -160,6 +160,16 @@ const Header = ({
     const fallback = activeOffers.find((offer) => offer.is_default);
     return (fallback ?? activeOffers[0]).id;
   });
+  // Selected tier that actually fits the selected variant's stock (falls
+  // back to the first available tier when the selection becomes invalid).
+  const selectedOffer = useMemo(() => {
+    const pick = (offer: QuantityOffer) => offer.quantity <= stock;
+    const exact = activeOffers.find(
+      (offer) => offer.id === selectedOfferId && pick(offer)
+    );
+    if (exact) return exact;
+    return activeOffers.find(pick) ?? null;
+  }, [activeOffers, selectedOfferId, stock]);
 
   const [quantity, setQuantity] = useState(1);
 
@@ -322,7 +332,7 @@ const Header = ({
               offers={activeOffers}
               unitPrice={price}
               stock={stock}
-              selectedId={selectedOfferId}
+              selectedId={selectedOffer?.id ?? null}
               onChange={setSelectedOfferId}
             />
           )}
@@ -358,7 +368,7 @@ const Header = ({
 
           <OrderForm
             variantId={selectedVariant?.id ?? null}
-            quantity={quantity}
+            quantity={selectedOffer ? selectedOffer.quantity : quantity}
             product={{ id: product.id, name: product.name }}
             image={selectedImage || primaryImage}
             unitPrice={basePrice}
@@ -368,6 +378,8 @@ const Header = ({
             hasSizes={hasSizes}
             selectedColor={selectedColor}
             selectedSize={selectedSize}
+            offer={selectedOffer}
+            hasOffers={activeOffers.length > 0}
           />
 
           {!selectedVariant && (

@@ -27,6 +27,7 @@ import { round2 } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import Price from "@/components/common/Price";
 import { ar } from "@/lib/store/i18n-ar";
+import type { QuantityOffer } from "@/types/offer.types";
 
 type OrderFormProps = {
   variantId: string | null;
@@ -42,6 +43,10 @@ type OrderFormProps = {
   hasSizes: boolean;
   selectedColor: string | null;
   selectedSize: string | null;
+  /** Selected quantity tier (fixed total price), if the product has offers. */
+  offer?: QuantityOffer | null;
+  /** True when the product has quantity offers (tier picker replaces stepper). */
+  hasOffers?: boolean;
 };
 
 export default function OrderForm({
@@ -56,6 +61,8 @@ export default function OrderForm({
   hasSizes,
   selectedColor,
   selectedSize,
+  offer = null,
+  hasOffers = false,
 }: OrderFormProps) {
   const router = useRouter();
 
@@ -110,7 +117,12 @@ export default function OrderForm({
   );
 
   const subtotal = round2(unitPrice * quantity);
-  const discountTotal = round2(unitDiscount * quantity);
+  // A quantity tier is a fixed TOTAL price: express it as a discount line so
+  // subtotal (reference) / discount / total keep their existing meaning.
+  const discountTotal = offer
+    ? Math.max(0, round2(subtotal - offer.total_price))
+    : round2(unitDiscount * quantity);
+  const goodsTotal = round2(subtotal - discountTotal);
   const deliveryPrice = getDeliveryPrice(selectedZone, deliveryType);
   const orderTotal = getOrderTotal(subtotal, discountTotal, deliveryPrice);
 
@@ -122,6 +134,9 @@ export default function OrderForm({
     if (!variantId) return ar.product.unavailable;
     if (hasColors && !selectedColor) return ar.product.pickColor;
     if (hasSizes && !selectedSize) return ar.product.pickSize;
+    // Offers exist but no tier fits the selected variant's stock: the
+    // stepper is hidden, so there is nothing else to order.
+    if (hasOffers && !offer) return ar.product.outOfStock;
     if (!quantityValid) return ar.product.outOfStock;
     if (zonesLoading) return ar.checkout.loadingWilayas;
     return null;
@@ -472,12 +487,15 @@ export default function OrderForm({
       >
         <div className="flex flex-col shrink-0">
           <span className="text-[11px] text-black/50 leading-tight">
-            {selectedZone ? ar.checkout.total : ar.checkout.subtotal}
+            {selectedZone || offer
+              ? ar.checkout.total
+              : ar.checkout.subtotal}
           </span>
           <span className="font-bold text-base text-black leading-tight">
             {/* No wilaya yet: delivery is unknown, so show the goods
-                subtotal instead of a dash. */}
-            <Price value={selectedZone ? orderTotal : subtotal} />
+                total instead of a dash. With a quantity tier selected that
+                is the tier's fixed total price. */}
+            <Price value={selectedZone ? orderTotal : goodsTotal} />
           </span>
         </div>
         {submitButton("sticky")}

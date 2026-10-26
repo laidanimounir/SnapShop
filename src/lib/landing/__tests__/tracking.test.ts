@@ -85,6 +85,42 @@ describe("trackPixelEvent", () => {
     });
   });
 
+  it("includes content ids, content type and an event id when supplied", () => {
+    const fbq = vi.fn();
+    const track = vi.fn();
+    globalRef.window!.fbq = fbq;
+    globalRef.window!.ttq = { track };
+
+    trackPixelEvent("Purchase", {
+      value: 4500,
+      contentIds: ["product-uuid-1"],
+      contentType: "product",
+      eventId: "order-uuid-1",
+    });
+
+    const expected = {
+      currency: "DZD",
+      value: 4500,
+      content_ids: ["product-uuid-1"],
+      content_type: "product",
+      event_id: "order-uuid-1",
+    };
+    expect(fbq).toHaveBeenCalledWith("track", "Purchase", expected);
+    expect(track).toHaveBeenCalledWith("Purchase", expected);
+  });
+
+  it("omits content params when they are missing or empty", () => {
+    const fbq = vi.fn();
+    globalRef.window!.fbq = fbq;
+
+    trackPixelEvent("ViewContent", { value: 2000, contentIds: [] });
+
+    expect(fbq).toHaveBeenCalledWith("track", "ViewContent", {
+      currency: "DZD",
+      value: 2000,
+    });
+  });
+
   it("does nothing and never throws when no pixel loaded", () => {
     expect(() => trackPixelEvent("InitiateCheckout")).not.toThrow();
   });

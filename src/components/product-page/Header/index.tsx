@@ -22,6 +22,7 @@ import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
 import { IoMdCheckmark } from "react-icons/io";
 import { Truck, Wallet, RotateCcw } from "lucide-react";
 import Price from "@/components/common/Price";
+import { trackPixelEvent } from "@/lib/landing/tracking";
 import {
   ar,
   arabicCount,
@@ -173,6 +174,17 @@ const Header = ({
   }, [activeOffers, selectedOfferId, stock]);
 
   const [quantity, setQuantity] = useState(1);
+
+  // Funnel pixel: one ViewContent per product view, with the product id and
+  // the real (base) price. No-op until a pixel is enabled and loaded.
+  useEffect(() => {
+    trackPixelEvent("ViewContent", {
+      value: product.base_price,
+      contentIds: [product.id],
+      contentType: "product",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

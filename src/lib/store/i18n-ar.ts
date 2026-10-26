@@ -223,6 +223,8 @@ export const ar = {
   checkout: {
     customerName: "اسم العميل",
     fullName: "اسمك الكامل",
+    yourInfo: "بياناتك",
+    shippingInfo: "معلومات التوصيل",
     phoneNumber: "رقم الهاتف",
     phonePlaceholder: "+213 5XX XX XX XX",
     wilaya: "الولاية",

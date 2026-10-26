@@ -303,8 +303,11 @@ export default function OrderForm({
         </div>
       )}
 
+      {/* Visible group headings — labels stay visible above every field. */}
+      <h3 className="text-[13px] font-semibold text-black">{ar.checkout.yourInfo}</h3>
+
       <div>
-        <label className="block text-xs font-medium text-black mb-1">
+        <label className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.customerName}
         </label>
         <input
@@ -315,10 +318,10 @@ export default function OrderForm({
           onBlur={() => handleBlur("customerName")}
           placeholder={ar.checkout.fullName}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all",
             errors.customerName
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30"
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10"
           )}
         />
         {errors.customerName && (
@@ -327,7 +330,7 @@ export default function OrderForm({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-black mb-1">
+        <label className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.phoneNumber}
         </label>
         <input
@@ -340,17 +343,21 @@ export default function OrderForm({
           onBlur={() => handleBlur("phone")}
           placeholder={ar.checkout.phonePlaceholder}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all text-start",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all text-start",
             errors.phone
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30"
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10"
           )}
         />
         {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
       </div>
 
+      <h3 className="text-[13px] font-semibold text-black pt-3 border-t border-black/10">
+        {ar.checkout.shippingInfo}
+      </h3>
+
       <div>
-        <label htmlFor="order-wilaya" className="block text-xs font-medium text-black mb-1">
+        <label htmlFor="order-wilaya" className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.wilaya}
         </label>
         <select
@@ -361,10 +368,10 @@ export default function OrderForm({
           onBlur={() => handleBlur("wilaya")}
           disabled={zonesLoading || !!zonesError}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all bg-white",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all bg-white",
             errors.wilaya
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30",
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10",
             (zonesLoading || !!zonesError) && "opacity-60 cursor-not-allowed"
           )}
         >
@@ -382,7 +389,7 @@ export default function OrderForm({
       </div>
 
       <div>
-        <span className="block text-xs font-medium text-black mb-1">
+        <span className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.deliveryMethod}
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -393,7 +400,7 @@ export default function OrderForm({
               <label
                 key={type}
                 className={cn(
-                  "flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border cursor-pointer text-sm transition-colors",
+                  "flex items-center justify-between gap-3 px-3 py-3 rounded-lg border cursor-pointer text-base transition-colors",
                   checked
                     ? "border-black bg-gray-50"
                     : "border-black/10 hover:border-black/30"
@@ -423,7 +430,7 @@ export default function OrderForm({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-black mb-1">
+        <label className="block text-[13px] font-medium text-black mb-1">
           {ar.checkout.shippingAddress}
         </label>
         <textarea
@@ -434,10 +441,10 @@ export default function OrderForm({
           placeholder={ar.checkout.addressPlaceholder}
           rows={2}
           className={cn(
-            "w-full px-3 py-2.5 text-sm border rounded-lg outline-none transition-all resize-none",
+            "w-full px-3 py-3 text-base border rounded-lg outline-none transition-all resize-none",
             errors.address
-              ? "border-red-400 focus:border-red-500"
-              : "border-black/10 focus:border-black/30"
+              ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+              : "border-black/10 focus:border-black/40 focus:ring-2 focus:ring-black/10"
           )}
         />
         {errors.address && (

@@ -2,6 +2,7 @@ import ProductListSec from "@/components/common/ProductListSec";
 import BreadcrumbProduct from "@/components/product-page/BreadcrumbProduct";
 import Header from "@/components/product-page/Header";
 import Tabs from "@/components/product-page/Tabs";
+import ReviewsContent from "@/components/product-page/Tabs/ReviewsContent";
 import { getProductById, getProducts, getApprovedReviews } from "@/lib/api/products";
 import { getActiveQuantityOffers } from "@/lib/api/offers";
 import {
@@ -83,7 +84,12 @@ export default async function ProductPage({
             offers={offers}
           />
         </section>
-        <Tabs reviews={reviews} product={product} />
+        {/* Reviews sit above the tabs: social proof before the fold of the
+            tab section, instead of hiding behind a tab click. */}
+        <section className="pt-6 border-t border-black/10 mb-9 sm:mb-11">
+          <ReviewsContent reviews={reviews} productId={product.id} />
+        </section>
+        <Tabs product={product} />
       </div>
       <div className="mb-[50px] sm:mb-20">
         <ProductListSec

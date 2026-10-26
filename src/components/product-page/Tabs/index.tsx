@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import React, { useState } from "react";
 import ProductDetailsContent from "./ProductDetailsContent";
-import ReviewsContent from "./ReviewsContent";
 import FaqContent from "./FaqContent";
 import type { Product } from "@/types/product.types";
-import type { Review } from "@/types/review.types";
 import { ar } from "@/lib/store/i18n-ar";
 
 type TabBtn = {
@@ -15,13 +13,14 @@ type TabBtn = {
   label: string;
 };
 
+// Reviews were moved above the tabs (see product page): only details and
+// FAQs remain as tabs.
 const tabBtnData: TabBtn[] = [
   { id: 1, label: ar.product.tabs.details },
-  { id: 2, label: ar.product.tabs.ratingReviews },
   { id: 3, label: ar.product.tabs.faqs },
 ];
 
-const Tabs = ({ reviews, product }: { reviews: Review[]; product: Product }) => {
+const Tabs = ({ product }: { product: Product }) => {
   const [active, setActive] = useState<number>(1);
 
   return (
@@ -46,7 +45,6 @@ const Tabs = ({ reviews, product }: { reviews: Review[]; product: Product }) => 
       </div>
       <div className="mb-12 sm:mb-16">
         {active === 1 && <ProductDetailsContent product={product} />}
-        {active === 2 && <ReviewsContent reviews={reviews} productId={product.id} />}
         {active === 3 && <FaqContent />}
       </div>
     </div>

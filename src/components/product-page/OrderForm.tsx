@@ -15,6 +15,7 @@ import {
   validateWilaya,
   type FieldErrors,
 } from "@/lib/checkout/validation";
+import { normalizeDzPhone } from "@/lib/checkout/phone";
 import {
   DELIVERY_TYPE_LABEL,
   formatZoneLabel,
@@ -225,7 +226,7 @@ export default function OrderForm({
       }
       const result = await placeGuestOrder({
         guest_name: customerName.trim(),
-        guest_phone: phone.trim(),
+        guest_phone: normalizeDzPhone(phone) ?? phone.trim(),
         guest_address: address.trim(),
         items: [{ variant_id: variantId, quantity: clampQuantity(quantity) }],
         idempotency_key: attemptKey,

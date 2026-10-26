@@ -1,4 +1,5 @@
 import { ar } from "../store/i18n-ar";
+import { normalizeDzPhone } from "./phone";
 
 export type FieldErrors = {
   customerName?: string;
@@ -12,8 +13,7 @@ export const validateName = (value: string): string | undefined =>
 
 export const validatePhone = (value: string): string | undefined => {
   if (!value.trim()) return ar.checkout.validation.phoneRequired;
-  const digits = value.replace(/\D/g, "");
-  if (digits.length < 8) return ar.checkout.validation.phoneMin;
+  if (!normalizeDzPhone(value)) return ar.checkout.validation.phoneInvalid;
   return undefined;
 };
 

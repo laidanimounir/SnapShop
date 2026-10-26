@@ -15,11 +15,16 @@ describe("checkout field validators", () => {
     expect(validateName("أمين")).toBeUndefined();
   });
 
-  it("requires a phone with at least 8 digits", () => {
+  it("requires an Algerian 05/06 phone of exactly 10 digits", () => {
     expect(validatePhone("")).toBeTruthy();
     expect(validatePhone("0550")).toBeTruthy();
-    expect(validatePhone("05501234")).toBeUndefined();
-    expect(validatePhone("+213 550 12 34")).toBeUndefined();
+    expect(validatePhone("05501234")).toBeTruthy();
+    expect(validatePhone("0750123456")).toBeTruthy();
+    expect(validatePhone("05501234567")).toBeTruthy();
+    expect(validatePhone("0550123456")).toBeUndefined();
+    expect(validatePhone("0650123456")).toBeUndefined();
+    expect(validatePhone("+213 550 12 34 56")).toBeUndefined();
+    expect(validatePhone("00213550123456")).toBeUndefined();
   });
 
   it("requires a non-empty address", () => {

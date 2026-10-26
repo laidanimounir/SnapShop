@@ -226,7 +226,7 @@ export const ar = {
     yourInfo: "بياناتك",
     shippingInfo: "معلومات التوصيل",
     phoneNumber: "رقم الهاتف",
-    phonePlaceholder: "+213 5XX XX XX XX",
+    phonePlaceholder: "05XX XX XX XX",
     wilaya: "الولاية",
     loadingWilayas: "جارٍ تحميل الولايات…",
     selectWilaya: "اختر ولايتك",
@@ -247,6 +247,7 @@ export const ar = {
     validation: {
       nameRequired: "يرجى إدخال اسمك الكامل",
       phoneRequired: "يرجى إدخال رقم هاتفك",
+      phoneInvalid: "أدخل رقم هاتف جزائري صحيح من 10 أرقام يبدأ بـ 05 أو 06",
       phoneMin: "يجب أن يتكون رقم الهاتف من 8 أرقام على الأقل",
       addressRequired: "يرجى إدخال عنوان التوصيل",
       wilayaRequired: "يرجى اختيار ولايتك",

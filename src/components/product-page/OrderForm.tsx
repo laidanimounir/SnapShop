@@ -472,10 +472,12 @@ export default function OrderForm({
       >
         <div className="flex flex-col shrink-0">
           <span className="text-[11px] text-black/50 leading-tight">
-            {ar.checkout.total}
+            {selectedZone ? ar.checkout.total : ar.checkout.subtotal}
           </span>
           <span className="font-bold text-base text-black leading-tight">
-            {selectedZone ? <Price value={orderTotal} /> : "—"}
+            {/* No wilaya yet: delivery is unknown, so show the goods
+                subtotal instead of a dash. */}
+            <Price value={selectedZone ? orderTotal : subtotal} />
           </span>
         </div>
         {submitButton("sticky")}

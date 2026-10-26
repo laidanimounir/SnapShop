@@ -310,7 +310,8 @@ const Header = ({
                   <button
                     key={color.name}
                     type="button"
-                    aria-label={color.name}
+                    aria-label={`${ar.a11y.selectColor}: ${color.name}`}
+                    aria-pressed={selectedColor === color.name}
                     className="rounded-full w-11 h-11 flex items-center justify-center border border-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2"
                     style={{
                       backgroundColor: color.hex || "#d1d5db",
@@ -344,6 +345,8 @@ const Header = ({
                       key={size}
                       type="button"
                       disabled={!!outOfStock}
+                      aria-label={`${ar.a11y.selectSize}: ${size}`}
+                      aria-pressed={selectedSize === size}
                       className={cn([
                         "bg-[#F0F0F0] flex items-center justify-center px-5 lg:px-6 min-h-[44px] py-2.5 lg:py-3 text-sm lg:text-base rounded-full m-1 lg:m-0 max-h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/60 focus-visible:ring-offset-2",
                         selectedSize === size && "bg-black font-medium text-white",
@@ -377,6 +380,7 @@ const Header = ({
                 <button
                   type="button"
                   className="h-6 w-6 text-xl"
+                  aria-label={ar.a11y.quantityDecrease}
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 >
                   -
@@ -387,6 +391,7 @@ const Header = ({
                 <button
                   type="button"
                   className="h-6 w-6 text-xl"
+                  aria-label={ar.a11y.quantityIncrease}
                   onClick={() =>
                     setQuantity((q) => Math.min(10, Math.max(1, stock), q + 1))
                   }

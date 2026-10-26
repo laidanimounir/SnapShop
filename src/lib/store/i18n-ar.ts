@@ -338,6 +338,10 @@ export const ar = {
   a11y: {
     close: "إغلاق",
     zoomImage: "تكبير صورة المنتج",
+    quantityDecrease: "إنقاص الكمية",
+    quantityIncrease: "زيادة الكمية",
+    selectColor: "اختيار اللون",
+    selectSize: "اختيار المقاس",
     previousSlide: "الشريحة السابقة",
     nextSlide: "الشريحة التالية",
     morePages: "المزيد من الصفحات",

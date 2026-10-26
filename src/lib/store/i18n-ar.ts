@@ -326,6 +326,7 @@ export const ar = {
   },
   a11y: {
     close: "إغلاق",
+    zoomImage: "تكبير صورة المنتج",
     previousSlide: "الشريحة السابقة",
     nextSlide: "الشريحة التالية",
     morePages: "المزيد من الصفحات",

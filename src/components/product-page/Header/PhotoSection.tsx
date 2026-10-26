@@ -5,6 +5,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { ImageOff } from "lucide-react";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
 import { cn } from "@/lib/utils";
+import { ar } from "@/lib/store/i18n-ar";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const PhotoSection = ({
   images,
@@ -24,6 +30,8 @@ const PhotoSection = ({
 
   // ---- mobile: swipeable scroll-snap track + dots -------------------------
   const trackRef = useRef<HTMLDivElement>(null);
+  // Tap-to-zoom lightbox (accessible: Escape/close button, focus trap).
+  const [zoomUrl, setZoomUrl] = useState<string | null>(null);
   const cappedKey = capped.join("|");
   const [index, setIndex] = useState(() => {
     const i = capped.indexOf(selected);
@@ -85,6 +93,7 @@ const PhotoSection = ({
   }
 
   return (
+    <>
     <div className="flex flex-col-reverse lg:flex-row lg:gap-3.5">
       {/* Desktop: thumbnail column. */}
       {gallery.length > 0 && (
@@ -122,15 +131,22 @@ const PhotoSection = ({
               key={url}
               className="shrink-0 w-full snap-center bg-[#F0EEED] aspect-[4/5] max-h-[440px] sm:max-h-[500px] overflow-hidden"
             >
-              <Image
-                src={url}
-                width={444}
-                height={555}
-                sizes="100vw"
-                className="w-full h-full object-cover"
-                alt={title}
-                priority={url === capped[0]}
-              />
+              <button
+                type="button"
+                className="block w-full h-full"
+                onClick={() => setZoomUrl(url)}
+                aria-label={ar.a11y.zoomImage}
+              >
+                <Image
+                  src={url}
+                  width={444}
+                  height={555}
+                  sizes="100vw"
+                  className="w-full h-full object-cover"
+                  alt={title}
+                  priority={url === capped[0]}
+                />
+              </button>
             </div>
           ))}
         </div>
@@ -154,19 +170,49 @@ const PhotoSection = ({
         )}
       </div>
 
-      {/* Desktop: main image. */}
+      {/* Desktop: main image (tap opens the same lightbox). */}
       <div className="hidden lg:flex items-center justify-center bg-[#F0EEED] rounded-[20px] w-full h-full max-h-[530px] min-h-[380px] xl:min-h-[530px] overflow-hidden mb-0">
-        <Image
-          src={selected || capped[0]}
-          width={444}
-          height={530}
-          sizes="(min-width: 1024px) calc(50vw - 40px), 100vw"
-          className="rounded-md w-full h-full object-cover hover:scale-110 transition-all duration-500"
-          alt={title}
-          priority
-        />
+        <button
+          type="button"
+          className="w-full h-full"
+          onClick={() => setZoomUrl(selected || capped[0])}
+          aria-label={ar.a11y.zoomImage}
+        >
+          <Image
+            src={selected || capped[0]}
+            width={444}
+            height={530}
+            sizes="(min-width: 1024px) calc(50vw - 40px), 100vw"
+            className="rounded-md w-full h-full object-cover hover:scale-110 transition-all duration-500"
+            alt={title}
+            priority
+          />
+        </button>
       </div>
     </div>
+
+    {/* Tap-to-zoom lightbox. */}
+    <Dialog
+      open={zoomUrl != null}
+      onOpenChange={(open) => {
+        if (!open) setZoomUrl(null);
+      }}
+    >
+      <DialogContent className="max-w-[96vw] w-auto border-none bg-black/90 p-2 sm:p-3 shadow-none">
+        <DialogTitle className="sr-only">{ar.a11y.zoomImage}</DialogTitle>
+        {zoomUrl && (
+          <Image
+            src={zoomUrl}
+            alt={title}
+            width={1000}
+            height={1250}
+            sizes="96vw"
+            className="mx-auto max-h-[82vh] w-auto max-w-full rounded-md object-contain"
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

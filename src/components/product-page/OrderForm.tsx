@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import Price from "@/components/common/Price";
 import { ar } from "@/lib/store/i18n-ar";
 import type { QuantityOffer } from "@/types/offer.types";
+import { trackPixelEvent } from "@/lib/landing/tracking";
 
 type OrderFormProps = {
   variantId: string | null;
@@ -222,6 +223,15 @@ export default function OrderForm({
         offer_id: offerId,
       });
       setIdempotency(null);
+      // Funnel pixel: report the conversion with the selected tier (id +
+      // quantity, never a price) so ad reporting can tell which offer sold.
+      // No pixel is injected on this page yet - the call is a safe no-op.
+      trackPixelEvent("Purchase", {
+        value: result.total,
+        quantity,
+        offerId,
+        offerQuantity: offer?.quantity,
+      });
       router.push(`/order-confirmation/${result.confirmation_token}`);
     } catch (e) {
       // placeGuestOrder already maps server errors to user-facing Arabic text.

@@ -242,6 +242,11 @@ export default function OrderForm({
         quantity,
         offerId,
         offerQuantity: offer?.quantity,
+        contentIds: [product.id],
+        contentType: "product",
+        // Dedup key: the order id lets Meta match this browser event with
+        // any server-side conversion for the same order.
+        eventId: result.order_id,
       });
       router.push(`/order-confirmation/${result.confirmation_token}`);
     } catch (e) {

@@ -20,6 +20,7 @@ import {
   uploadProductImageAction,
 } from "@/app/admin/actions";
 import { validateQuantityOffers } from "@/lib/admin/quantity-offers";
+import { round2 } from "@/lib/pricing";
 import { buildVariantMatrix } from "@/lib/admin/variant-matrix";
 import { COMMON_COLORS, isValidHex, normalizeHex } from "@/lib/admin/colors";
 import {
@@ -151,6 +152,31 @@ export default function ProductEditor({
   const addOffer = () => {
     if (!offersEnabled || offerDrafts.length >= MAX_OFFERS_PER_PRODUCT) return;
     setOfferDrafts((prev) => [...prev, emptyOfferDraft()]);
+    setDirty(true);
+  };
+
+  // One-click preset: tiers for 1, 2 and 3 pieces at exactly the normal
+  // price. The merchant only lowers the totals to create a real offer.
+  const applyOfferPreset = () => {
+    const base = Number(basePrice);
+    if (!offersEnabled || !Number.isFinite(base) || base <= 0) return;
+    if (
+      offerDrafts.length > 0 &&
+      !window.confirm(ar.products.editor.offerPresetConfirm)
+    ) {
+      return;
+    }
+    setOfferDrafts(
+      [1, 2, 3].map((quantity, index) => ({
+        id: null,
+        quantity: String(quantity),
+        total_price: round2(base * quantity).toFixed(2),
+        label: "",
+        badge: "",
+        is_default: index === 0,
+        is_active: true,
+      }))
+    );
     setDirty(true);
   };
 
@@ -746,7 +772,7 @@ export default function ProductEditor({
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-3 mt-3">
+            <div className="flex flex-wrap items-center gap-3 mt-3">
               <button
                 type="button"
                 className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-40"
@@ -754,6 +780,13 @@ export default function ProductEditor({
                 onClick={addOffer}
               >
                 {ar.products.editor.addOffer}
+              </button>
+              <button
+                type="button"
+                className="px-3 py-2 rounded-lg border border-black/15 text-sm hover:bg-gray-100"
+                onClick={applyOfferPreset}
+              >
+                {ar.products.editor.offerPreset}
               </button>
               {offerDrafts.length >= MAX_OFFERS_PER_PRODUCT && (
                 <span className="text-xs text-black/50">

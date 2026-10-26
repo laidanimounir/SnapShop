@@ -193,6 +193,9 @@ export const ar = {
       offerActive: "نشط (يظهر للعميل)",
       offerPerPiece: "≈ {price} دج للقطعة",
       addOffer: "+ إضافة عرض",
+      offerPreset: "عرض جاهز: 1 / 2 / 3 قطع",
+      offerPresetConfirm:
+        "سيتم استبدال العروض الحالية بالعرض الجاهز (1 / 2 / 3 قطع). هل تريد المتابعة؟",
       removeOffer: "حذف العرض",
       maxOffers: "الحد الأقصى 3 عروض لهذا المنتج.",
       offersMaxError: "الحد الأقصى {n} عروض لكل منتج.",

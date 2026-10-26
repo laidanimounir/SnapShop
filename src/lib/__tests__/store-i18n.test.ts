@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ar,
   arabicCount,
   deliveryTypeLabelAr,
   formatAr,
@@ -95,5 +96,27 @@ describe("arabicCount", () => {
     expect(arabicCount(1, productCountForms)).toBe("1 منتج");
     expect(arabicCount(4, productCountForms)).toBe("4 منتجات");
     expect(arabicCount(50, productCountForms)).toBe("50 منتجًا");
+  });
+});
+
+describe("product FAQ copy", () => {
+  const items = ar.product.faqs.items;
+
+  it("is real store copy, not merchant placeholder instructions", () => {
+    const placeholders = ["اشرح", "حدّد نوع", "وفّر معلومات", "قميص"];
+    for (const faq of items) {
+      for (const marker of placeholders) {
+        expect(faq.question).not.toContain(marker);
+        expect(faq.answer).not.toContain(marker);
+      }
+    }
+  });
+
+  it("covers COD, delivery, order confirmation and returns", () => {
+    const text = items.map((f) => f.question + f.answer).join(" ");
+    expect(text).toContain("الدفع عند الاستلام");
+    expect(text).toContain("جميع الولايات");
+    expect(text).toContain("تأكيد");
+    expect(text).toContain("الإرجاع");
   });
 });

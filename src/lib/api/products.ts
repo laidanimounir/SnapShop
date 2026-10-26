@@ -153,7 +153,7 @@ export async function getProducts(
   let query: any = supabase
     .from("products")
     .select(
-      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at",
+      "id, name, description, category, brand, base_price, discount_percentage, discount_amount, rating, is_active, size_type, created_at, updated_at",
       { count: "exact" }
     )
     .eq("is_active", true);

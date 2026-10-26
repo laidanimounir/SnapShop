@@ -433,3 +433,13 @@ export const productCountForms: ArabicCountForms = {
   many: "منتجًا",
   other: "منتجًا",
 };
+
+/** Reusable plural forms for "review(s)" in storefront copy. */
+export const reviewCountForms: ArabicCountForms = {
+  zero: "تقييمات",
+  one: "تقييم",
+  two: "تقييمان",
+  few: "تقييمات",
+  many: "تقييمًا",
+  other: "تقييمًا",
+};

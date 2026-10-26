@@ -74,7 +74,7 @@ export default async function ProductPage({
         <hr className="h-[1px] border-t-black/10 mb-5 sm:mb-6" />
         <BreadcrumbProduct title={product.name} />
         <section className="mb-11">
-          <Header product={product} />
+          <Header product={product} reviewCount={reviews.length} />
         </section>
         <Tabs reviews={reviews} product={product} />
       </div>

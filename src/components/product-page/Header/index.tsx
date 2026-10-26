@@ -16,9 +16,20 @@ import { sortSizes } from "@/lib/sizes";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
 import { IoMdCheckmark } from "react-icons/io";
 import Price from "@/components/common/Price";
-import { ar, formatStorePrice } from "@/lib/store/i18n-ar";
+import {
+  ar,
+  arabicCount,
+  formatStorePrice,
+  reviewCountForms,
+} from "@/lib/store/i18n-ar";
 
-const Header = ({ product }: { product: Product }) => {
+const Header = ({
+  product,
+  reviewCount = 0,
+}: {
+  product: Product;
+  reviewCount?: number;
+}) => {
   // Only active variants reach the storefront (filtered server-side),
   // but guard again so a stale prop never shows a dead variant.
   const activeVariants = useMemo(
@@ -147,19 +158,28 @@ const Header = ({ product }: { product: Product }) => {
           >
             {product.name}
           </h1>
-          {product.rating > 0 && (
+          {(product.rating > 0 || reviewCount > 0) && (
             <div className="flex items-center mb-3 sm:mb-3.5">
-              <Rating
-                initialValue={product.rating}
-                allowFraction
-                SVGclassName="inline-block"
-                emptyClassName="fill-gray-50"
-                size={25}
-                readonly
-              />
-              <span className="text-black text-xs sm:text-sm ms-[11px] sm:ms-[13px] pb-0.5 sm:pb-0">
-                <bdi dir="ltr">{product.rating.toFixed(1)}/5</bdi>
-              </span>
+              {product.rating > 0 && (
+                <Rating
+                  initialValue={product.rating}
+                  allowFraction
+                  SVGclassName="inline-block"
+                  emptyClassName="fill-gray-50"
+                  size={25}
+                  readonly
+                />
+              )}
+              {product.rating > 0 && (
+                <span className="text-black text-xs sm:text-sm ms-[11px] sm:ms-[13px] pb-0.5 sm:pb-0">
+                  <bdi dir="ltr">{product.rating.toFixed(1)}/5</bdi>
+                </span>
+              )}
+              {reviewCount > 0 && (
+                <span className="text-black/50 text-xs sm:text-sm pb-0.5 sm:pb-0 ms-1.5">
+                  ({arabicCount(reviewCount, reviewCountForms)})
+                </span>
+              )}
             </div>
           )}
           <div className="flex items-center gap-2.5 sm:gap-3 mb-5">

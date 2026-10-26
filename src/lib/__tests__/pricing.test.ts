@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   formatPrice,
+  getCompareAtPrice,
   getDiscountAmount,
   getDiscountedPrice,
   getEffectivePrice,
+  getSavings,
   round2,
 } from "../pricing";
 
@@ -42,5 +44,25 @@ describe("formatPrice", () => {
   it("displays consistently with 2 decimals", () => {
     expect(formatPrice(89.99)).toBe("DA 89.99");
     expect(formatPrice(100)).toBe("DA 100.00");
+  });
+});
+
+describe("compare_at_price (old struck price, display only)", () => {
+  it("shows the old price only when it is higher than the real price", () => {
+    expect(getCompareAtPrice(600, 400)).toBe(600);
+    expect(getCompareAtPrice(400, 400)).toBeNull();
+    expect(getCompareAtPrice(300, 400)).toBeNull();
+  });
+
+  it("treats missing/invalid values as no old price", () => {
+    expect(getCompareAtPrice(null, 400)).toBeNull();
+    expect(getCompareAtPrice(undefined, 400)).toBeNull();
+    expect(getCompareAtPrice(Number.NaN, 400)).toBeNull();
+  });
+
+  it("derives the savings badge from the two numbers", () => {
+    expect(getSavings(600, 400)).toEqual({ amount: 200, percent: 33 });
+    expect(getSavings(500, 500)).toEqual({ amount: 0, percent: 0 });
+    expect(getSavings(450, 400)).toEqual({ amount: 50, percent: 11 });
   });
 });

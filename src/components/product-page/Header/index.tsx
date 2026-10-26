@@ -8,9 +8,11 @@ import { cairo } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import Rating from "@/components/ui/Rating";
 import {
+  getCompareAtPrice,
   getDiscountedPrice,
   getDiscountAmount,
   getEffectivePrice,
+  getSavings,
 } from "@/lib/pricing";
 import { sortSizes } from "@/lib/sizes";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
@@ -134,6 +136,10 @@ const Header = ({
     product.discount_amount
   );
   const hasDiscount = product.discount_percentage > 0 || product.discount_amount > 0;
+  // New model: the merchant types the real price (base_price) and an old
+  // price shown struck through. Display only — never used for charging.
+  const compareAt = getCompareAtPrice(product.compare_at_price, price);
+  const savings = compareAt != null ? getSavings(compareAt, price) : null;
   const stock = selectedVariant?.stock_quantity ?? 0;
 
   const [quantity, setQuantity] = useState(1);
@@ -182,26 +188,47 @@ const Header = ({
               )}
             </div>
           )}
-          <div className="flex items-center gap-2.5 sm:gap-3 mb-5">
+          <div className="flex items-center flex-wrap gap-2.5 sm:gap-3 mb-5">
             <Price
               value={price}
               className="font-bold text-black text-2xl sm:text-[32px]"
             />
-            {hasDiscount && (
-              <Price
-                value={basePrice}
-                className="font-bold text-black/40 line-through text-2xl sm:text-[32px]"
-              />
-            )}
-            {product.discount_percentage > 0 && (
-              <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
-                <bdi dir="ltr">-{product.discount_percentage}%</bdi>
-              </span>
-            )}
-            {product.discount_amount > 0 && (
-              <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
-                <bdi dir="ltr">-{formatStorePrice(discountAmount)}</bdi>
-              </span>
+            {compareAt != null ? (
+              <>
+                <Price
+                  value={compareAt}
+                  className="font-bold text-black/40 line-through text-2xl sm:text-[32px]"
+                />
+                {savings && savings.percent > 0 && (
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                    <bdi dir="ltr">-{savings.percent}%</bdi>
+                  </span>
+                )}
+                {savings && savings.amount > 0 && savings.percent <= 0 && (
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                    <bdi dir="ltr">-{formatStorePrice(savings.amount)}</bdi>
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                {hasDiscount && (
+                  <Price
+                    value={basePrice}
+                    className="font-bold text-black/40 line-through text-2xl sm:text-[32px]"
+                  />
+                )}
+                {product.discount_percentage > 0 && (
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                    <bdi dir="ltr">-{product.discount_percentage}%</bdi>
+                  </span>
+                )}
+                {product.discount_amount > 0 && (
+                  <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-brand-accent/10 text-brand-accent">
+                    <bdi dir="ltr">-{formatStorePrice(discountAmount)}</bdi>
+                  </span>
+                )}
+              </>
             )}
           </div>
           <p className="text-sm sm:text-base text-black/60 mb-5">

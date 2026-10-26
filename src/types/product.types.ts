@@ -29,6 +29,8 @@ export type Product = {
   category: string | null;
   brand: string | null;
   base_price: number;
+  /** Old "was" price (display only). Absent/null = no old price. */
+  compare_at_price?: number | null;
   discount_percentage: number;
   discount_amount: number;
   rating: number;

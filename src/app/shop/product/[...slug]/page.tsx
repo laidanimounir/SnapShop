@@ -9,6 +9,7 @@ import {
 } from "@/lib/landing/api";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { isValidUuid } from "@/lib/uuid";
 import { ar, truncateGraphemes } from "@/lib/store/i18n-ar";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -45,6 +46,10 @@ export default async function ProductPage({
   params: { slug: string[] };
 }) {
   const productId = params.slug[0];
+
+  // Anything that is not a uuid (hand-edited url, garbage) is a 404, never a
+  // Postgres cast error leaking as a 500.
+  if (!isValidUuid(productId)) notFound();
 
   // When the product has a published landing page, the landing page is the
   // canonical storefront page for it: send visitors there instead.

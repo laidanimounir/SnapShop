@@ -1,5 +1,6 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { sanitizeSearchTerm } from "@/lib/search";
+import { isValidUuid } from "@/lib/uuid";
 import type { Product, ProductImage, ProductVariant } from "@/types/product.types";
 import type { Review } from "@/types/review.types";
 
@@ -211,6 +212,9 @@ export async function getProducts(
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
+  // A non-uuid id makes Postgres throw a cast error (HTTP 500 on the page).
+  // Treat it as "not found" instead.
+  if (!isValidUuid(id)) return null;
   const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("products")
@@ -229,6 +233,7 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 export async function getApprovedReviews(productId: string): Promise<Review[]> {
+  if (!isValidUuid(productId)) return [];
   const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("reviews")

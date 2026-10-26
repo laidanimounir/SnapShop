@@ -13,6 +13,7 @@ import {
   getDiscountAmount,
   getEffectivePrice,
   getSavings,
+  round2,
 } from "@/lib/pricing";
 import { sortSizes } from "@/lib/sizes";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/images";
@@ -125,19 +126,21 @@ const Header = ({
   const basePrice = selectedVariant
     ? getEffectivePrice(product.base_price, selectedVariant.price)
     : product.base_price;
-  const price = getDiscountedPrice(
-    basePrice,
-    product.discount_percentage,
-    product.discount_amount
-  );
-  const discountAmount = getDiscountAmount(
-    basePrice,
-    product.discount_percentage,
-    product.discount_amount
-  );
-  const hasDiscount = product.discount_percentage > 0 || product.discount_amount > 0;
   // New model: the merchant types the real price (base_price) and an old
   // price shown struck through. Display only — never used for charging.
+  // Products that still carry a legacy percentage/amount discount and no
+  // compare_at_price keep today's display until the optional data
+  // migration (see report) converts them.
+  const hasComparePrice = product.compare_at_price != null;
+  const price = hasComparePrice
+    ? round2(basePrice)
+    : getDiscountedPrice(basePrice, product.discount_percentage, product.discount_amount);
+  const discountAmount = hasComparePrice
+    ? 0
+    : getDiscountAmount(basePrice, product.discount_percentage, product.discount_amount);
+  const hasDiscount =
+    !hasComparePrice &&
+    (product.discount_percentage > 0 || product.discount_amount > 0);
   const compareAt = getCompareAtPrice(product.compare_at_price, price);
   const savings = compareAt != null ? getSavings(compareAt, price) : null;
   const stock = selectedVariant?.stock_quantity ?? 0;

@@ -74,9 +74,9 @@ export default async function ProductPage({
   return (
     <main>
       <div className="max-w-frame mx-auto px-4 xl:px-0">
-        <hr className="h-[1px] border-t-black/10 mb-5 sm:mb-6" />
+        <hr className="h-[1px] border-t-black/10 mb-4 sm:mb-6" />
         <BreadcrumbProduct title={product.name} />
-        <section className="mb-11">
+        <section className="mb-9 sm:mb-11">
           <Header
             product={product}
             reviewCount={reviews.length}

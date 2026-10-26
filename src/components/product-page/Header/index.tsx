@@ -188,7 +188,7 @@ const Header = ({
           <h1
             className={cn([
               cairo.className,
-              "text-2xl md:text-[40px] md:leading-[40px] mb-3 md:mb-3.5",
+              "text-2xl md:text-[40px] md:leading-[40px] mb-2 sm:mb-3 md:mb-3.5",
             ])}
           >
             {product.name}
@@ -217,7 +217,7 @@ const Header = ({
               )}
             </div>
           )}
-          <div className="flex items-center flex-wrap gap-2.5 sm:gap-3 mb-5">
+          <div className="flex items-center flex-wrap gap-2.5 sm:gap-3 mb-4 sm:mb-5">
             <Price
               value={price}
               className="font-bold text-black text-2xl sm:text-[32px]"
@@ -260,7 +260,7 @@ const Header = ({
               </>
             )}
           </div>
-          <p className="text-sm sm:text-base text-black/60 mb-5">
+          <p className="text-sm sm:text-base text-black/60 mb-4 sm:mb-5">
             {product.description}
           </p>
           {hasColors && (

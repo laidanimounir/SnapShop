@@ -45,7 +45,7 @@ const PhotoSection = ({
         </div>
       )}
 
-      <div className="flex items-center justify-center bg-[#F0EEED] rounded-[13px] sm:rounded-[20px] w-full sm:w-96 md:w-full mx-auto h-full max-h-[530px] min-h-[330px] lg:min-h-[380px] xl:min-h-[530px] overflow-hidden mb-3 lg:mb-0">
+      <div className="flex items-center justify-center bg-[#F0EEED] rounded-[13px] sm:rounded-[20px] w-full sm:w-96 md:w-full mx-auto aspect-[4/5] max-h-[440px] sm:max-h-[500px] lg:aspect-auto lg:h-full lg:max-h-[530px] lg:min-h-[380px] xl:min-h-[530px] overflow-hidden mb-2 sm:mb-3 lg:mb-0">
         {selected ? (
           <Image
             src={selected}

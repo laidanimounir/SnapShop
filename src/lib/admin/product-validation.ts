@@ -18,6 +18,8 @@ export type ProductInput = {
   category?: string | null;
   brand?: string | null;
   base_price: number;
+  /** Old "was" price (display only). null / "" = no old price. */
+  compare_at_price?: number | string | null;
   discount_percentage?: number;
   discount_amount?: number;
   is_active?: boolean;
@@ -30,6 +32,8 @@ export type ValidProduct = {
   category: string | null;
   brand: string | null;
   base_price: number;
+  /** Only present when the caller sent the field; omitted = keep stored value. */
+  compare_at_price?: number | null;
   discount_percentage: number;
   discount_amount: number;
   is_active: boolean;
@@ -63,6 +67,20 @@ export function validateProductInput(
   if (!Number.isFinite(basePrice) || basePrice < 0) {
     return fail(ar.validation.basePrice);
   }
+  // Old struck price: optional. When the caller passes the field it must be
+  // a real number strictly higher than the price the customer pays (empty
+  // string means "clear it"). When the caller omits the field entirely, the
+  // stored value is left untouched.
+  const hasCompare = input.compare_at_price !== undefined;
+  let compareAtPrice: number | null = null;
+  const rawCompare = input.compare_at_price;
+  if (hasCompare && rawCompare != null && String(rawCompare).trim() !== "") {
+    const value = Number(rawCompare);
+    if (!Number.isFinite(value) || value <= basePrice) {
+      return fail(ar.validation.compareAtPrice);
+    }
+    compareAtPrice = Math.round(value * 100) / 100;
+  }
   const pct = Number(input.discount_percentage ?? 0);
   if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
     return fail(ar.validation.discountPct);
@@ -89,6 +107,7 @@ export function validateProductInput(
       category,
       brand,
       base_price: Math.round(basePrice * 100) / 100,
+      ...(hasCompare ? { compare_at_price: compareAtPrice } : {}),
       discount_percentage: pct,
       discount_amount: Math.round(amt * 100) / 100,
       is_active: input.is_active ?? false,

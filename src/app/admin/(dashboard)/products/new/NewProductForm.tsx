@@ -24,6 +24,16 @@ export default function NewProductForm() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    // Old price must be higher than the real price (server re-checks too).
+    if (oldPrice.trim() !== "") {
+      const compareNum = Number(oldPrice);
+      const realNum = Number(basePrice);
+      if (!Number.isFinite(compareNum) || !Number.isFinite(realNum) || compareNum <= realNum) {
+        setBusy(false);
+        setError(ar.validation.compareAtPrice);
+        return;
+      }
+    }
     const result = await createProductAction({
       name,
       description,

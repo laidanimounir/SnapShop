@@ -227,6 +227,16 @@ export default function ProductEditor({
       showToast(ar.products.editor.colorNamesUnique, true);
       return;
     }
+    // Old price must be higher than the real price (server re-checks too).
+    const compareRaw = compareAtPrice.trim();
+    if (compareRaw !== "") {
+      const compareNum = Number(compareRaw);
+      const realNum = Number(basePrice);
+      if (!Number.isFinite(compareNum) || !Number.isFinite(realNum) || compareNum <= realNum) {
+        showToast(ar.validation.compareAtPrice, true);
+        return;
+      }
+    }
     setSaving(true);
     setToast(null);
     const basic = await updateProductAction(product.id, {

@@ -77,6 +77,50 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        admin: {
+          background: "hsl(var(--admin-background) / <alpha-value>)",
+          foreground: "hsl(var(--admin-foreground) / <alpha-value>)",
+          card: {
+            DEFAULT: "hsl(var(--admin-card) / <alpha-value>)",
+            foreground: "hsl(var(--admin-card-foreground) / <alpha-value>)",
+          },
+          popover: {
+            DEFAULT: "hsl(var(--admin-popover) / <alpha-value>)",
+            foreground: "hsl(var(--admin-popover-foreground) / <alpha-value>)",
+          },
+          primary: {
+            DEFAULT: "hsl(var(--admin-primary) / <alpha-value>)",
+            foreground: "hsl(var(--admin-primary-foreground) / <alpha-value>)",
+          },
+          secondary: {
+            DEFAULT: "hsl(var(--admin-secondary) / <alpha-value>)",
+            foreground: "hsl(var(--admin-secondary-foreground) / <alpha-value>)",
+          },
+          muted: {
+            DEFAULT: "hsl(var(--admin-muted) / <alpha-value>)",
+            foreground: "hsl(var(--admin-muted-foreground) / <alpha-value>)",
+          },
+          accent: {
+            DEFAULT: "hsl(var(--admin-accent) / <alpha-value>)",
+            foreground: "hsl(var(--admin-accent-foreground) / <alpha-value>)",
+          },
+          destructive: {
+            DEFAULT: "hsl(var(--admin-destructive) / <alpha-value>)",
+            foreground: "hsl(var(--admin-destructive-foreground) / <alpha-value>)",
+          },
+          border: "hsl(var(--admin-border) / <alpha-value>)",
+          input: "hsl(var(--admin-input) / <alpha-value>)",
+          ring: "hsl(var(--admin-ring) / <alpha-value>)",
+          sidebar: {
+            DEFAULT: "hsl(var(--admin-sidebar) / <alpha-value>)",
+            foreground: "hsl(var(--admin-sidebar-foreground) / <alpha-value>)",
+            accent: "hsl(var(--admin-sidebar-accent) / <alpha-value>)",
+            "accent-foreground":
+              "hsl(var(--admin-sidebar-accent-foreground) / <alpha-value>)",
+            border: "hsl(var(--admin-sidebar-border) / <alpha-value>)",
+            ring: "hsl(var(--admin-sidebar-ring) / <alpha-value>)",
+          },
+        },
       },
       keyframes: {
         "accordion-down": {

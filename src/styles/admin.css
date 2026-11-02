@@ -1,0 +1,86 @@
+/* Admin-only design tokens. Everything is scoped to .admin-root so the
+   storefront keeps its existing palette, typography, and dark-mode rules. */
+
+:root {
+  --admin-background: 0 0% 100%;
+  --admin-foreground: 0 0% 3.9%;
+  --admin-card: 0 0% 100%;
+  --admin-card-foreground: 0 0% 3.9%;
+  --admin-popover: 0 0% 100%;
+  --admin-popover-foreground: 0 0% 3.9%;
+  --admin-primary: 0 0% 9%;
+  --admin-primary-foreground: 0 0% 98%;
+  --admin-secondary: 0 0% 96.1%;
+  --admin-secondary-foreground: 0 0% 9%;
+  --admin-muted: 0 0% 96.1%;
+  --admin-muted-foreground: 0 0% 45.1%;
+  --admin-accent: 0 0% 96.1%;
+  --admin-accent-foreground: 0 0% 9%;
+  --admin-destructive: 0 84.2% 60.2%;
+  --admin-destructive-foreground: 0 0% 98%;
+  --admin-border: 0 0% 89.8%;
+  --admin-input: 0 0% 89.8%;
+  --admin-ring: 0 0% 63.9%;
+  --admin-sidebar: 0 0% 98%;
+  --admin-sidebar-foreground: 0 0% 3.9%;
+  --admin-sidebar-accent: 0 0% 96.1%;
+  --admin-sidebar-accent-foreground: 0 0% 9%;
+  --admin-sidebar-border: 0 0% 89.8%;
+  --admin-sidebar-ring: 0 0% 63.9%;
+}
+
+.admin-root[data-theme="dark"],
+:root:has(.admin-root[data-theme="dark"]) {
+  --admin-background: 0 0% 3.9%;
+  --admin-foreground: 0 0% 98%;
+  --admin-card: 0 0% 3.9%;
+  --admin-card-foreground: 0 0% 98%;
+  --admin-popover: 0 0% 3.9%;
+  --admin-popover-foreground: 0 0% 98%;
+  --admin-primary: 0 0% 98%;
+  --admin-primary-foreground: 0 0% 9%;
+  --admin-secondary: 0 0% 14.9%;
+  --admin-secondary-foreground: 0 0% 98%;
+  --admin-muted: 0 0% 14.9%;
+  --admin-muted-foreground: 0 0% 63.9%;
+  --admin-accent: 0 0% 14.9%;
+  --admin-accent-foreground: 0 0% 98%;
+  --admin-destructive: 0 62.8% 30.6%;
+  --admin-destructive-foreground: 0 0% 98%;
+  --admin-border: 0 0% 14.9%;
+  --admin-input: 0 0% 14.9%;
+  --admin-ring: 0 0% 83.1%;
+  --admin-sidebar: 0 0% 5.9%;
+  --admin-sidebar-foreground: 0 0% 98%;
+  --admin-sidebar-accent: 0 0% 14.9%;
+  --admin-sidebar-accent-foreground: 0 0% 98%;
+  --admin-sidebar-border: 0 0% 14.9%;
+  --admin-sidebar-ring: 0 0% 83.1%;
+  color-scheme: dark;
+}
+
+.admin-root {
+  min-height: 100vh;
+  background-color: hsl(var(--admin-background));
+  color: hsl(var(--admin-foreground));
+  color-scheme: light;
+}
+
+.admin-root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+.admin-root ::selection {
+  background-color: hsl(var(--admin-primary) / 0.9);
+  color: hsl(var(--admin-primary-foreground));
+}
+
+.admin-root input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+@media print {
+  .admin-root {
+    background: #fff;
+  }
+}

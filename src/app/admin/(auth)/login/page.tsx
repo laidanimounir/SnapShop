@@ -2,9 +2,15 @@
 
 import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { LockKeyhole } from "lucide-react";
+
 import { signInAdmin } from "@/app/admin/actions";
-import { BRAND_NAME } from "@/lib/config";
 import { ar } from "@/lib/admin/i18n-ar";
+import { Button } from "@/components/admin/ui/button";
+import { Card } from "@/components/admin/ui/card";
+import { Input } from "@/components/admin/ui/input";
+import { Label } from "@/components/admin/ui/label";
+import { AdminLogo } from "@/components/admin/layout/admin-logo";
 
 function LoginPanel() {
   const router = useRouter();
@@ -43,62 +49,74 @@ function LoginPanel() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white border border-black/10 rounded-xl p-6 space-y-4"
-      >
-        <div>
-          <h1 className="text-lg font-semibold">{BRAND_NAME} — لوحة الإدارة</h1>
-          <p className="text-sm text-black/60">{ar.login.subtitle}</p>
+    <div className="flex min-h-svh items-center justify-center bg-admin-muted/40 px-4 py-10">
+      <Card className="w-full max-w-md gap-0 p-6 shadow-lg">
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
+          <AdminLogo className="text-admin-foreground" />
+          <div className="space-y-1">
+            <h1 className="text-lg font-semibold tracking-tight">
+              {ar.login.title}
+            </h1>
+            <p className="text-xs text-admin-muted-foreground">
+              {ar.login.subtitle}
+            </p>
+          </div>
         </div>
 
         {deniedByLayout && (
-          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm">
-            {ar.messages.notAdmin}
+          <div
+            role="status"
+            className="mb-4 flex items-start gap-2 rounded-md border border-admin-border bg-admin-muted px-3 py-2 text-xs text-admin-foreground"
+          >
+            <LockKeyhole className="mt-0.5 size-4 shrink-0" />
+            <span>{ar.messages.notAdmin}</span>
           </div>
         )}
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+          <div
+            role="alert"
+            className="mb-4 rounded-md border border-admin-destructive/30 bg-admin-destructive/10 px-3 py-2 text-xs text-admin-destructive"
+          >
             {error}
           </div>
         )}
 
-        <div>
-          <label className="block text-xs font-medium text-black mb-1">
-            {ar.login.email}
-          </label>
-          <input
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none focus:border-black/30"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="admin-email">{ar.login.email}</Label>
+            <Input
+              id="admin-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={Boolean(error)}
+            />
+          </div>
 
-        <div>
-          <label className="block text-xs font-medium text-black mb-1">
-            {ar.login.password}
-          </label>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2.5 text-sm border border-black/10 rounded-lg outline-none focus:border-black/30"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="admin-password">{ar.login.password}</Label>
+            <Input
+              id="admin-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={Boolean(error)}
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-black/80 transition-all disabled:opacity-50"
-        >
-          {isSubmitting ? ar.login.signingIn : ar.login.signIn}
-        </button>
-      </form>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? ar.login.signingIn : ar.login.signIn}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }

@@ -7,7 +7,7 @@ export default function PrintButton() {
     <button
       type="button"
       onClick={() => window.print()}
-      className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 print:hidden"
+      className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted print:hidden"
     >
       {ar.orders.printSlip}
     </button>

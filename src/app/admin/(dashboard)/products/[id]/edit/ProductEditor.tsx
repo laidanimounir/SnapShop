@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -39,8 +39,8 @@ import { presetSizesFor } from "@/lib/sizes";
 import { ar, formatAr } from "@/lib/admin/i18n-ar";
 
 const inputCls =
-  "w-full px-3 py-2 border border-black/15 rounded-lg text-sm";
-const sectionCls = "bg-white border border-black/10 rounded-lg p-5 mb-4";
+  "w-full px-3 py-2 border border-admin-border rounded-lg text-sm";
+const sectionCls = "bg-admin-card border border-admin-border rounded-lg p-5 mb-4";
 
 type RowState = {
   stock: string;
@@ -521,7 +521,7 @@ export default function ProductEditor({
       {toast && (
         <div
           className={`mb-4 px-4 py-3 rounded-lg text-sm ${
-            toastError ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"
+            toastError ? "bg-admin-destructive/10 text-admin-destructive" : "bg-green-50 text-green-800"
           }`}
         >
           {toast}
@@ -652,7 +652,7 @@ export default function ProductEditor({
             {ar.products.editor.activeVisible}
           </label>
         </div>
-        <p className="text-xs text-black/50 mt-2">
+        <p className="text-xs text-admin-muted-foreground mt-2">
           {ar.products.editor.discountNote}
         </p>
       </section>
@@ -662,7 +662,7 @@ export default function ProductEditor({
         <h2 className="font-semibold mb-1">
           {ar.products.editor.offersTitle}
         </h2>
-        <p className="text-xs text-black/50 mb-3">
+        <p className="text-xs text-admin-muted-foreground mb-3">
           {ar.products.editor.offersHelp}
         </p>
         {!offersEnabled ? (
@@ -675,7 +675,7 @@ export default function ProductEditor({
               {offerDrafts.map((offer, index) => (
                 <div
                   key={offer.id ?? `new-${index}`}
-                  className="border border-black/10 rounded-lg p-3"
+                  className="border border-admin-border rounded-lg p-3"
                 >
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
@@ -756,13 +756,13 @@ export default function ProductEditor({
                       {ar.products.editor.offerActive}
                     </label>
                     {offerPerPiece(offer) && (
-                      <span className="text-xs text-black/50">
+                      <span className="text-xs text-admin-muted-foreground">
                         {offerPerPiece(offer)}
                       </span>
                     )}
                     <button
                       type="button"
-                      className="ms-auto px-2.5 py-1.5 text-xs rounded bg-red-50 text-red-700 hover:bg-red-100"
+                      className="ms-auto px-2.5 py-1.5 text-xs rounded bg-admin-destructive/10 text-admin-destructive hover:bg-admin-destructive/20"
                       aria-label={ar.products.editor.removeOffer}
                       onClick={() => removeOffer(index)}
                     >
@@ -775,7 +775,7 @@ export default function ProductEditor({
             <div className="flex flex-wrap items-center gap-3 mt-3">
               <button
                 type="button"
-                className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-40"
+                className="px-3 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted disabled:opacity-40"
                 disabled={offerDrafts.length >= MAX_OFFERS_PER_PRODUCT}
                 onClick={addOffer}
               >
@@ -783,13 +783,13 @@ export default function ProductEditor({
               </button>
               <button
                 type="button"
-                className="px-3 py-2 rounded-lg border border-black/15 text-sm hover:bg-gray-100"
+                className="px-3 py-2 rounded-lg border border-admin-border text-sm hover:bg-admin-muted"
                 onClick={applyOfferPreset}
               >
                 {ar.products.editor.offerPreset}
               </button>
               {offerDrafts.length >= MAX_OFFERS_PER_PRODUCT && (
-                <span className="text-xs text-black/50">
+                <span className="text-xs text-admin-muted-foreground">
                   {ar.products.editor.maxOffers}
                 </span>
               )}
@@ -803,7 +803,7 @@ export default function ProductEditor({
         <h2 className="font-semibold mb-1">
           {ar.products.editor.images} ({orderedImages.length}/{MAX_PRODUCT_IMAGES})
         </h2>
-        <p className="text-xs text-black/50 mb-3">
+        <p className="text-xs text-admin-muted-foreground mb-3">
           {formatAr(ar.products.editor.imagesHelp, {
             n: MAX_PRODUCT_IMAGES - 1,
           })}
@@ -817,10 +817,10 @@ export default function ProductEditor({
           </div>
         )}
         <label
-          className={`inline-block px-4 py-2 rounded-lg border border-black/15 text-sm font-medium mb-3 ${
+          className={`inline-block px-4 py-2 rounded-lg border border-admin-border text-sm font-medium mb-3 ${
             uploading || imagesFull
               ? "opacity-50 cursor-not-allowed"
-              : "cursor-pointer hover:bg-gray-100"
+              : "cursor-pointer hover:bg-admin-muted"
           }`}
         >
           {uploading
@@ -838,13 +838,13 @@ export default function ProductEditor({
           />
         </label>
         {orderedImages.length === 0 && (
-          <p className="text-sm text-black/50">
+          <p className="text-sm text-admin-muted-foreground">
             {ar.products.editor.noImagesYet}
           </p>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {orderedImages.map((img, idx) => (
-            <div key={img.id} className="border border-black/10 rounded-lg p-2">
+            <div key={img.id} className="border border-admin-border rounded-lg p-2">
               <div className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -856,14 +856,14 @@ export default function ProductEditor({
                   className={`absolute top-1 start-1 text-[10px] px-1.5 py-0.5 rounded ${
                     idx === 0
                       ? "bg-black/80 text-white"
-                      : "bg-white/85 text-black border border-black/10"
+                      : "bg-admin-card/85 text-admin-foreground border border-admin-border"
                   }`}
                 >
                   {idx === 0 ? ar.products.editor.main : idx + 1}
                 </span>
               </div>
               <select
-                className="w-full mt-2 px-2 py-1 border border-black/15 rounded text-xs"
+                className="w-full mt-2 px-2 py-1 border border-admin-border rounded text-xs"
                 value={img.color ?? ""}
                 onChange={(e) => linkColor(img.id, e.target.value)}
                 title={ar.products.editor.linkedColor}
@@ -880,7 +880,7 @@ export default function ProductEditor({
                   type="button"
                   disabled={idx === 0}
                   onClick={() => makePrimary(img.id)}
-                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100 disabled:opacity-40"
+                  className="px-2 py-1 text-xs border border-admin-border rounded hover:bg-admin-muted disabled:opacity-40"
                 >
                   {ar.products.editor.makeMain}
                 </button>
@@ -888,7 +888,7 @@ export default function ProductEditor({
                   type="button"
                   disabled={idx === 0}
                   onClick={() => reorderImage(idx, -1)}
-                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100 disabled:opacity-40"
+                  className="px-2 py-1 text-xs border border-admin-border rounded hover:bg-admin-muted disabled:opacity-40"
                   aria-label={ar.products.editor.moveUp}
                 >
                   ↑
@@ -897,7 +897,7 @@ export default function ProductEditor({
                   type="button"
                   disabled={idx === orderedImages.length - 1}
                   onClick={() => reorderImage(idx, 1)}
-                  className="px-2 py-1 text-xs border border-black/15 rounded hover:bg-gray-100 disabled:opacity-40"
+                  className="px-2 py-1 text-xs border border-admin-border rounded hover:bg-admin-muted disabled:opacity-40"
                   aria-label={ar.products.editor.moveDown}
                 >
                   ↓
@@ -906,7 +906,7 @@ export default function ProductEditor({
                   type="button"
                   disabled={deletingId === img.id}
                   onClick={() => removeImage(img.id)}
-                  className="px-2 py-1 text-xs rounded bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50"
+                  className="px-2 py-1 text-xs rounded bg-admin-destructive/10 text-admin-destructive hover:bg-admin-destructive/20 disabled:opacity-50"
                 >
                   {deletingId === img.id ? "…" : ar.common.delete}
                 </button>
@@ -936,10 +936,10 @@ export default function ProductEditor({
               {colors.map((c, idx) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center gap-2 ps-2 pe-1 py-1 border border-black/15 rounded-full text-sm"
+                  className="inline-flex items-center gap-2 ps-2 pe-1 py-1 border border-admin-border rounded-full text-sm"
                 >
                   <span
-                    className="w-4 h-4 rounded-full border border-black/20 shrink-0"
+                    className="w-4 h-4 rounded-full border border-admin-border shrink-0"
                     style={{ backgroundColor: c.hex }}
                   />
                   <input
@@ -953,14 +953,14 @@ export default function ProductEditor({
                     type="button"
                     aria-label={`${ar.common.delete} ${idx + 1}`}
                     onClick={() => removeColorAt(idx)}
-                    className="px-1 text-black/50 hover:text-red-600"
+                    className="px-1 text-admin-muted-foreground hover:text-admin-destructive"
                   >
                     ×
                   </button>
                 </span>
               ))}
               {colors.length === 0 && (
-                <span className="text-sm text-black/50">
+                <span className="text-sm text-admin-muted-foreground">
                   {ar.products.editor.noColorsYet}
                 </span>
               )}
@@ -983,8 +983,8 @@ export default function ProductEditor({
                     onClick={() => addColor(c.en, c.hex)}
                     className={`h-7 w-7 rounded-full border ${
                       exists
-                        ? "border-black ring-2 ring-black/30"
-                        : "border-black/20 hover:scale-110 transition-transform"
+                        ? "border-admin-primary ring-2 ring-admin-primary/30"
+                        : "border-admin-border hover:scale-110 transition-transform"
                     }`}
                     style={{ backgroundColor: c.hex }}
                   />
@@ -998,7 +998,7 @@ export default function ProductEditor({
                   {ar.common.name}
                 </label>
                 <input
-                  className="px-3 py-2 border border-black/15 rounded-lg text-sm w-36"
+                  className="px-3 py-2 border border-admin-border rounded-lg text-sm w-36"
                   value={newColorName}
                   maxLength={60}
                   onChange={(e) => setNewColorName(e.target.value)}
@@ -1013,7 +1013,7 @@ export default function ProductEditor({
                   <input
                     className={`px-3 py-2 border rounded-lg text-sm w-28 font-mono ${
                       isValidHex(newColorHex)
-                        ? "border-black/15"
+                        ? "border-admin-border"
                         : "border-red-400"
                     }`}
                     value={newColorHex}
@@ -1024,7 +1024,7 @@ export default function ProductEditor({
                   <input
                     type="color"
                     aria-label={ar.products.editor.pickColor}
-                    className="h-10 w-12 border border-black/15 rounded-lg"
+                    className="h-10 w-12 border border-admin-border rounded-lg"
                     value={
                       isValidHex(newColorHex)
                         ? normalizeHex(newColorHex) ?? "#000000"
@@ -1033,7 +1033,7 @@ export default function ProductEditor({
                     onChange={(e) => setNewColorHex(e.target.value.toUpperCase())}
                   />
                   <span
-                    className="w-9 h-9 rounded-full border border-black/20 shrink-0"
+                    className="w-9 h-9 rounded-full border border-admin-border shrink-0"
                     style={{
                       backgroundColor: isValidHex(newColorHex)
                         ? normalizeHex(newColorHex) ?? "#FFFFFF"
@@ -1052,7 +1052,7 @@ export default function ProductEditor({
                 type="button"
                 disabled={!newColorName.trim() || !isValidHex(newColorHex)}
                 onClick={addCustomColor}
-                className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {ar.products.editor.addColor}
               </button>
@@ -1065,7 +1065,7 @@ export default function ProductEditor({
       <section className={sectionCls}>
         <h2 className="font-semibold mb-3">{ar.products.editor.sizes}</h2>
         {sizeType === "none" ? (
-          <p className="text-sm text-black/50">
+          <p className="text-sm text-admin-muted-foreground">
             {ar.products.editor.noSizesNotice}
           </p>
         ) : (
@@ -1084,7 +1084,7 @@ export default function ProductEditor({
             {useSizes && preset.length > 0 && (
               <>
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-xs text-black/50">
+                  <span className="text-xs text-admin-muted-foreground">
                     {ar.products.editor.tapToSelect}
                   </span>
                   <div className="flex gap-2 shrink-0">
@@ -1096,7 +1096,7 @@ export default function ProductEditor({
                         );
                         setDirty(true);
                       }}
-                      className="text-xs px-2.5 py-1 border border-black/15 rounded-full hover:bg-gray-100"
+                      className="text-xs px-2.5 py-1 border border-admin-border rounded-full hover:bg-admin-muted"
                     >
                       {ar.products.editor.selectAll}
                     </button>
@@ -1108,7 +1108,7 @@ export default function ProductEditor({
                         );
                         setDirty(true);
                       }}
-                      className="text-xs px-2.5 py-1 border border-black/15 rounded-full hover:bg-gray-100"
+                      className="text-xs px-2.5 py-1 border border-admin-border rounded-full hover:bg-admin-muted"
                     >
                       {ar.products.editor.clear}
                     </button>
@@ -1130,8 +1130,8 @@ export default function ProductEditor({
                         }}
                         className={`min-w-[3rem] px-3 py-1.5 rounded-full text-sm border font-medium transition-colors ${
                           on
-                            ? "bg-black text-white border-black"
-                            : "bg-white border-black/15 text-black/70 hover:bg-gray-100"
+                            ? "bg-admin-primary text-admin-primary-foreground border-admin-primary"
+                            : "bg-admin-card border-admin-border text-admin-foreground/80 hover:bg-admin-muted"
                         }`}
                       >
                         {s}
@@ -1148,7 +1148,7 @@ export default function ProductEditor({
                     {ar.products.editor.customSize}
                   </label>
                   <input
-                    className="px-3 py-2 border border-black/15 rounded-lg text-sm w-40"
+                    className="px-3 py-2 border border-admin-border rounded-lg text-sm w-40"
                     value={customSize}
                     maxLength={20}
                     onChange={(e) => setCustomSize(e.target.value)}
@@ -1175,7 +1175,7 @@ export default function ProductEditor({
                     setCustomSize("");
                     setDirty(true);
                   }}
-                  className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {ar.products.editor.addSize}
                 </button>
@@ -1183,7 +1183,7 @@ export default function ProductEditor({
             )}
             {useSizes && sizes.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                <span className="text-xs text-black/50 w-full mb-1">
+                <span className="text-xs text-admin-muted-foreground w-full mb-1">
                   {formatAr(ar.products.editor.selected, { n: sizes.length })}
                 </span>
                 {sizes
@@ -1191,7 +1191,7 @@ export default function ProductEditor({
                   .map((s) => (
                     <span
                       key={s}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-black text-white rounded-full text-sm"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-admin-primary text-admin-primary-foreground rounded-full text-sm"
                     >
                       {s}
                       <button
@@ -1207,7 +1207,7 @@ export default function ProductEditor({
                     </span>
                   ))}
                 {sizeType !== "custom" && (
-                  <span className="text-xs text-black/50 w-full mt-1">
+                  <span className="text-xs text-admin-muted-foreground w-full mt-1">
                     {sizes.filter((s) => preset.includes(s)).join(", ") ||
                       ar.products.editor.noneSelected}
                   </span>
@@ -1223,7 +1223,7 @@ export default function ProductEditor({
         <h2 className="font-semibold mb-1">
           {ar.products.editor.variants} ({matrix.length})
         </h2>
-        <p className="text-xs text-black/50 mb-3">
+        <p className="text-xs text-admin-muted-foreground mb-3">
           {ar.products.editor.generatedFrom}
           {removedWithHistory.length > 0 && (
             <span className="text-amber-700 font-medium">
@@ -1238,7 +1238,7 @@ export default function ProductEditor({
               {ar.products.editor.setStockAll}
             </label>
             <input
-              className="px-3 py-2 border border-black/15 rounded-lg text-sm w-28"
+              className="px-3 py-2 border border-admin-border rounded-lg text-sm w-28"
               type="number"
               min="0"
               value={bulkStock}
@@ -1261,7 +1261,7 @@ export default function ProductEditor({
               });
               setDirty(true);
             }}
-            className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
+            className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted"
           >
             {ar.products.editor.apply}
           </button>
@@ -1269,7 +1269,7 @@ export default function ProductEditor({
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[560px]">
             <thead>
-              <tr className="border-b border-black/10 text-start text-black/60">
+              <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
                 <th className="py-2 font-medium text-start">{ar.common.color}</th>
                 <th className="py-2 font-medium text-start">{ar.common.size}</th>
                 <th className="py-2 font-medium text-start">{ar.common.stock}</th>
@@ -1283,7 +1283,7 @@ export default function ProductEditor({
                 const r = getRow(m.color, m.size);
                 const k = rowKey(m.color, m.size);
                 return (
-                  <tr key={k} className="border-b border-black/5">
+                  <tr key={k} className="border-b border-admin-border/60">
                     <td className="py-2 pe-2">{m.color ?? "—"}</td>
                     <td className="py-2 pe-2">{m.size ?? "—"}</td>
                     <td className="py-2 pe-2">
@@ -1293,7 +1293,7 @@ export default function ProductEditor({
                         max="100000"
                         value={r.stock}
                         onChange={(e) => setRow(m.color, m.size, { stock: e.target.value })}
-                        className="w-20 px-2 py-1 border border-black/15 rounded text-sm"
+                        className="w-20 px-2 py-1 border border-admin-border rounded text-sm"
                       />
                     </td>
                     <td className="py-2 pe-2">
@@ -1304,7 +1304,7 @@ export default function ProductEditor({
                         placeholder={ar.products.basePrice}
                         value={r.price}
                         onChange={(e) => setRow(m.color, m.size, { price: e.target.value })}
-                        className="w-24 px-2 py-1 border border-black/15 rounded text-sm"
+                        className="w-24 px-2 py-1 border border-admin-border rounded text-sm"
                       />
                     </td>
                     <td className="py-2 pe-2">
@@ -1312,7 +1312,7 @@ export default function ProductEditor({
                         value={r.sku}
                         maxLength={64}
                         onChange={(e) => setRow(m.color, m.size, { sku: e.target.value })}
-                        className="w-28 px-2 py-1 border border-black/15 rounded text-sm"
+                        className="w-28 px-2 py-1 border border-admin-border rounded text-sm"
                       />
                     </td>
                     <td className="py-2">
@@ -1329,7 +1329,7 @@ export default function ProductEditor({
               })}
               {matrix.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-4 text-center text-black/50">
+                  <td colSpan={6} className="py-4 text-center text-admin-muted-foreground">
                     {ar.products.editor.noVariants}
                   </td>
                 </tr>
@@ -1344,7 +1344,7 @@ export default function ProductEditor({
           type="button"
           disabled={saving}
           onClick={saveAll}
-          className="px-6 py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
+          className="px-6 py-2.5 rounded-full bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90 disabled:opacity-50"
         >
           {saving ? ar.common.saving : ar.products.editor.saveAll}
         </button>
@@ -1352,12 +1352,12 @@ export default function ProductEditor({
           href={`/shop/product/${product.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-6 py-2.5 rounded-full border border-black/15 text-sm font-medium hover:bg-gray-100"
+          className="px-6 py-2.5 rounded-full border border-admin-border text-sm font-medium hover:bg-admin-muted"
         >
           {ar.products.editor.previewPage}
         </Link>
         {!isActive && (
-          <span className="text-xs text-black/50">
+          <span className="text-xs text-admin-muted-foreground">
             {ar.products.editor.previewInactive}
           </span>
         )}
@@ -1370,7 +1370,7 @@ export default function ProductEditor({
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="px-4 py-2.5 rounded-full bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100"
+            className="px-4 py-2.5 rounded-full bg-admin-destructive/10 text-admin-destructive text-sm font-medium hover:bg-admin-destructive/20"
           >
             {ar.products.editor.deleteProduct}
           </button>
@@ -1380,14 +1380,14 @@ export default function ProductEditor({
             <button
               type="button"
               onClick={removeProduct}
-              className="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium"
+              className="px-4 py-2 rounded-full bg-admin-destructive text-admin-destructive-foreground text-sm font-medium"
             >
               {ar.products.editor.confirmDelete}
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
-              className="px-4 py-2 rounded-full border border-black/15 text-sm"
+              className="px-4 py-2 rounded-full border border-admin-border text-sm"
             >
               {ar.common.cancel}
             </button>

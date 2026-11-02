@@ -80,7 +80,7 @@ export function LivePreview({
   } as React.CSSProperties;
 
   return (
-    <div className="bg-white border border-black/10 rounded-lg p-4 flex h-full flex-col">
+    <div className="bg-admin-card border border-admin-border rounded-lg p-4 flex h-full flex-col">
       <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
         <h2 className="font-bold">{ar.landing.preview}</h2>
         <div className="flex items-center gap-1">
@@ -92,8 +92,8 @@ export function LivePreview({
               onClick={() => setDevice(value)}
               className={`px-3 py-1 rounded-full text-xs border ${
                 device === value
-                  ? "bg-black text-white border-black"
-                  : "border-black/15 hover:bg-gray-100"
+                  ? "bg-admin-primary text-admin-primary-foreground border-admin-primary"
+                  : "border-admin-border hover:bg-admin-muted"
               }`}
             >
               {value === "mobile"
@@ -104,7 +104,7 @@ export function LivePreview({
         </div>
       </div>
 
-      <p className="text-xs text-black/50 mb-3">{ar.landing.previewNote}</p>
+      <p className="text-xs text-admin-muted-foreground mb-3">{ar.landing.previewNote}</p>
 
       {preview.droppedCount > 0 || preview.hiddenCount > 0 ? (
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3">
@@ -123,7 +123,7 @@ export function LivePreview({
 
       <div
         ref={viewportRef}
-        className="bg-gray-100 rounded-lg p-3 flex-1 min-h-0 overflow-y-auto"
+        className="bg-admin-muted rounded-lg p-3 flex-1 min-h-0 overflow-y-auto"
       >
         {/* Reserves the scaled footprint: the transform below doesn't
             affect layout, so the wrapper carries the visible size. */}
@@ -138,7 +138,7 @@ export function LivePreview({
             ref={frameRef}
             dir="rtl"
             style={frameStyle}
-            className="overflow-hidden rounded-lg border border-black/10 bg-[var(--lp-bg)] text-[var(--lp-text)] shadow-sm"
+            className="overflow-hidden rounded-lg border border-admin-border bg-[var(--lp-bg)] text-[var(--lp-text)] shadow-sm"
           >
             <div
               data-landing-page
@@ -148,7 +148,7 @@ export function LivePreview({
                 dangerouslySetInnerHTML={{ __html: LANDING_HEADING_FONT_CSS }}
               />
               {preview.sections.length === 0 ? (
-                <p className="p-6 text-center text-sm text-black/40">
+                <p className="p-6 text-center text-sm text-admin-muted-foreground/70">
                   {ar.landing.previewEmpty}
                 </p>
               ) : (
@@ -163,7 +163,7 @@ export function LivePreview({
         </div>
       </div>
 
-      <p className="text-xs text-black/40 mt-2">
+      <p className="text-xs text-admin-muted-foreground/70 mt-2">
         {ar.landing.previewBreakpoints}
       </p>
     </div>

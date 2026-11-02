@@ -11,7 +11,7 @@ export default async function AdminLandingTemplatesPage() {
     <div>
       <div className="mb-4">
         <h1 className="text-2xl font-bold">{ar.landing.templatesPage.title}</h1>
-        <p className="text-sm text-black/60 mt-1 max-w-2xl">
+        <p className="text-sm text-admin-muted-foreground mt-1 max-w-2xl">
           {ar.landing.templatesPage.intro}
         </p>
       </div>

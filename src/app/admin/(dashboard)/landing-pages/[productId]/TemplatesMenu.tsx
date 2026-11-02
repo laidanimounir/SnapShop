@@ -128,13 +128,13 @@ export function TemplatesMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 hover:bg-gray-100"
+        className="px-4 py-2 rounded-full text-sm font-medium border border-admin-border hover:bg-admin-muted"
       >
         {ar.landing.templates.open}
       </button>
 
       {open && (
-        <div className="absolute end-0 mt-2 z-40 w-[22rem] max-w-[90vw] rounded-xl border border-black/10 bg-white shadow-xl p-3">
+        <div className="absolute end-0 mt-2 z-40 w-[22rem] max-w-[90vw] rounded-xl border border-admin-border bg-admin-card shadow-xl p-3">
           <div className="flex gap-1 mb-3 flex-wrap">
             <TabButton active={tab === "save"} onClick={() => setTab("save")}>
               {ar.landing.templates.saveAs}
@@ -149,7 +149,7 @@ export function TemplatesMenu({
 
           {tab === "save" && (
             <div className="space-y-2">
-              <p className="text-xs text-black/50">
+              <p className="text-xs text-admin-muted-foreground">
                 {ar.landing.templates.saveAsHelp}
               </p>
               <input
@@ -157,14 +157,14 @@ export function TemplatesMenu({
                 onChange={(e) => setSaveName(e.target.value)}
                 maxLength={80}
                 placeholder={ar.landing.templates.name}
-                className="w-full rounded-lg border border-black/15 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-admin-border px-3 py-2 text-sm"
               />
               <input
                 value={saveDescription}
                 onChange={(e) => setSaveDescription(e.target.value)}
                 maxLength={300}
                 placeholder={ar.landing.templates.description}
-                className="w-full rounded-lg border border-black/15 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-admin-border px-3 py-2 text-sm"
               />
               <button
                 type="button"
@@ -179,11 +179,11 @@ export function TemplatesMenu({
 
           {tab === "apply" && (
             <div className="space-y-2">
-              <p className="text-xs text-black/50">
+              <p className="text-xs text-admin-muted-foreground">
                 {ar.landing.templates.applyHelp}
               </p>
               {templates.length === 0 ? (
-                <p className="text-sm text-black/40 py-2">
+                <p className="text-sm text-admin-muted-foreground/70 py-2">
                   {ar.landing.templates.applyEmpty}
                 </p>
               ) : (
@@ -197,7 +197,7 @@ export function TemplatesMenu({
                         <div className="text-sm font-medium truncate">
                           {t.name}
                         </div>
-                        <div className="text-xs text-black/40">
+                        <div className="text-xs text-admin-muted-foreground/70">
                           {new Date(t.updated_at).toLocaleDateString("en-GB")}
                         </div>
                       </div>
@@ -205,7 +205,7 @@ export function TemplatesMenu({
                         type="button"
                         onClick={() => onApply(t.id)}
                         disabled={busy}
-                        className="shrink-0 px-3 py-1 rounded-full text-xs font-medium border border-black/15 hover:bg-gray-100 disabled:opacity-50"
+                        className="shrink-0 px-3 py-1 rounded-full text-xs font-medium border border-admin-border hover:bg-admin-muted disabled:opacity-50"
                       >
                         {ar.landing.templates.applySection}
                       </button>
@@ -218,17 +218,17 @@ export function TemplatesMenu({
 
           {tab === "copy" && (
             <div className="space-y-2">
-              <p className="text-xs text-black/50">
+              <p className="text-xs text-admin-muted-foreground">
                 {ar.landing.templates.copyHelp}
               </p>
               <input
                 value={copyQuery}
                 onChange={(e) => setCopyQuery(e.target.value)}
                 placeholder={ar.landing.templates.copySearch}
-                className="w-full rounded-lg border border-black/15 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-admin-border px-3 py-2 text-sm"
               />
               {filteredSources.length === 0 ? (
-                <p className="text-sm text-black/40 py-2">
+                <p className="text-sm text-admin-muted-foreground/70 py-2">
                   {copySources.length === 0
                     ? ar.landing.templates.copyEmpty
                     : ar.landing.templates.noResults}
@@ -244,7 +244,7 @@ export function TemplatesMenu({
                         <div className="text-sm font-medium truncate">
                           {s.productName}
                         </div>
-                        <div className="text-xs text-black/40" dir="ltr">
+                        <div className="text-xs text-admin-muted-foreground/70" dir="ltr">
                           /p/{s.slug}
                         </div>
                       </div>
@@ -252,7 +252,7 @@ export function TemplatesMenu({
                         type="button"
                         onClick={() => onCopy(s.productId)}
                         disabled={busy}
-                        className="shrink-0 px-3 py-1 rounded-full text-xs font-medium border border-black/15 hover:bg-gray-100 disabled:opacity-50"
+                        className="shrink-0 px-3 py-1 rounded-full text-xs font-medium border border-admin-border hover:bg-admin-muted disabled:opacity-50"
                       >
                         {ar.landing.templates.copySection}
                       </button>
@@ -266,7 +266,7 @@ export function TemplatesMenu({
           {msg && (
             <p
               className={`mt-2 text-xs ${
-                msg.error ? "text-red-600" : "text-emerald-700"
+                msg.error ? "text-admin-destructive" : "text-emerald-700"
               }`}
             >
               {msg.text}
@@ -293,8 +293,8 @@ function TabButton({
       onClick={onClick}
       className={`px-3 py-1 rounded-full text-xs font-medium border ${
         active
-          ? "bg-black text-white border-black"
-          : "border-black/15 hover:bg-gray-100"
+          ? "bg-admin-primary text-admin-primary-foreground border-admin-primary"
+          : "border-admin-border hover:bg-admin-muted"
       }`}
     >
       {children}

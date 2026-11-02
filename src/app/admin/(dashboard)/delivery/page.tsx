@@ -10,7 +10,7 @@ export default async function AdminDeliveryPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">{ar.delivery.title}</h1>
-      <p className="text-sm text-black/60 mb-4">{ar.delivery.intro}</p>
+      <p className="text-sm text-admin-muted-foreground mb-4">{ar.delivery.intro}</p>
       <DeliveryZonesEditor zones={zones} />
     </div>
   );

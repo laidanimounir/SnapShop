@@ -37,7 +37,7 @@ export default function DeleteProductButton({
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100"
+        className="px-3 py-1 rounded-full text-xs font-medium bg-admin-destructive/10 text-admin-destructive hover:bg-admin-destructive/20"
       >
         {ar.common.delete}
       </button>
@@ -50,7 +50,7 @@ export default function DeleteProductButton({
         type="button"
         disabled={busy}
         onClick={run}
-        className="px-3 py-1 rounded-full text-xs font-medium bg-red-600 text-white disabled:opacity-50"
+        className="px-3 py-1 rounded-full text-xs font-medium bg-admin-destructive text-admin-destructive-foreground disabled:opacity-50"
       >
         {busy ? "…" : ar.common.confirm}
       </button>
@@ -61,11 +61,11 @@ export default function DeleteProductButton({
           setConfirming(false);
           setError(null);
         }}
-        className="px-3 py-1 rounded-full text-xs font-medium border border-black/15"
+        className="px-3 py-1 rounded-full text-xs font-medium border border-admin-border"
       >
         {ar.common.cancel}
       </button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-admin-destructive">{error}</span>}
     </span>
   );
 }

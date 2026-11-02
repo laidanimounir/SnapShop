@@ -23,10 +23,10 @@ export default async function AdminHome() {
           <Link
             key={card.label}
             href={card.href}
-            className="bg-white border border-black/10 rounded-lg p-5 hover:border-black/30 transition-colors"
+            className="bg-admin-card border border-admin-border rounded-lg p-5 hover:border-admin-ring transition-colors"
           >
             <p className="text-3xl font-bold">{card.value}</p>
-            <p className="text-sm text-black/60 mt-1">{card.label}</p>
+            <p className="text-sm text-admin-muted-foreground mt-1">{card.label}</p>
           </Link>
         ))}
       </div>
@@ -39,12 +39,12 @@ export default async function AdminHome() {
           <Link
             key={status}
             href={`/admin/orders?status=${status}`}
-            className="bg-white border border-black/10 rounded-lg p-4 hover:border-black/30 transition-colors"
+            className="bg-admin-card border border-admin-border rounded-lg p-4 hover:border-admin-ring transition-colors"
           >
             <p className="text-2xl font-bold">
               {stats.statusCounts[status] ?? 0}
             </p>
-            <p className="text-xs text-black/60 mt-1">
+            <p className="text-xs text-admin-muted-foreground mt-1">
               {statusLabelAr(status)}
             </p>
           </Link>

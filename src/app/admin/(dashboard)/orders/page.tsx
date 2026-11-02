@@ -77,8 +77,8 @@ export default async function AdminOrdersPage({
     cn(
       "px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap",
       active
-        ? "bg-black text-white"
-        : "bg-white border border-black/10 text-black/60 hover:border-black/30"
+        ? "bg-admin-primary text-admin-primary-foreground"
+        : "bg-admin-card border border-admin-border text-admin-muted-foreground hover:border-admin-ring"
     );
 
   return (
@@ -102,7 +102,7 @@ export default async function AdminOrdersPage({
 
       <form
         method="get"
-        className="flex flex-wrap items-end gap-3 bg-white border border-black/10 rounded-lg p-4 mb-4"
+        className="flex flex-wrap items-end gap-3 bg-admin-card border border-admin-border rounded-lg p-4 mb-4"
       >
         {status && <input type="hidden" name="status" value={status} />}
         <div className="flex-1 min-w-[180px]">
@@ -114,7 +114,7 @@ export default async function AdminOrdersPage({
             name="q"
             defaultValue={q}
             placeholder={ar.orders.searchPlaceholder}
-            className="w-full px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
         <div>
@@ -126,7 +126,7 @@ export default async function AdminOrdersPage({
             name="from"
             type="date"
             defaultValue={from}
-            className="px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
         <div>
@@ -138,7 +138,7 @@ export default async function AdminOrdersPage({
             name="to"
             type="date"
             defaultValue={to}
-            className="px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
         <div>
@@ -149,7 +149,7 @@ export default async function AdminOrdersPage({
             id="order-wilaya"
             name="wilaya"
             defaultValue={wilaya ? String(wilaya) : ""}
-            className="px-3 py-2 border border-black/15 rounded-lg text-sm bg-white"
+            className="px-3 py-2 border border-admin-border rounded-lg text-sm bg-admin-card"
           >
             <option value="">{ar.orders.allWilayas}</option>
             {zones.map((zone) => (
@@ -161,22 +161,22 @@ export default async function AdminOrdersPage({
         </div>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80"
+          className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90"
         >
           {ar.common.filter}
         </button>
         <Link
           href={buildHref({}, {})}
-          className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
+          className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted"
         >
           {ar.common.reset}
         </Link>
       </form>
 
-      <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
+      <div className="bg-admin-card border border-admin-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-start text-black/60">
+            <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
               <th className="px-4 py-3 font-medium text-start">{ar.orders.order}</th>
               <th className="px-4 py-3 font-medium text-start">{ar.orders.guest}</th>
               <th className="px-4 py-3 font-medium text-start">{ar.common.phone}</th>
@@ -195,7 +195,7 @@ export default async function AdminOrdersPage({
               return (
                 <tr
                   key={order.id}
-                  className="border-b border-black/5 hover:bg-gray-50"
+                  className="border-b border-admin-border/60 hover:bg-admin-muted/50"
                 >
                   <td className="px-4 py-3">
                     <Link
@@ -207,12 +207,12 @@ export default async function AdminOrdersPage({
                   </td>
                   <td className="px-4 py-3">{order.guest_name}</td>
                   <td className="px-4 py-3">{order.guest_phone}</td>
-                  <td className="px-4 py-3 text-black/70">
+                  <td className="px-4 py-3 text-admin-foreground/80">
                     {zone
                       ? `${zone.name_fr} (${String(order.wilaya_code).padStart(2, "0")})`
                       : "—"}
                   </td>
-                  <td className="px-4 py-3 text-black/70">
+                  <td className="px-4 py-3 text-admin-foreground/80">
                     {order.delivery_type === "office"
                       ? ar.common.office
                       : ar.common.home}
@@ -221,7 +221,7 @@ export default async function AdminOrdersPage({
                     <StatusBadge status={order.status} />
                   </td>
                   <td className="px-4 py-3">{formatPrice(order.total)}</td>
-                  <td className="px-4 py-3 text-black/60">
+                  <td className="px-4 py-3 text-admin-muted-foreground">
                     {new Date(order.created_at).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-4 py-3">
@@ -235,7 +235,7 @@ export default async function AdminOrdersPage({
             })}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-black/50">
+                <td colSpan={9} className="px-4 py-6 text-center text-admin-muted-foreground">
                   {ar.orders.noOrders}
                 </td>
               </tr>
@@ -244,7 +244,7 @@ export default async function AdminOrdersPage({
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-3 text-sm text-black/60">
+      <div className="flex items-center justify-between mt-3 text-sm text-admin-muted-foreground">
         <span>
           {total === 0
             ? ar.common.noResults
@@ -260,12 +260,12 @@ export default async function AdminOrdersPage({
                 status,
                 page: page - 1,
               })}
-              className="px-3 py-1.5 rounded-lg border border-black/15 hover:bg-gray-100"
+              className="px-3 py-1.5 rounded-lg border border-admin-border hover:bg-admin-muted"
             >
               {ar.common.previous}
             </Link>
           ) : (
-            <span className="px-3 py-1.5 rounded-lg border border-black/10 text-black/30">
+            <span className="px-3 py-1.5 rounded-lg border border-admin-border text-admin-muted-foreground/50">
               {ar.common.previous}
             </span>
           )}
@@ -278,12 +278,12 @@ export default async function AdminOrdersPage({
                 status,
                 page: page + 1,
               })}
-              className="px-3 py-1.5 rounded-lg border border-black/15 hover:bg-gray-100"
+              className="px-3 py-1.5 rounded-lg border border-admin-border hover:bg-admin-muted"
             >
               {ar.common.next}
             </Link>
           ) : (
-            <span className="px-3 py-1.5 rounded-lg border border-black/10 text-black/30">
+            <span className="px-3 py-1.5 rounded-lg border border-admin-border text-admin-muted-foreground/50">
               {ar.common.next}
             </span>
           )}

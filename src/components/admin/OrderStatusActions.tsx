@@ -62,7 +62,7 @@ export default function OrderStatusActions({
   };
 
   if (options.length === 0) {
-    return <p className="text-sm text-black/50">{ar.orders.terminal}</p>;
+    return <p className="text-sm text-admin-muted-foreground">{ar.orders.terminal}</p>;
   }
 
   return (
@@ -79,8 +79,8 @@ export default function OrderStatusActions({
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50",
                 danger
-                  ? "border border-red-200 text-red-700 hover:bg-red-50"
-                  : "bg-black text-white hover:bg-black/80"
+                  ? "border border-admin-destructive/30 text-admin-destructive hover:bg-admin-destructive/10"
+                  : "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90"
               )}
             >
               {busy === option
@@ -91,8 +91,8 @@ export default function OrderStatusActions({
         })}
       </div>
       {message && <p className="text-sm text-emerald-700">{message}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <p className="text-xs text-black/50">{ar.orders.transitionsValidated}</p>
+      {error && <p className="text-sm text-admin-destructive">{error}</p>}
+      <p className="text-xs text-admin-muted-foreground">{ar.orders.transitionsValidated}</p>
     </div>
   );
 }

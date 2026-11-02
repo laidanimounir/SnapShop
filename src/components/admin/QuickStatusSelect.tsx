@@ -23,7 +23,7 @@ export default function QuickStatusSelect({
   const options = allowedTransitions(status);
 
   if (options.length === 0) {
-    return <span className="text-xs text-black/40">{ar.orders.noActions}</span>;
+    return <span className="text-xs text-admin-muted-foreground/70">{ar.orders.noActions}</span>;
   }
 
   const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -70,7 +70,7 @@ export default function QuickStatusSelect({
         disabled={busy}
         defaultValue=""
         aria-label={ar.orders.changeStatus}
-        className="px-2 py-1 border border-black/15 rounded-lg text-xs bg-white disabled:opacity-50"
+        className="px-2 py-1 border border-admin-border rounded-lg text-xs bg-admin-card disabled:opacity-50"
       >
         <option value="" disabled>
           {busy ? ar.common.saving : ar.orders.changeStatus}
@@ -81,7 +81,7 @@ export default function QuickStatusSelect({
           </option>
         ))}
       </select>
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      {error && <p className="text-xs text-admin-destructive mt-1">{error}</p>}
     </div>
   );
 }

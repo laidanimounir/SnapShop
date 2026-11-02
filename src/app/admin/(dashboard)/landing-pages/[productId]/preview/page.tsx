@@ -37,7 +37,7 @@ export default async function AdminLandingDraftPreviewPage({
       <p className="mb-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
         {ar.landing.previewDraftNote}
       </p>
-      <div className="border border-black/10 rounded-lg overflow-hidden">
+      <div className="border border-admin-border rounded-lg overflow-hidden">
         <main
           data-landing-page
           className={`${cairo.variable} ${tajawal.variable} ${almarai.variable}`}

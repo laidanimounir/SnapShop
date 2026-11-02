@@ -36,7 +36,7 @@ import { TemplatesMenu } from "./TemplatesMenu";
 const STATUS_STYLES: Record<LandingPageStatus, string> = {
   draft: "bg-amber-100 text-amber-800",
   published: "bg-green-100 text-green-800",
-  unpublished: "bg-gray-200 text-gray-600",
+  unpublished: "bg-admin-muted text-admin-muted-foreground",
 };
 
 type NarrowPane = "sections" | "settings" | "preview";
@@ -263,13 +263,13 @@ export function LandingPageEditor({
 
   return (
     <div>
-      <header className="sticky top-0 z-30 -mx-6 -mt-6 mb-4 border-b border-black/10 bg-gray-50/95 px-6 py-3 backdrop-blur">
+      <header className="sticky top-0 z-30 -mx-6 -mt-6 mb-4 border-b border-admin-border bg-admin-muted/50 px-6 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex min-w-0 items-center gap-3">
             <Link
               href="/admin/landing-pages"
               onClick={goBack}
-              className="shrink-0 text-sm text-black/60 hover:underline"
+              className="shrink-0 text-sm text-admin-muted-foreground hover:underline"
             >
               ← {ar.landing.backToList}
             </Link>
@@ -279,10 +279,10 @@ export function LandingPageEditor({
             >
               {statusLabel(status)}
             </span>
-            <span dir="ltr" className="shrink-0 text-xs text-black/50 font-mono">
+            <span dir="ltr" className="shrink-0 text-xs text-admin-muted-foreground font-mono">
               /p/{page.slug}
             </span>
-            <span className="shrink-0 text-xs text-black/50">
+            <span className="shrink-0 text-xs text-admin-muted-foreground">
               {ar.landing.lastSaved}:{" "}
               {new Date(updatedAt).toLocaleDateString("en-GB")}
             </span>
@@ -298,7 +298,7 @@ export function LandingPageEditor({
               type="button"
               onClick={onSave}
               disabled={saving}
-              className="px-4 py-2 rounded-full text-sm font-medium bg-black text-white hover:bg-black/80 disabled:opacity-50"
+              className="px-4 py-2 rounded-full text-sm font-medium bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90 disabled:opacity-50"
             >
               {saving ? ar.landing.saving : ar.landing.saveDraft}
             </button>
@@ -307,7 +307,7 @@ export function LandingPageEditor({
                 href={`/p/${page.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 bg-white hover:bg-gray-100"
+                className="px-4 py-2 rounded-full text-sm font-medium border border-admin-border bg-admin-card hover:bg-admin-muted"
               >
                 {ar.landing.view}
               </a>
@@ -357,7 +357,7 @@ export function LandingPageEditor({
 
       <div
         role="tablist"
-        className="flex xl:hidden gap-1 mb-4 rounded-full border border-black/10 bg-white p-1"
+        className="flex xl:hidden gap-1 mb-4 rounded-full border border-admin-border bg-admin-card p-1"
       >
         {NARROW_TABS.map((t) => {
           const active = t.key === narrowPane;
@@ -372,7 +372,7 @@ export function LandingPageEditor({
                 if (t.key !== "sections") setActiveTab("section");
               }}
               className={`flex-1 px-3 py-1.5 rounded-full text-sm font-medium ${
-                active ? "bg-black text-white" : "hover:bg-gray-100"
+                active ? "bg-admin-primary text-admin-primary-foreground" : "hover:bg-admin-muted"
               }`}
             >
               {t.label}
@@ -433,8 +433,10 @@ export function LandingPageEditor({
 
       {toast && (
         <div
-          className={`fixed bottom-5 start-5 z-50 px-4 py-2 rounded-lg text-sm text-white shadow-lg ${
-            toast.error ? "bg-red-600" : "bg-black"
+          className={`fixed bottom-5 start-5 z-50 px-4 py-2 rounded-lg text-sm shadow-lg ${
+            toast.error
+              ? "bg-admin-destructive text-admin-destructive-foreground"
+              : "bg-admin-primary text-admin-primary-foreground"
           }`}
         >
           {toast.msg}
@@ -492,12 +494,12 @@ function HeaderMoreMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="px-3 py-2 rounded-full text-sm font-medium border border-black/15 bg-white hover:bg-gray-100"
+        className="px-3 py-2 rounded-full text-sm font-medium border border-admin-border bg-admin-card hover:bg-admin-muted"
       >
         ⋯
       </button>
       {open && (
-        <div className="absolute end-0 mt-2 z-40 flex w-64 flex-col gap-2 rounded-xl border border-black/10 bg-white p-3 shadow-xl">
+        <div className="absolute end-0 mt-2 z-40 flex w-64 flex-col gap-2 rounded-xl border border-admin-border bg-admin-card p-3 shadow-xl">
           <TemplatesMenu
             pageId={pageId}
             templates={templates}
@@ -510,7 +512,7 @@ function HeaderMoreMenu({
             href={`/admin/landing-pages/${productId}/preview`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 text-center hover:bg-gray-100"
+            className="px-4 py-2 rounded-full text-sm font-medium border border-admin-border text-center hover:bg-admin-muted"
           >
             {ar.landing.viewDraft}
           </Link>
@@ -523,7 +525,7 @@ function HeaderMoreMenu({
                 onUnpublish();
               }}
               disabled={unpublishing}
-              className="px-4 py-2 rounded-full text-sm font-medium border border-black/15 text-red-600 hover:bg-red-50 disabled:opacity-50"
+              className="px-4 py-2 rounded-full text-sm font-medium border border-admin-border text-admin-destructive hover:bg-admin-destructive/10 disabled:opacity-50"
             >
               {unpublishing ? ar.landing.unpublishing : ar.landing.unpublish}
             </button>

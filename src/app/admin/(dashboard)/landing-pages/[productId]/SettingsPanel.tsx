@@ -6,7 +6,7 @@ import { ar } from "@/lib/admin/i18n-ar";
 import { LANDING_FONTS, type Theme } from "@/lib/landing/theme";
 import { ImageUploadButton } from "./ImageUploadButton";
 
-const inputCls = "w-full px-3 py-2 border border-black/15 rounded-lg text-sm";
+const inputCls = "w-full px-3 py-2 border border-admin-border rounded-lg text-sm";
 const labelCls = "block text-sm font-medium mb-1";
 
 export type SettingsFields = {
@@ -43,19 +43,19 @@ function CollapsibleGroup({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border border-black/10 rounded-lg">
+    <div className="border border-admin-border rounded-lg">
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium text-start hover:bg-gray-50"
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium text-start hover:bg-admin-muted/50"
       >
         <span>{title}</span>
-        <span aria-hidden="true" className="text-black/40">
+        <span aria-hidden="true" className="text-admin-muted-foreground/70">
           {open ? "▲" : "▼"}
         </span>
       </button>
-      {open && <div className="border-t border-black/10 p-3">{children}</div>}
+      {open && <div className="border-t border-admin-border p-3">{children}</div>}
     </div>
   );
 }
@@ -84,7 +84,7 @@ export function ThemeFields({
                   onChange={(e) =>
                     onTheme({ [field.key]: e.target.value } as Partial<Theme>)
                   }
-                  className="h-9 w-10 rounded border border-black/15"
+                  className="h-9 w-10 rounded border border-admin-border"
                 />
                 <input
                   className={`${inputCls} font-mono`}
@@ -231,9 +231,9 @@ export function SeoFields({
         </div>
       </div>
 
-      <div className="border-t border-black/10 pt-5">
+      <div className="border-t border-admin-border pt-5">
         <h3 className="font-medium mb-1">{ar.landing.pixels}</h3>
-        <p className="text-xs text-black/50 mb-3">{ar.landing.pixelsHelp}</p>
+        <p className="text-xs text-admin-muted-foreground mb-3">{ar.landing.pixelsHelp}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>{ar.landing.facebookPixel}</label>

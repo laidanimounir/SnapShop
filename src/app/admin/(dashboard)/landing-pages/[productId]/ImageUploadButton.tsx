@@ -6,7 +6,7 @@ import { uploadLandingAssetAction } from "@/app/admin/landing-actions";
 import { ar } from "@/lib/admin/i18n-ar";
 
 const buttonCls =
-  "px-3 py-1.5 rounded-lg border border-black/15 text-xs hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent";
+  "px-3 py-1.5 rounded-lg border border-admin-border text-xs hover:bg-admin-muted disabled:opacity-40 disabled:hover:bg-transparent";
 
 // Uploads one image for this landing page and hands the public URL back to
 // the field that renders it. The URL input stays editable, so pasting an
@@ -65,7 +65,7 @@ export function ImageUploadButton({
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
       {error && (
-        <p role="alert" className="text-xs text-red-600 mt-1">
+        <p role="alert" className="text-xs text-admin-destructive mt-1">
           {error}
         </p>
       )}

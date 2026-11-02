@@ -9,7 +9,7 @@ export default function StatusBadge({ status }: { status: string }) {
   const known = isOrderStatus(status);
   const classes = known
     ? STATUS_BADGE_CLASSES[status]
-    : "bg-gray-100 text-gray-700";
+    : "bg-admin-muted text-admin-muted-foreground";
 
   return (
     <span

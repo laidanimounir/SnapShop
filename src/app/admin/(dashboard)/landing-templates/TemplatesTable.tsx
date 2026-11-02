@@ -77,7 +77,7 @@ export function TemplatesTable({
 
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-black/50 bg-white border border-black/10 rounded-lg px-4 py-6 text-center">
+      <p className="text-sm text-admin-muted-foreground bg-admin-card border border-admin-border rounded-lg px-4 py-6 text-center">
         {ar.landing.templatesPage.empty}
       </p>
     );
@@ -85,10 +85,10 @@ export function TemplatesTable({
 
   return (
     <>
-      <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
+      <div className="bg-admin-card border border-admin-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm min-w-[680px]">
           <thead>
-            <tr className="border-b border-black/10 text-black/60">
+            <tr className="border-b border-admin-border text-admin-muted-foreground">
               <th className="px-4 py-3 font-medium text-start">
                 {ar.landing.templatesPage.name}
               </th>
@@ -108,24 +108,24 @@ export function TemplatesTable({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-b border-black/5">
+              <tr key={row.id} className="border-b border-admin-border/60">
                 <td className="px-4 py-3">
                   {editingId === row.id ? (
                     <input
                       value={nameDraft}
                       onChange={(e) => setNameDraft(e.target.value)}
                       maxLength={80}
-                      className="w-full rounded-lg border border-black/15 px-2 py-1 text-sm"
+                      className="w-full rounded-lg border border-admin-border px-2 py-1 text-sm"
                     />
                   ) : (
                     <div className="font-medium">{row.name}</div>
                   )}
                 </td>
-                <td className="px-4 py-3 text-black/70">
+                <td className="px-4 py-3 text-admin-foreground/80">
                   {row.description ?? ar.landing.templatesPage.noDescription}
                 </td>
-                <td className="px-4 py-3 text-black/70">{row.sectionCount}</td>
-                <td className="px-4 py-3 text-black/70">
+                <td className="px-4 py-3 text-admin-foreground/80">{row.sectionCount}</td>
+                <td className="px-4 py-3 text-admin-foreground/80">
                   {new Date(row.updated_at).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4 py-3">
@@ -136,14 +136,14 @@ export function TemplatesTable({
                           type="button"
                           onClick={() => saveRename(row)}
                           disabled={busy}
-                          className="px-3 py-1 rounded-full text-xs font-medium bg-black text-white hover:bg-black/80 disabled:opacity-50"
+                          className="px-3 py-1 rounded-full text-xs font-medium bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90 disabled:opacity-50"
                         >
                           {ar.landing.templatesPage.renameSave}
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingId(null)}
-                          className="px-3 py-1 rounded-full text-xs font-medium border border-black/15 hover:bg-gray-100"
+                          className="px-3 py-1 rounded-full text-xs font-medium border border-admin-border hover:bg-admin-muted"
                         >
                           {ar.common.cancel}
                         </button>
@@ -152,7 +152,7 @@ export function TemplatesTable({
                       <button
                         type="button"
                         onClick={() => startRename(row)}
-                        className="px-3 py-1 rounded-full text-xs font-medium border border-black/15 hover:bg-gray-100"
+                        className="px-3 py-1 rounded-full text-xs font-medium border border-admin-border hover:bg-admin-muted"
                       >
                         {ar.landing.templatesPage.rename}
                       </button>
@@ -161,7 +161,7 @@ export function TemplatesTable({
                       type="button"
                       onClick={() => remove(row)}
                       disabled={busy}
-                      className="px-3 py-1 rounded-full text-xs font-medium border border-black/15 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      className="px-3 py-1 rounded-full text-xs font-medium border border-admin-border text-admin-destructive hover:bg-admin-destructive/10 disabled:opacity-50"
                     >
                       {ar.common.delete}
                     </button>
@@ -175,8 +175,10 @@ export function TemplatesTable({
 
       {toast && (
         <div
-          className={`fixed bottom-5 start-5 z-50 px-4 py-2 rounded-lg text-sm text-white shadow-lg ${
-            toast.error ? "bg-red-600" : "bg-black"
+          className={`fixed bottom-5 start-5 z-50 px-4 py-2 rounded-lg text-sm shadow-lg ${
+            toast.error
+              ? "bg-admin-destructive text-admin-destructive-foreground"
+              : "bg-admin-primary text-admin-primary-foreground"
           }`}
         >
           {toast.msg}

@@ -30,7 +30,7 @@ import {
 } from "@/lib/admin/landing-sections";
 import { ar } from "@/lib/admin/i18n-ar";
 
-const selectCls = "px-3 py-2 border border-black/15 rounded-lg text-sm";
+const selectCls = "px-3 py-2 border border-admin-border rounded-lg text-sm";
 
 // Small line icon per section type so the list is scannable at a glance.
 // Inline SVG (no icon dependency) with stroke following the current color.
@@ -117,10 +117,10 @@ function SortableRow({
       style={style}
       className={`border rounded-lg p-2.5 ${
         isDragging
-          ? "relative z-10 border-black/40 bg-white shadow-lg"
+          ? "relative z-10 border-admin-ring bg-admin-card shadow-lg"
           : isSelected
-            ? "border-black/40 bg-gray-50"
-            : "border-black/10"
+            ? "border-admin-ring bg-admin-muted/50"
+            : "border-admin-border"
       }`}
     >
       <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ function SortableRow({
           title={ar.landing.dragHandle}
           aria-label={ar.landing.dragHandle}
           style={{ touchAction: "none" }}
-          className="shrink-0 px-1 py-1 rounded leading-none text-black/35 hover:text-black hover:bg-gray-100 cursor-grab active:cursor-grabbing"
+          className="shrink-0 px-1 py-1 rounded leading-none text-admin-muted-foreground/60 hover:text-admin-foreground hover:bg-admin-muted cursor-grab active:cursor-grabbing"
           {...attributes}
           {...listeners}
         >
@@ -142,17 +142,17 @@ function SortableRow({
           onClick={() => onSelect(section.id)}
           className="flex min-w-0 flex-1 items-center gap-2 text-start"
         >
-          <span className="shrink-0 text-black/40">
+          <span className="shrink-0 text-admin-muted-foreground/70">
             <SectionTypeIcon type={section.type} />
           </span>
           <span className="truncate text-sm font-medium">{label}</span>
           {section.hidden && (
-            <span className="shrink-0 px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-600">
+            <span className="shrink-0 px-2 py-0.5 rounded-full text-xs bg-admin-muted text-admin-muted-foreground">
               {ar.landing.hiddenBadge}
             </span>
           )}
           {!valid && (
-            <span className="shrink-0 px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
+            <span className="shrink-0 px-2 py-0.5 rounded-full text-xs bg-admin-destructive/15 text-admin-destructive">
               {ar.landing.incompleteBadge}
             </span>
           )}
@@ -171,7 +171,7 @@ function SortableRow({
       </div>
 
       {showSummary && (
-        <div className="mt-1 ps-6 text-xs text-black/50 truncate">
+        <div className="mt-1 ps-6 text-xs text-admin-muted-foreground truncate">
           {summary}
         </div>
       )}
@@ -225,7 +225,7 @@ function RowMenu({
   };
 
   const itemCls =
-    "w-full text-start px-3 py-2 rounded-lg text-sm hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent";
+    "w-full text-start px-3 py-2 rounded-lg text-sm hover:bg-admin-muted disabled:opacity-30 disabled:hover:bg-transparent";
 
   return (
     <div ref={containerRef} className="relative shrink-0">
@@ -235,14 +235,14 @@ function RowMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="px-2 py-1 rounded border border-black/15 text-sm leading-none hover:bg-gray-100"
+        className="px-2 py-1 rounded border border-admin-border text-sm leading-none hover:bg-admin-muted"
       >
         ⋯
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute end-0 mt-1 z-40 w-44 rounded-xl border border-black/10 bg-white p-1 shadow-xl"
+          className="absolute end-0 mt-1 z-40 w-44 rounded-xl border border-admin-border bg-admin-card p-1 shadow-xl"
         >
           <button
             type="button"
@@ -282,7 +282,7 @@ function RowMenu({
             type="button"
             role="menuitem"
             onClick={run(onRemove)}
-            className={`${itemCls} text-red-600`}
+            className={`${itemCls} text-admin-destructive`}
           >
             {ar.landing.deleteSection}
           </button>
@@ -338,9 +338,9 @@ export function SectionsPanel({
   }
 
   return (
-    <div className="bg-white border border-black/10 rounded-lg p-5 mb-4">
+    <div className="bg-admin-card border border-admin-border rounded-lg p-5 mb-4">
       <h2 className="font-bold mb-1">{ar.landing.sections}</h2>
-      <p className="text-xs text-black/50 mb-3">{ar.landing.sectionsHelp}</p>
+      <p className="text-xs text-admin-muted-foreground mb-3">{ar.landing.sectionsHelp}</p>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <select
@@ -357,14 +357,14 @@ export function SectionsPanel({
         <button
           type="button"
           onClick={() => onAdd(newType)}
-          className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80"
+          className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90"
         >
           {ar.landing.addSection}
         </button>
       </div>
 
       {sections.length === 0 ? (
-        <p className="text-sm text-black/50 py-4 text-center">
+        <p className="text-sm text-admin-muted-foreground py-4 text-center">
           {ar.landing.noSections}
         </p>
       ) : (

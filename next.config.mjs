@@ -28,6 +28,11 @@ const nextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
   },
+  // Keep the dev overlay out of admin screenshots; production is unaffected.
+  devIndicators: {
+    appIsrStatus: false,
+    buildActivity: false,
+  },
   // Image uploads go through server actions (admin only, max 5 MB files).
   experimental: {
     serverActions: {

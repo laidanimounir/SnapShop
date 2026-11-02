@@ -20,7 +20,7 @@ export default async function AdminOrderDetailPage({
     return (
       <div>
         <h1 className="text-2xl font-bold mb-4">{ar.orders.detailTitle}</h1>
-        <p className="text-black/50">{ar.messages.orderNotFound}</p>
+        <p className="text-admin-muted-foreground">{ar.messages.orderNotFound}</p>
         <Link href="/admin/orders" className="text-sm underline underline-offset-2">
           {ar.common.back}
         </Link>
@@ -54,55 +54,55 @@ export default async function AdminOrderDetailPage({
 
       <div className="print:hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white border border-black/10 rounded-lg p-5 space-y-3">
+          <div className="bg-admin-card border border-admin-border rounded-lg p-5 space-y-3">
             <h2 className="font-semibold">{ar.orders.customer}</h2>
             <p>
-              <span className="text-black/60">{ar.common.name}:</span>{" "}
+              <span className="text-admin-muted-foreground">{ar.common.name}:</span>{" "}
               {order.guest_name}
             </p>
             <p>
-              <span className="text-black/60">{ar.common.phone}:</span>{" "}
+              <span className="text-admin-muted-foreground">{ar.common.phone}:</span>{" "}
               {order.guest_phone}
             </p>
             {order.guest_email && (
               <p>
-                <span className="text-black/60">{ar.common.email}:</span>{" "}
+                <span className="text-admin-muted-foreground">{ar.common.email}:</span>{" "}
                 {order.guest_email}
               </p>
             )}
             <p>
-              <span className="text-black/60">{ar.common.address}:</span>{" "}
+              <span className="text-admin-muted-foreground">{ar.common.address}:</span>{" "}
               {order.guest_address}
             </p>
             <p>
-              <span className="text-black/60">{ar.orders.wilaya}:</span>{" "}
+              <span className="text-admin-muted-foreground">{ar.orders.wilaya}:</span>{" "}
               {wilayaLabel}
             </p>
             <p>
-              <span className="text-black/60">{ar.common.delivery}:</span>{" "}
+              <span className="text-admin-muted-foreground">{ar.common.delivery}:</span>{" "}
               {deliveryLabel} — {formatPrice(order.delivery_price)}
             </p>
             <p>
-              <span className="text-black/60">{ar.orders.payment}:</span>{" "}
+              <span className="text-admin-muted-foreground">{ar.orders.payment}:</span>{" "}
               {ar.orders.cod}
             </p>
             <p>
-              <span className="text-black/60">{ar.common.created}:</span>{" "}
+              <span className="text-admin-muted-foreground">{ar.common.created}:</span>{" "}
               {new Date(order.created_at).toLocaleString("en-GB")}
             </p>
             <div>
-              <span className="text-black/60">{ar.orders.confirmationToken}:</span>
+              <span className="text-admin-muted-foreground">{ar.orders.confirmationToken}:</span>
               <p className="font-mono text-xs break-all mt-1">
                 {order.confirmation_token}
               </p>
             </div>
           </div>
 
-          <div className="bg-white border border-black/10 rounded-lg p-5 space-y-3">
+          <div className="bg-admin-card border border-admin-border rounded-lg p-5 space-y-3">
             <h2 className="font-semibold">{ar.common.status}</h2>
             <div className="flex items-center gap-3">
               <StatusBadge status={order.status} />
-              <span className="text-xs text-black/50">
+              <span className="text-xs text-admin-muted-foreground">
                 {ar.common.updated}{" "}
                 {new Date(order.status_updated_at).toLocaleString("en-GB")}
               </span>
@@ -111,11 +111,11 @@ export default async function AdminOrderDetailPage({
           </div>
         </div>
 
-        <div className="bg-white border border-black/10 rounded-lg p-5 mt-4">
+        <div className="bg-admin-card border border-admin-border rounded-lg p-5 mt-4">
           <h2 className="font-semibold mb-3">{ar.orders.items}</h2>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 text-start text-black/60">
+              <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
                 <th className="py-2 font-medium text-start">{ar.orders.items}</th>
                 <th className="py-2 font-medium text-start">{ar.orders.variant}</th>
                 <th className="py-2 font-medium text-start">{ar.orders.qty}</th>
@@ -124,9 +124,9 @@ export default async function AdminOrderDetailPage({
             </thead>
             <tbody>
               {order.items.map((item) => (
-                <tr key={item.id} className="border-b border-black/5">
+                <tr key={item.id} className="border-b border-admin-border/60">
                   <td className="py-2">{item.product_name}</td>
-                  <td className="py-2 text-black/60">
+                  <td className="py-2 text-admin-muted-foreground">
                     {[item.color, item.size].filter(Boolean).join(" / ") || "—"}
                   </td>
                   <td className="py-2">{item.quantity}</td>
@@ -140,17 +140,17 @@ export default async function AdminOrderDetailPage({
 
           <div className="mt-4 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-black/60">{ar.common.subtotal}</span>
+              <span className="text-admin-muted-foreground">{ar.common.subtotal}</span>
               <span>{formatPrice(order.subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-black/60">{ar.common.discount}</span>
-              <span className="text-red-600">
+              <span className="text-admin-muted-foreground">{ar.common.discount}</span>
+              <span className="text-admin-destructive">
                 -{formatPrice(order.discount_total)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-black/60">
+              <span className="text-admin-muted-foreground">
                 {ar.common.delivery} ({deliveryLabel})
               </span>
               <span>{formatPrice(order.delivery_price)}</span>
@@ -163,7 +163,7 @@ export default async function AdminOrderDetailPage({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-          <div className="bg-white border border-black/10 rounded-lg p-5">
+          <div className="bg-admin-card border border-admin-border rounded-lg p-5">
             <h2 className="font-semibold mb-3">{ar.orders.adminNote}</h2>
             <AdminNoteEditor
               orderId={order.id}
@@ -171,10 +171,10 @@ export default async function AdminOrderDetailPage({
             />
           </div>
 
-          <div className="bg-white border border-black/10 rounded-lg p-5">
+          <div className="bg-admin-card border border-admin-border rounded-lg p-5">
             <h2 className="font-semibold mb-3">{ar.orders.timeline}</h2>
             {order.history.length === 0 ? (
-              <p className="text-sm text-black/50">
+              <p className="text-sm text-admin-muted-foreground">
                 {ar.orders.noStatusChanges}
               </p>
             ) : (
@@ -182,10 +182,10 @@ export default async function AdminOrderDetailPage({
                 {order.history.map((entry) => (
                   <li
                     key={entry.id}
-                    className="text-sm border-s-2 border-black/10 ps-3"
+                    className="text-sm border-s-2 border-admin-border ps-3"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-black/50">
+                      <span className="text-admin-muted-foreground">
                         {entry.old_status
                           ? ar.statuses[
                               entry.old_status as keyof typeof ar.statuses
@@ -195,11 +195,11 @@ export default async function AdminOrderDetailPage({
                       <span aria-hidden="true">→</span>
                       <StatusBadge status={entry.new_status} />
                     </div>
-                    <p className="text-xs text-black/50 mt-1">
+                    <p className="text-xs text-admin-muted-foreground mt-1">
                       {new Date(entry.changed_at).toLocaleString("en-GB")}
                     </p>
                     {entry.note && (
-                      <p className="text-xs text-black/70 mt-1">
+                      <p className="text-xs text-admin-foreground/80 mt-1">
                         {ar.orders.noteLabel}: {entry.note}
                       </p>
                     )}

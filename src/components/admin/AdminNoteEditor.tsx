@@ -31,18 +31,18 @@ export default function AdminNoteEditor({
         rows={3}
         maxLength={2000}
         placeholder={ar.orders.notePlaceholder}
-        className="w-full px-3 py-2 border border-black/15 rounded-lg text-sm resize-none"
+        className="w-full px-3 py-2 border border-admin-border rounded-lg text-sm resize-none"
       />
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={save}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
+          className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90 disabled:opacity-50"
         >
           {saving ? ar.common.saving : ar.orders.saveNote}
         </button>
-        {message && <span className="text-sm text-black/60">{message}</span>}
+        {message && <span className="text-sm text-admin-muted-foreground">{message}</span>}
       </div>
     </div>
   );

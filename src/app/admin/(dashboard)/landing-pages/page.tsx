@@ -8,10 +8,10 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE = 10;
 
 const STATUS_STYLES: Record<string, string> = {
-  none: "bg-gray-200 text-gray-600",
+  none: "bg-admin-muted text-admin-muted-foreground",
   draft: "bg-amber-100 text-amber-800",
   published: "bg-green-100 text-green-800",
-  unpublished: "bg-gray-200 text-gray-600",
+  unpublished: "bg-admin-muted text-admin-muted-foreground",
 };
 
 function statusLabel(status: string | null): string {
@@ -75,7 +75,7 @@ export default async function AdminLandingPagesPage({
     <div>
       <div className="mb-4">
         <h1 className="text-2xl font-bold">{ar.landing.title}</h1>
-        <p className="text-sm text-black/60 mt-1 max-w-2xl">
+        <p className="text-sm text-admin-muted-foreground mt-1 max-w-2xl">
           {ar.landing.intro}
         </p>
       </div>
@@ -86,12 +86,12 @@ export default async function AdminLandingPagesPage({
           name="q"
           defaultValue={searchParams.q ?? ""}
           placeholder={ar.landing.searchPlaceholder}
-          className="px-3 py-2 border border-black/15 rounded-lg text-sm w-64"
+          className="px-3 py-2 border border-admin-border rounded-lg text-sm w-64"
         />
         <select
           name="status"
           defaultValue={statusFilter}
-          className="px-3 py-2 border border-black/15 rounded-lg text-sm"
+          className="px-3 py-2 border border-admin-border rounded-lg text-sm"
         >
           <option value="all">{ar.common.all}</option>
           <option value="none">{ar.landing.none}</option>
@@ -101,16 +101,16 @@ export default async function AdminLandingPagesPage({
         </select>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
+          className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted"
         >
           {ar.common.filter}
         </button>
       </form>
 
-      <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
+      <div className="bg-admin-card border border-admin-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm min-w-[680px]">
           <thead>
-            <tr className="border-b border-black/10 text-start text-black/60">
+            <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
               <th className="px-4 py-3 font-medium text-start">
                 {ar.landing.product}
               </th>
@@ -129,11 +129,11 @@ export default async function AdminLandingPagesPage({
             {items.map((row) => (
               <tr
                 key={row.product.id}
-                className="border-b border-black/5 hover:bg-gray-50"
+                className="border-b border-admin-border/60 hover:bg-admin-muted/50"
               >
                 <td className="px-4 py-3">
                   <div className="font-medium">{row.product.name}</div>
-                  <div className="text-xs text-black/50">
+                  <div className="text-xs text-admin-muted-foreground">
                     {row.product.category ?? "-"}
                   </div>
                 </td>
@@ -142,13 +142,13 @@ export default async function AdminLandingPagesPage({
                   {row.page ? (
                     <div
                       dir="ltr"
-                      className="text-xs text-black/50 mt-1 font-mono text-left"
+                      className="text-xs text-admin-muted-foreground mt-1 font-mono text-left"
                     >
                       /p/{row.page.slug}
                     </div>
                   ) : null}
                 </td>
-                <td className="px-4 py-3 text-black/70">
+                <td className="px-4 py-3 text-admin-foreground/80">
                   {row.page
                     ? new Date(row.page.updated_at).toLocaleDateString("en-GB")
                     : "-"}
@@ -157,7 +157,7 @@ export default async function AdminLandingPagesPage({
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/admin/landing-pages/${row.product.id}`}
-                      className="px-3 py-1 rounded-full text-xs font-medium bg-black text-white hover:bg-black/80"
+                      className="px-3 py-1 rounded-full text-xs font-medium bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90"
                     >
                       {row.page ? ar.landing.edit : ar.landing.create}
                     </Link>
@@ -166,7 +166,7 @@ export default async function AdminLandingPagesPage({
                         href={`/p/${row.page.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1 rounded-full text-xs font-medium border border-black/15 hover:bg-gray-100"
+                        className="px-3 py-1 rounded-full text-xs font-medium border border-admin-border hover:bg-admin-muted"
                       >
                         {ar.landing.view}
                       </a>
@@ -177,7 +177,7 @@ export default async function AdminLandingPagesPage({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-black/50">
+                <td colSpan={4} className="px-4 py-6 text-center text-admin-muted-foreground">
                   {ar.landing.noProducts}
                 </td>
               </tr>
@@ -188,13 +188,13 @@ export default async function AdminLandingPagesPage({
 
       {totalPages > 1 && (
         <div className="flex items-center gap-2 mt-4 text-sm">
-          <span className="text-black/60">
+          <span className="text-admin-muted-foreground">
             {ar.common.page} {safePage} {ar.common.of} {totalPages}
           </span>
           {safePage > 1 && (
             <Link
               href={hrefFor({ page: String(safePage - 1) })}
-              className="px-3 py-1 rounded-lg border border-black/15 hover:bg-gray-100"
+              className="px-3 py-1 rounded-lg border border-admin-border hover:bg-admin-muted"
             >
               {ar.common.previous}
             </Link>
@@ -202,7 +202,7 @@ export default async function AdminLandingPagesPage({
           {safePage < totalPages && (
             <Link
               href={hrefFor({ page: String(safePage + 1) })}
-              className="px-3 py-1 rounded-lg border border-black/15 hover:bg-gray-100"
+              className="px-3 py-1 rounded-lg border border-admin-border hover:bg-admin-muted"
             >
               {ar.common.next}
             </Link>

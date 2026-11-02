@@ -59,10 +59,10 @@ export default function SettingsForm({ tracking, provider }: Props) {
 
   return (
     <div className="space-y-6">
-      <section className="bg-white border border-black/10 rounded-lg p-5 space-y-4">
+      <section className="bg-admin-card border border-admin-border rounded-lg p-5 space-y-4">
         <div>
           <h2 className="font-semibold">{ar.settings.trackingTitle}</h2>
-          <p className="text-sm text-black/60 mt-1">
+          <p className="text-sm text-admin-muted-foreground mt-1">
             {ar.settings.trackingHelp}
           </p>
         </div>
@@ -79,7 +79,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
             pattern="[0-9]*"
             maxLength={20}
             placeholder="1234567890"
-            className="w-full max-w-sm px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="w-full max-w-sm px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
 
@@ -97,20 +97,20 @@ export default function SettingsForm({ tracking, provider }: Props) {
             type="button"
             onClick={savePixel}
             disabled={savingPixel}
-            className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90 disabled:opacity-50"
           >
             {savingPixel ? ar.common.saving : ar.settings.savePixel}
           </button>
           {pixelMessage && (
-            <span className="text-sm text-black/60">{pixelMessage}</span>
+            <span className="text-sm text-admin-muted-foreground">{pixelMessage}</span>
           )}
         </div>
       </section>
 
-      <section className="bg-white border border-black/10 rounded-lg p-5 space-y-4">
+      <section className="bg-admin-card border border-admin-border rounded-lg p-5 space-y-4">
         <div>
           <h2 className="font-semibold">{ar.settings.providerTitle}</h2>
-          <p className="text-sm text-black/60 mt-1">
+          <p className="text-sm text-admin-muted-foreground mt-1">
             {ar.settings.providerHelp}
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
           <span className="block text-xs font-medium mb-1">
             {ar.settings.currentKey}
           </span>
-          <p className="font-mono text-sm text-black/70">
+          <p className="font-mono text-sm text-admin-foreground/80">
             {provider.masked_api_key}
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
             onChange={(e) => setApiKey(e.target.value)}
             autoComplete="new-password"
             placeholder={provider.has_api_key ? "••••••••" : ar.settings.newKeyPlaceholder}
-            className="w-full max-w-sm px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="w-full max-w-sm px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
 
@@ -149,7 +149,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="https://api.example.com"
-            className="w-full max-w-sm px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="w-full max-w-sm px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
 
@@ -167,7 +167,7 @@ export default function SettingsForm({ tracking, provider }: Props) {
             type="button"
             onClick={saveProvider}
             disabled={savingProvider}
-            className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90 disabled:opacity-50"
           >
             {savingProvider ? ar.common.saving : ar.settings.saveProvider}
           </button>
@@ -175,12 +175,12 @@ export default function SettingsForm({ tracking, provider }: Props) {
             type="button"
             disabled
             title={ar.settings.testTooltip}
-            className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium opacity-50 cursor-not-allowed"
+            className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium opacity-50 cursor-not-allowed"
           >
             {ar.settings.testConnection}
           </button>
           {providerMessage && (
-            <span className="text-sm text-black/60">{providerMessage}</span>
+            <span className="text-sm text-admin-muted-foreground">{providerMessage}</span>
           )}
         </div>
       </section>

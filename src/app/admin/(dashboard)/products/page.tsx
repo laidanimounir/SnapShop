@@ -48,7 +48,7 @@ export default async function AdminProductsPage({
         </h1>
         <Link
           href="/admin/products/new"
-          className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80"
+          className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90"
         >
           {ar.products.newProduct}
         </Link>
@@ -60,12 +60,12 @@ export default async function AdminProductsPage({
           name="q"
           defaultValue={searchParams.q ?? ""}
           placeholder={ar.products.searchPlaceholder}
-          className="px-3 py-2 border border-black/15 rounded-lg text-sm w-64"
+          className="px-3 py-2 border border-admin-border rounded-lg text-sm w-64"
         />
         <select
           name="active"
           defaultValue={activeFilter}
-          className="px-3 py-2 border border-black/15 rounded-lg text-sm"
+          className="px-3 py-2 border border-admin-border rounded-lg text-sm"
         >
           <option value="all">{ar.common.all}</option>
           <option value="active">{ar.common.active}</option>
@@ -73,16 +73,16 @@ export default async function AdminProductsPage({
         </select>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100"
+          className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted"
         >
           {ar.common.filter}
         </button>
       </form>
 
-      <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
+      <div className="bg-admin-card border border-admin-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm min-w-[760px]">
           <thead>
-            <tr className="border-b border-black/10 text-start text-black/60">
+            <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
               <th className="px-4 py-3 font-medium text-start">{ar.products.product}</th>
               <th className="px-4 py-3 font-medium text-start">{ar.common.category}</th>
               <th className="px-4 py-3 font-medium text-start">{ar.common.price}</th>
@@ -94,10 +94,10 @@ export default async function AdminProductsPage({
           </thead>
           <tbody>
             {items.map((product) => (
-              <tr key={product.id} className="border-b border-black/5 hover:bg-gray-50">
+              <tr key={product.id} className="border-b border-admin-border/60 hover:bg-admin-muted/50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-admin-muted overflow-hidden shrink-0">
                       {product.thumbnail_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -118,7 +118,7 @@ export default async function AdminProductsPage({
                 <td className="px-4 py-3">{product.category ?? "-"}</td>
                 <td className="px-4 py-3">{formatPrice(product.base_price)}</td>
                 <td className="px-4 py-3">
-                  <span className={product.total_stock <= 0 ? "text-red-600" : ""}>
+                  <span className={product.total_stock <= 0 ? "text-admin-destructive" : ""}>
                     {product.total_stock}
                   </span>
                 </td>
@@ -136,7 +136,7 @@ export default async function AdminProductsPage({
                       className={
                         product.is_active
                           ? "px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                          : "px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600"
+                          : "px-3 py-1 rounded-full text-xs font-medium bg-admin-muted text-admin-muted-foreground"
                       }
                     >
                       {product.is_active ? ar.common.active : ar.common.inactive}
@@ -147,7 +147,7 @@ export default async function AdminProductsPage({
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/admin/products/${product.id}/edit`}
-                      className="px-3 py-1 rounded-full text-xs font-medium border border-black/15 hover:bg-gray-100"
+                      className="px-3 py-1 rounded-full text-xs font-medium border border-admin-border hover:bg-admin-muted"
                     >
                       {ar.common.edit}
                     </Link>
@@ -158,7 +158,7 @@ export default async function AdminProductsPage({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-black/50">
+                <td colSpan={7} className="px-4 py-6 text-center text-admin-muted-foreground">
                   {ar.products.noProducts}
                 </td>
               </tr>
@@ -169,13 +169,13 @@ export default async function AdminProductsPage({
 
       {totalPages > 1 && (
         <div className="flex items-center gap-2 mt-4 text-sm">
-          <span className="text-black/60">
+          <span className="text-admin-muted-foreground">
             {ar.common.page} {safePage} {ar.common.of} {totalPages}
           </span>
           {safePage > 1 && (
             <Link
               href={hrefFor({ page: String(safePage - 1) })}
-              className="px-3 py-1 rounded-lg border border-black/15 hover:bg-gray-100"
+              className="px-3 py-1 rounded-lg border border-admin-border hover:bg-admin-muted"
             >
               {ar.common.previous}
             </Link>
@@ -183,7 +183,7 @@ export default async function AdminProductsPage({
           {safePage < totalPages && (
             <Link
               href={hrefFor({ page: String(safePage + 1) })}
-              className="px-3 py-1 rounded-lg border border-black/15 hover:bg-gray-100"
+              className="px-3 py-1 rounded-lg border border-admin-border hover:bg-admin-muted"
             >
               {ar.common.next}
             </Link>

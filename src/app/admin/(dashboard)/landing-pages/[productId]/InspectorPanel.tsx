@@ -37,10 +37,10 @@ export function InspectorPanel({
   onField: (key: keyof SettingsFields, value: string) => void;
 }) {
   return (
-    <section className="bg-white border border-black/10 rounded-lg p-5">
+    <section className="bg-admin-card border border-admin-border rounded-lg p-5">
       <div
         role="tablist"
-        className="flex flex-wrap gap-2 border-b border-black/10 pb-3 mb-4"
+        className="flex flex-wrap gap-2 border-b border-admin-border pb-3 mb-4"
       >
         {TABS.map((t) => {
           const active = t.key === tab;
@@ -53,8 +53,8 @@ export function InspectorPanel({
               onClick={() => onTab(t.key)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium ${
                 active
-                  ? "bg-black text-white"
-                  : "border border-black/15 hover:bg-gray-100"
+                  ? "bg-admin-primary text-admin-primary-foreground"
+                  : "border border-admin-border hover:bg-admin-muted"
               }`}
             >
               {t.label}
@@ -67,7 +67,7 @@ export function InspectorPanel({
         section ? (
           <div className="space-y-3">
             {!isSectionValid(section) && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-admin-destructive">
                 {ar.landing.invalidSection}
               </p>
             )}
@@ -82,7 +82,7 @@ export function InspectorPanel({
             <p className="text-sm font-medium mb-1">
               {ar.landing.noSectionSelected}
             </p>
-            <p className="text-xs text-black/50">
+            <p className="text-xs text-admin-muted-foreground">
               {ar.landing.noSectionSelectedHelp}
             </p>
           </div>

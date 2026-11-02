@@ -4,14 +4,14 @@ import { ar } from "@/lib/admin/i18n-ar";
 import type { Section } from "@/lib/admin/landing-sections";
 import { ImageUploadButton } from "./ImageUploadButton";
 
-const inputCls = "w-full px-3 py-2 border border-black/15 rounded-lg text-sm";
+const inputCls = "w-full px-3 py-2 border border-admin-border rounded-lg text-sm";
 const urlCls = `${inputCls} font-mono`;
 const labelCls = "block text-sm font-medium mb-1";
-const boxCls = "border border-black/10 rounded-lg p-3 space-y-3";
+const boxCls = "border border-admin-border rounded-lg p-3 space-y-3";
 const addBtnCls =
-  "px-3 py-1.5 rounded-lg border border-black/15 text-xs hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent";
+  "px-3 py-1.5 rounded-lg border border-admin-border text-xs hover:bg-admin-muted disabled:opacity-40 disabled:hover:bg-transparent";
 const removeBtnCls =
-  "shrink-0 px-2 py-1.5 rounded border border-black/15 text-xs text-red-600 hover:bg-red-50";
+  "shrink-0 px-2 py-1.5 rounded border border-admin-border text-xs text-admin-destructive hover:bg-admin-destructive/10";
 
 function replaceAt<T>(arr: T[], index: number, value: T): T[] {
   return arr.map((item, i) => (i === index ? value : item));
@@ -117,7 +117,7 @@ export function SectionFields({
                 })
               }
             />
-            <p className="text-xs text-black/50 mt-1">
+            <p className="text-xs text-admin-muted-foreground mt-1">
               {ar.landing.fields.imageUrlHelp}
             </p>
             <ImageUploadButton
@@ -358,7 +358,7 @@ export function SectionFields({
               onChange={(e) => onChange({ ...props, title: e.target.value })}
             />
           </div>
-          <p className="text-xs text-black/50">{ar.landing.fields.sizeGuideHelp}</p>
+          <p className="text-xs text-admin-muted-foreground">{ar.landing.fields.sizeGuideHelp}</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -838,7 +838,7 @@ export function SectionFields({
                 })
               }
             />
-            <p className="text-xs text-black/50 mt-1">
+            <p className="text-xs text-admin-muted-foreground mt-1">
               {ar.landing.fields.countdownHelp}
             </p>
           </div>
@@ -877,7 +877,7 @@ export function SectionFields({
               maxLength={4000}
               onChange={(e) => onChange({ ...props, text: e.target.value })}
             />
-            <p className="text-xs text-black/50 mt-1">
+            <p className="text-xs text-admin-muted-foreground mt-1">
               {ar.landing.fields.richTextHelp}
             </p>
           </div>

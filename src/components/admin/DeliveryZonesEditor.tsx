@@ -156,7 +156,7 @@ export default function DeliveryZonesEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3 bg-white border border-black/10 rounded-lg p-4">
+      <div className="flex flex-wrap items-end gap-3 bg-admin-card border border-admin-border rounded-lg p-4">
         <div className="flex-1 min-w-[200px]">
           <label className="block text-xs font-medium mb-1" htmlFor="zone-search">
             {ar.delivery.search}
@@ -166,7 +166,7 @@ export default function DeliveryZonesEditor({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={ar.delivery.searchPlaceholder}
-            className="w-full px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
         <div>
@@ -181,14 +181,14 @@ export default function DeliveryZonesEditor({
             step="0.01"
             value={bulkPrice}
             onChange={(e) => setBulkPrice(e.target.value)}
-            className="w-32 px-3 py-2 border border-black/15 rounded-lg text-sm"
+            className="w-32 px-3 py-2 border border-admin-border rounded-lg text-sm"
           />
         </div>
         <button
           type="button"
           onClick={() => bulkSet("home")}
           disabled={bulking !== null}
-          className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50"
+          className="px-3 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted disabled:opacity-50"
         >
           {bulking === "home" ? ar.common.saving : ar.delivery.setAllHome}
         </button>
@@ -196,7 +196,7 @@ export default function DeliveryZonesEditor({
           type="button"
           onClick={() => bulkSet("office")}
           disabled={bulking !== null}
-          className="px-3 py-2 rounded-lg border border-black/15 text-sm font-medium hover:bg-gray-100 disabled:opacity-50"
+          className="px-3 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted disabled:opacity-50"
         >
           {bulking === "office" ? ar.common.saving : ar.delivery.setAllOffice}
         </button>
@@ -204,16 +204,16 @@ export default function DeliveryZonesEditor({
           type="button"
           onClick={saveAll}
           disabled={savingAll || savingCode !== null}
-          className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-black/80 disabled:opacity-50"
+          className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90 disabled:opacity-50"
         >
           {savingAll ? ar.common.saving : ar.delivery.saveAll}
         </button>
       </div>
 
-      <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
+      <div className="bg-admin-card border border-admin-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-start text-black/60">
+            <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
               <th className="px-3 py-3 font-medium text-start">#</th>
               <th className="px-3 py-3 font-medium text-start">
                 {ar.orders.wilaya}
@@ -236,14 +236,14 @@ export default function DeliveryZonesEditor({
             {filtered.map((row) => (
               <tr
                 key={row.wilaya_code}
-                className="border-b border-black/5 hover:bg-gray-50"
+                className="border-b border-admin-border/60 hover:bg-admin-muted/50"
               >
-                <td className="px-3 py-2 text-black/50">
+                <td className="px-3 py-2 text-admin-muted-foreground">
                   {String(row.wilaya_code).padStart(2, "0")}
                 </td>
                 <td className="px-3 py-2">
                   <span className="font-medium">{row.name_fr}</span>
-                  <span className="text-black/50"> — {row.name_ar}</span>
+                  <span className="text-admin-muted-foreground"> — {row.name_ar}</span>
                 </td>
                 <td className="px-3 py-2">
                   <input
@@ -260,7 +260,7 @@ export default function DeliveryZonesEditor({
                       "w-28 px-2 py-1.5 border rounded-lg text-sm",
                       validateDeliveryPrice(row.home)
                         ? "border-red-400"
-                        : "border-black/15"
+                        : "border-admin-border"
                     )}
                   />
                 </td>
@@ -279,7 +279,7 @@ export default function DeliveryZonesEditor({
                       "w-28 px-2 py-1.5 border rounded-lg text-sm",
                       validateDeliveryPrice(row.office)
                         ? "border-red-400"
-                        : "border-black/15"
+                        : "border-admin-border"
                     )}
                   />
                 </td>
@@ -298,7 +298,7 @@ export default function DeliveryZonesEditor({
                     type="button"
                     onClick={() => saveRow(row)}
                     disabled={savingCode === row.wilaya_code}
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-black text-white hover:bg-black/80 disabled:opacity-50"
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90 disabled:opacity-50"
                   >
                     {savingCode === row.wilaya_code
                       ? ar.common.saving
@@ -309,7 +309,7 @@ export default function DeliveryZonesEditor({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-black/50">
+                <td colSpan={6} className="px-3 py-6 text-center text-admin-muted-foreground">
                   {ar.delivery.noMatch}
                 </td>
               </tr>
@@ -323,7 +323,7 @@ export default function DeliveryZonesEditor({
           role="status"
           className={cn(
             "fixed bottom-5 end-5 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium",
-            toast.error ? "bg-red-600 text-white" : "bg-emerald-600 text-white"
+            toast.error ? "bg-admin-destructive text-admin-destructive-foreground" : "bg-emerald-600 text-white"
           )}
         >
           {toast.message}

@@ -8,6 +8,7 @@ import { PanelRightClose } from "lucide-react";
 import { ar } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/admin/ui/button";
+import { Badge } from "@/components/admin/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -40,19 +41,19 @@ function SidebarContent({
     <div className="flex min-h-0 flex-1 flex-col">
       <nav
         aria-label="التنقل الرئيسي"
-        className="flex-1 overflow-x-hidden overflow-y-auto px-2 py-3"
+        className="flex-1 overflow-x-hidden overflow-y-auto px-3 py-4"
       >
-        {adminNavGroups.map((group, groupIndex) => (
-          <div key={group.label} className="pb-1">
-            {groupIndex > 0 &&
-              (collapsed ? (
-                <div className="mx-2 my-2 h-px bg-admin-sidebar-border" />
-              ) : (
-                <p className="px-2 pb-1 pt-3 text-[10px] font-medium tracking-wide text-admin-muted-foreground">
-                  {group.label}
-                </p>
-              ))}
-            <div className="flex flex-col gap-0.5">
+        {adminNavGroups.map((group) => (
+          <div key={group.label} className="mb-4 last:mb-0">
+            <span
+              className={cn(
+                "mb-2 block text-xs font-semibold uppercase text-admin-muted-foreground",
+                collapsed && "text-center"
+              )}
+            >
+              {collapsed ? "..." : group.label}
+            </span>
+            <div className="flex flex-col">
               {group.items.map((item) => {
                 const active = isAdminNavItemActive(pathname, item);
                 const Icon = item.icon;
@@ -64,14 +65,15 @@ function SidebarContent({
                         onClick={onNavigate}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "flex h-9 items-center gap-2.5 rounded-none text-xs font-medium transition-colors",
-                          "text-admin-sidebar-foreground/80 hover:bg-admin-sidebar-accent hover:text-admin-sidebar-accent-foreground",
+                          "my-0.5 flex items-center gap-3 rounded-md text-sm font-medium transition-colors",
+                          "hover:bg-admin-primary/5",
                           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-admin-ring",
-                          active &&
-                            "bg-admin-sidebar-accent text-admin-sidebar-accent-foreground",
+                          active
+                            ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary"
+                            : "text-admin-sidebar-foreground",
                           collapsed
-                            ? "justify-center px-0"
-                            : "px-2.5"
+                            ? "justify-center px-2.5 py-2"
+                            : "px-3 py-2"
                         )}
                       >
                         <Icon className="size-4 shrink-0" />
@@ -127,16 +129,21 @@ export function AdminSidebar({ email }: { email: string }) {
         >
           <AdminLogo collapsed={!open} />
           {open && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={toggle}
-              aria-label={ar.nav.collapseSidebar}
-              title={ar.nav.collapseSidebar}
-            >
-              <PanelRightClose className="size-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                v1.0
+              </Badge>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={toggle}
+                aria-label={ar.nav.collapseSidebar}
+                title={ar.nav.collapseSidebar}
+              >
+                <PanelRightClose className="size-4" />
+              </Button>
+            </div>
           )}
         </div>
         <SidebarContent collapsed={!open} email={email} />

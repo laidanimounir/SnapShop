@@ -13,7 +13,7 @@ export default function NewProductPage() {
           {ar.products.backToProducts}
         </Link>
       </div>
-      <p className="text-sm text-black/60 mb-4">{ar.products.newIntro}</p>
+      <p className="text-sm text-admin-muted-foreground mb-4">{ar.products.newIntro}</p>
       <NewProductForm />
     </div>
   );

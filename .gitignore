@@ -38,3 +38,6 @@ opencode.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# visual verification screenshots
+/.verification/

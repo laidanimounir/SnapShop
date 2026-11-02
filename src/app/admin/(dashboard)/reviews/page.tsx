@@ -17,7 +17,7 @@ export default async function AdminReviewsPage({
   const tabClass = (active: boolean) =>
     cn(
       "px-4 py-1.5 rounded-full text-sm font-medium",
-      active ? "bg-black text-white" : "bg-white border border-black/10 text-black/60"
+      active ? "bg-admin-primary text-admin-primary-foreground" : "bg-admin-card border border-admin-border text-admin-muted-foreground"
     );
 
   return (
@@ -36,10 +36,10 @@ export default async function AdminReviewsPage({
         </Link>
       </div>
 
-      <div className="bg-white border border-black/10 rounded-lg overflow-x-auto">
+      <div className="bg-admin-card border border-admin-border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black/10 text-start text-black/60">
+            <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
               <th className="px-4 py-3 font-medium text-start">{ar.reviews.product}</th>
               <th className="px-4 py-3 font-medium text-start">{ar.reviews.reviewer}</th>
               <th className="px-4 py-3 font-medium text-start">{ar.reviews.rating}</th>
@@ -51,7 +51,7 @@ export default async function AdminReviewsPage({
           </thead>
           <tbody>
             {reviews.map((review) => (
-              <tr key={review.id} className="border-b border-black/5 hover:bg-gray-50">
+              <tr key={review.id} className="border-b border-admin-border/60 hover:bg-admin-muted/50">
                 <td className="px-4 py-3">
                   <Link
                     href={`/admin/products/${review.product_id}`}
@@ -62,10 +62,10 @@ export default async function AdminReviewsPage({
                 </td>
                 <td className="px-4 py-3">{review.reviewer_name}</td>
                 <td className="px-4 py-3">{review.rating}/5</td>
-                <td className="px-4 py-3 max-w-xs truncate text-black/70">
+                <td className="px-4 py-3 max-w-xs truncate text-admin-foreground/80">
                   {review.comment ?? "-"}
                 </td>
-                <td className="px-4 py-3 text-black/60">
+                <td className="px-4 py-3 text-admin-muted-foreground">
                   {new Date(review.created_at).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4 py-3">
@@ -92,8 +92,8 @@ export default async function AdminReviewsPage({
                       type="submit"
                       className={
                         review.is_approved
-                          ? "px-3 py-1 rounded-full text-xs font-medium border border-red-200 text-red-600 hover:bg-red-50"
-                          : "px-3 py-1 rounded-full text-xs font-medium bg-black text-white hover:bg-black/80"
+                          ? "px-3 py-1 rounded-full text-xs font-medium border border-admin-destructive/30 text-admin-destructive hover:bg-admin-destructive/10"
+                          : "px-3 py-1 rounded-full text-xs font-medium bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90"
                       }
                     >
                       {review.is_approved ? ar.reviews.reject : ar.reviews.approve}
@@ -104,7 +104,7 @@ export default async function AdminReviewsPage({
             ))}
             {reviews.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-black/50">
+                <td colSpan={7} className="px-4 py-6 text-center text-admin-muted-foreground">
                   {ar.reviews.noReviews}
                 </td>
               </tr>

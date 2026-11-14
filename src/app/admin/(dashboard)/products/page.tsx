@@ -1,195 +1,37 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
+
+import { ProductsTable } from "@/components/admin/products/products-table";
+import { Button } from "@/components/admin/ui/button";
 import { getAdminProducts } from "@/lib/api/admin";
-import { setProductActive } from "@/app/admin/actions";
-import { formatPrice } from "@/lib/pricing";
 import { ar } from "@/lib/admin/i18n-ar";
-import DeleteProductButton from "./DeleteProductButton";
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 10;
-
-export default async function AdminProductsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; active?: string; page?: string };
-}) {
-  const all = await getAdminProducts();
-  const q = (searchParams.q ?? "").trim().toLowerCase();
-  const activeFilter = searchParams.active ?? "all";
-  const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
-
-  const filtered = all.filter((p) => {
-    if (activeFilter === "active" && !p.is_active) return false;
-    if (activeFilter === "inactive" && p.is_active) return false;
-    if (q && !`${p.name} ${p.category ?? ""}`.toLowerCase().includes(q)) {
-      return false;
-    }
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const items = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
-  const hrefFor = (over: Record<string, string>) => {
-    const params = new URLSearchParams();
-    if (over.q ?? q) params.set("q", over.q ?? q);
-    if (over.active ?? activeFilter) params.set("active", over.active ?? activeFilter);
-    if (over.page ?? String(safePage)) params.set("page", over.page ?? String(safePage));
-    return `/admin/products?${params.toString()}`;
-  };
+export default async function AdminProductsPage() {
+  const products = await getAdminProducts();
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">
-          {ar.products.title} ({filtered.length})
-        </h1>
-        <Link
-          href="/admin/products/new"
-          className="px-4 py-2 rounded-lg bg-admin-primary text-admin-primary-foreground text-sm font-medium hover:bg-admin-primary/90"
-        >
-          {ar.products.newProduct}
-        </Link>
-      </div>
-
-      <form method="get" className="flex flex-wrap gap-2 mb-4">
-        <input
-          type="text"
-          name="q"
-          defaultValue={searchParams.q ?? ""}
-          placeholder={ar.products.searchPlaceholder}
-          className="px-3 py-2 border border-admin-border rounded-lg text-sm w-64"
-        />
-        <select
-          name="active"
-          defaultValue={activeFilter}
-          className="px-3 py-2 border border-admin-border rounded-lg text-sm"
-        >
-          <option value="all">{ar.common.all}</option>
-          <option value="active">{ar.common.active}</option>
-          <option value="inactive">{ar.common.inactive}</option>
-        </select>
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg border border-admin-border text-sm font-medium hover:bg-admin-muted"
-        >
-          {ar.common.filter}
-        </button>
-      </form>
-
-      <div className="bg-admin-card border border-admin-border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm min-w-[760px]">
-          <thead>
-            <tr className="border-b border-admin-border text-start text-admin-muted-foreground">
-              <th className="px-4 py-3 font-medium text-start">{ar.products.product}</th>
-              <th className="px-4 py-3 font-medium text-start">{ar.common.category}</th>
-              <th className="px-4 py-3 font-medium text-start">{ar.common.price}</th>
-              <th className="px-4 py-3 font-medium text-start">{ar.common.stock}</th>
-              <th className="px-4 py-3 font-medium text-start">{ar.common.variants}</th>
-              <th className="px-4 py-3 font-medium text-start">{ar.common.status}</th>
-              <th className="px-4 py-3 font-medium text-start">{ar.common.actions}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((product) => (
-              <tr key={product.id} className="border-b border-admin-border/60 hover:bg-admin-muted/50">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-admin-muted overflow-hidden shrink-0">
-                      {product.thumbnail_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={product.thumbnail_url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      ) : null}
-                    </div>
-                    <Link
-                      href={`/admin/products/${product.id}/edit`}
-                      className="underline underline-offset-2 font-medium"
-                    >
-                      {product.name}
-                    </Link>
-                  </div>
-                </td>
-                <td className="px-4 py-3">{product.category ?? "-"}</td>
-                <td className="px-4 py-3">{formatPrice(product.base_price)}</td>
-                <td className="px-4 py-3">
-                  <span className={product.total_stock <= 0 ? "text-admin-destructive" : ""}>
-                    {product.total_stock}
-                  </span>
-                </td>
-                <td className="px-4 py-3">{product.variant_count}</td>
-                <td className="px-4 py-3">
-                  <form action={setProductActive.bind(null, product.id)}>
-                    <input
-                      type="hidden"
-                      name="is_active"
-                      value={String(!product.is_active)}
-                    />
-                    <button
-                      type="submit"
-                      title={ar.common.status}
-                      className={
-                        product.is_active
-                          ? "px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                          : "px-3 py-1 rounded-full text-xs font-medium bg-admin-muted text-admin-muted-foreground"
-                      }
-                    >
-                      {product.is_active ? ar.common.active : ar.common.inactive}
-                    </button>
-                  </form>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/admin/products/${product.id}/edit`}
-                      className="px-3 py-1 rounded-full text-xs font-medium border border-admin-border hover:bg-admin-muted"
-                    >
-                      {ar.common.edit}
-                    </Link>
-                    <DeleteProductButton id={product.id} name={product.name} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {items.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-admin-muted-foreground">
-                  {ar.products.noProducts}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex items-center gap-2 mt-4 text-sm">
-          <span className="text-admin-muted-foreground">
-            {ar.common.page} {safePage} {ar.common.of} {totalPages}
-          </span>
-          {safePage > 1 && (
-            <Link
-              href={hrefFor({ page: String(safePage - 1) })}
-              className="px-3 py-1 rounded-lg border border-admin-border hover:bg-admin-muted"
-            >
-              {ar.common.previous}
-            </Link>
-          )}
-          {safePage < totalPages && (
-            <Link
-              href={hrefFor({ page: String(safePage + 1) })}
-              className="px-3 py-1 rounded-lg border border-admin-border hover:bg-admin-muted"
-            >
-              {ar.common.next}
-            </Link>
-          )}
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {ar.products.title}
+          </h1>
+          <p className="text-sm text-admin-muted-foreground">
+            {products.length} {ar.products.results}
+          </p>
         </div>
-      )}
+
+        <Button asChild>
+          <Link href="/admin/products/new">
+            <Plus className="size-4" />
+            {ar.products.newProduct}
+          </Link>
+        </Button>
+      </div>
+
+      <ProductsTable products={products} />
     </div>
   );
 }

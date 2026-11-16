@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { ArrowRight, Menu, PanelLeft, Search, Store } from "lucide-react";
+import { Moon, Monitor, Sun } from "lucide-react";
 
 import { Button } from "@/components/admin/ui/button";
-import { Input } from "@/components/admin/ui/input";
 import { Separator } from "@/components/admin/ui/separator";
-import { AdminLogo } from "./admin-logo";
 import { NavUser } from "./nav-user";
-import { ThemeToggle, type AdminTheme } from "./theme-toggle";
+import { PreferencesPopover } from "./preferences-popover";
+import { SearchDialog } from "./search-dialog";
 import { useAdminShell } from "./admin-shell";
+import { useAdminPreferencesStore } from "@/lib/admin/preferences-provider";
 import { ar } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 import { adminNavGroups } from "./nav-config";
@@ -21,23 +20,22 @@ export function AdminHeader({
   theme,
 }: {
   email: string;
-  theme: AdminTheme;
+  theme: "light" | "dark";
 }) {
   const { toggle, setMobileOpen } = useAdminShell();
+  const { theme_mode: themeMode, setPreference } = useAdminPreferencesStore(
+    (state) => ({
+      theme_mode: state.values.theme_mode,
+      setPreference: state.setPreference,
+    }),
+  );
   const pathname = usePathname();
-  const searchRef = useRef<HTMLInputElement>(null);
 
-  // Ctrl+K to focus search
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+  const cycleTheme = () => {
+    const next =
+      themeMode === "light" ? "dark" : themeMode === "dark" ? "system" : "light";
+    setPreference("theme_mode", next);
+  };
 
   const currentLabel = adminNavGroups
     .flatMap((group) => group.items)
@@ -45,100 +43,138 @@ export function AdminHeader({
     ?.label;
 
   return (
-    <header className="sticky top-0 z-20 h-12 shrink-0 items-center gap-2 border-b border-admin-border bg-admin-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-admin-background/80 print:hidden">
-      {/* Mobile menu trigger */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="lg:hidden"
-        onClick={() => setMobileOpen(true)}
-        aria-label="فتح القائمة"
-        title="فتح القائمة"
-      >
-        <Menu className="size-5" />
-      </Button>
-
-      {/* Desktop sidebar toggle */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="hidden lg:inline-flex -rotate-180"
-        onClick={toggle}
-        aria-label={ar.nav.collapseSidebar}
-        title={ar.nav.collapseSidebar}
-      >
-        <PanelLeft className="size-5" />
-      </Button>
-
-      <Separator orientation="vertical" className="mx-1 hidden h-4 self-center lg:block" />
-
-      {/* Search trigger (Ctrl+K) */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => searchRef.current?.focus()}
-        aria-label={ar.header.search}
-        title={ar.header.search}
-      >
-        <Search className="size-4" />
-        <kbd className="ml-1 hidden sm:inline-flex size-5 items-center gap-1 rounded border border-admin-border px-1.5 text-[10px] font-medium text-admin-muted-foreground">
-          <span className="text-xs">⌃</span>K
-        </kbd>
-      </Button>
-
-      {/* Inline order search (existing behavior preserved) */}
-      <form
-        action="/admin/orders"
-        method="get"
-        role="search"
-        className="relative hidden sm:flex items-center border border-admin-border rounded-lg bg-admin-background px-2 py-1 focus-within:ring-1 focus-within:ring-admin-ring"
-      >
-        <Search
-          className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-admin-muted-foreground"
-        />
-        <Input
-          ref={searchRef}
-          type="search"
-          name="q"
-          placeholder={ar.header.searchPlaceholder}
-          aria-label={ar.header.search}
-          className="h-8 w-48 rounded-none ps-8 lg:w-64 bg-transparent focus:ring-0"
-        />
-      </form>
-
-      {/* Breadcrumb / page title */}
-      {currentLabel && (
-        <Link
-          href="/admin"
-          className={cn(
-            "hidden lg:block flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors",
-            pathname === "/admin" ? "bg-admin-muted text-admin-foreground" : ""
-          )}
-        >
-          <span className="text-[10px] text-admin-muted-foreground">لوحة التحكم</span>
-          <span className="text-admin-foreground">{currentLabel}</span>
-        </Link>
+    <header
+      className={cn(
+        "sticky top-0 z-20 h-12 shrink-0 items-center gap-2 border-b border-admin-border bg-admin-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-admin-background/80 print:hidden",
+        theme === "dark" ? "bg-admin-background/90" : ""
       )}
+    >
+      <SearchDialog />
 
-      <div className="flex items-center gap-1 ms-auto">
-        {/* View store link */}
-        <Link
-          href="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors"
-          )}
+      <div className="flex min-w-0 items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={() => setMobileOpen(true)}
+          aria-label="فتح القائمة"
+          title="فتح القائمة"
         >
-          <Store className="size-3.5 text-admin-muted-foreground" />
-          <span>{ar.header.viewStore}</span>
-        </Link>
+          <span className="sr-only">فتح القائمة</span>
+          <svg
+            className="size-5"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16m-7 6h7"
+            />
+          </svg>
+        </Button>
 
-        <ThemeToggle initialTheme={theme} />
-        <NavUser email={email} compact />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="hidden lg:inline-flex -rotate-180"
+          onClick={toggle}
+          aria-label={ar.nav.collapseSidebar}
+          title={ar.nav.collapseSidebar}
+        >
+          <span className="sr-only">{ar.nav.collapseSidebar}</span>
+          <svg
+            className="size-5"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16m-7 6h7"
+            />
+          </svg>
+        </Button>
+
+        <Separator
+          orientation="vertical"
+          className="mx-1 hidden h-4 self-center lg:block"
+        />
+
+        <PreferencesPopover />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={cycleTheme}
+          aria-label={themeMode === "light" ? "التبديل للوضع الداكن" : themeMode === "dark" ? "التبديل للنظام" : "التبديل للوضع الفاتح"}
+          title={themeMode === "light" ? "الوضع الداكن" : themeMode === "dark" ? "النظام" : "الوضع الفاتح"}
+        >
+          {themeMode === "system" ? (
+            <Monitor className="size-4" />
+          ) : themeMode === "dark" ? (
+            <Sun className="size-4" />
+          ) : (
+            <Moon className="size-4" />
+          )}
+        </Button>
+      </div>
+
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+        {currentLabel && (
+          <Link
+            href="/admin"
+            className={cn(
+              "hidden lg:block flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors",
+              pathname === "/admin"
+                ? "bg-admin-muted text-admin-foreground"
+                : ""
+            )}
+          >
+            <span className="text-[10px] text-admin-muted-foreground">
+              لوحة التحكم
+            </span>
+            <span className="text-admin-foreground">{currentLabel}</span>
+          </Link>
+        )}
+
+        <div className="flex items-center gap-1 ms-auto">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors"
+            )}
+          >
+            <svg
+              className="size-3.5 text-admin-muted-foreground"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 3v2h18V3H3v20h18v-2H3z"
+              />
+            </svg>
+            <span>{ar.header.viewStore}</span>
+          </Link>
+
+          <NavUser email={email} compact />
+        </div>
       </div>
     </header>
   );

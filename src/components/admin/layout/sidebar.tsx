@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelRightClose } from "lucide-react";
@@ -8,7 +7,6 @@ import { PanelRightClose } from "lucide-react";
 import { ar } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/admin/ui/button";
-import { Badge } from "@/components/admin/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -25,6 +23,7 @@ import { AdminLogo } from "./admin-logo";
 import { NavUser } from "./nav-user";
 import { adminNavGroups, isAdminNavItemActive } from "./nav-config";
 import { useAdminShell } from "./admin-shell";
+import { useAdminPreferencesStore } from "@/lib/admin/preferences-provider";
 
 function SidebarContent({
   collapsed,
@@ -36,6 +35,11 @@ function SidebarContent({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const { collapsible } = useAdminPreferencesStore(
+    (state) => ({ collapsible: state.values.sidebar_collapsible }),
+  );
+
+  const showTooltips = collapsible === "icon";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -43,54 +47,119 @@ function SidebarContent({
         aria-label="التنقل الرئيسي"
         className="flex-1 overflow-x-hidden overflow-y-auto ps-3 pe-3 py-4"
       >
-        {adminNavGroups.map((group) => (
-          <div key={group.label} className="mb-4 last:mb-0">
-            <span
-              className={cn(
-                "mb-2 block text-xs font-semibold uppercase text-admin-muted-foreground",
-                collapsed && "text-start"
-              )}
+        <div className="flex flex-col gap-1.5 ps-2 pe-2">
+          {/* Quick create primary action */}
+          <div className="flex flex-col gap-1">
+            <Link
+              href="/admin/products/new"
+              className="flex w-full items-center gap-2 rounded-lg bg-admin-primary px-3 py-2 text-xs font-medium text-admin-primary-foreground transition-colors hover:bg-admin-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-admin-ring"
             >
-              {collapsed ? "..." : group.label}
-            </span>
-            <div className="flex flex-col">
-              {group.items.map((item) => {
-                const active = isAdminNavItemActive(pathname, item);
-                const Icon = item.icon;
-                return (
-                  <Tooltip key={item.href}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={item.href}
-                        onClick={onNavigate}
-                        aria-current={active ? "page" : undefined}
-                        className={cn(
-                          "my-0.5 flex items-center gap-3 rounded-md text-sm font-medium transition-colors",
-                          "hover:bg-admin-primary/5",
-                          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-admin-ring",
-                          active
-                            ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary"
-                            : "text-admin-sidebar-foreground",
-                          collapsed
-                            ? "justify-center ps-2.5 pe-2.5 py-2"
-                            : "ps-3 pe-3 py-2"
-                        )}
-                      >
-                        <Icon className="size-4 shrink-0" />
-                        {!collapsed && (
-                          <span className="truncate text-start">{item.label}</span>
-                        )}
-                      </Link>
-                    </TooltipTrigger>
-                    {collapsed && (
-                      <TooltipContent side="left">{item.label}</TooltipContent>
-                    )}
-                  </Tooltip>
-                );
-              })}
-            </div>
+              <svg
+                className="size-4 shrink-0"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              {collapsed ? "..." : ar.nav.newProduct}
+            </Link>
+            <Link
+              href="/admin/orders"
+              className="flex w-full items-center gap-2 rounded-lg border border-admin-border bg-admin-background px-3 py-2 text-xs font-medium text-admin-foreground transition-colors hover:bg-admin-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-admin-ring"
+            >
+              <svg
+                className="size-4 shrink-0"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M3 10l1.557-3.114a1 1 0 011.443-.443l2.557 1.278c.273.136.428.42.428.73v8.686c0 .31-.155.594-.428.73L11.443 21.01a1 1 0 01-1.443-.443L3 17.886V20a1 1 0 01-1 1H1a1 1 0 01-1-1v-9a1 1 0 011-1z"
+                />
+              </svg>
+              {collapsed ? "..." : ar.nav.orders}
+            </Link>
           </div>
-        ))}
+          <div className="h-px bg-admin-sidebar-border mx-2 my-2"></div>
+
+          {adminNavGroups.map((group) => (
+            <div key={group.label} className="mb-2 last:mb-0">
+              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-admin-muted-foreground ps-1 pe-1">
+                {collapsed ? "..." : group.label}
+              </span>
+              <div className="flex flex-col">
+                {group.items.map((item) => {
+                  const active = isAdminNavItemActive(pathname, item);
+                  const Icon = item.icon;
+                  return (
+                    <>
+                      {showTooltips ? (
+                        <Tooltip key={item.href}>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={item.href}
+                              onClick={onNavigate}
+                              aria-current={active ? "page" : undefined}
+                              className={cn(
+                                "group/menu-item flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors",
+                                "my-0 ps-2 pe-2 py-1.5",
+                                active
+                                  ? "bg-admin-sidebar-accent text-admin-sidebar-accent-foreground font-medium"
+                                  : "text-admin-sidebar-foreground hover:bg-admin-sidebar-accent hover:text-admin-sidebar-accent-foreground",
+                                collapsed
+                                  ? "justify-center"
+                                  : ""
+                              )}
+                            >
+                              <Icon className="size-4 shrink-0" />
+                              {!collapsed && (
+                                <span className="truncate text-start">{item.label}</span>
+                              )}
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">{item.label}</TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={onNavigate}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "group/menu-item flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors",
+                            "my-0 ps-2 pe-2 py-1.5",
+                            active
+                              ? "bg-admin-sidebar-accent text-admin-sidebar-accent-foreground font-medium"
+                              : "text-admin-sidebar-foreground hover:bg-admin-sidebar-accent hover:text-admin-sidebar-accent-foreground",
+                            collapsed
+                              ? "justify-center"
+                              : ""
+                          )}
+                        >
+                          <Icon className="size-4 shrink-0" />
+                          {!collapsed && (
+                            <span className="truncate text-start">{item.label}</span>
+                          )}
+                        </Link>
+                      )}
+                    </>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       </nav>
       <div className="border-s border-admin-sidebar-border p-2">
         <NavUser email={email} compact={collapsed} />
@@ -101,78 +170,41 @@ function SidebarContent({
 
 export function AdminSidebar({ email }: { email: string }) {
   const { open, toggle, mobileOpen, setMobileOpen } = useAdminShell();
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const pathname = usePathname();
+  const { variant, collapsible } =
+    useAdminPreferencesStore((state) => ({
+      variant: state.values.sidebar_variant,
+      collapsible: state.values.sidebar_collapsible,
+    }));
 
-  useEffect(() => {
-    setMobileOpen(false);
-    setPreviewOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  const isRight = true; // RTL: sidebar on the right
 
   return (
     <TooltipProvider delayDuration={200}>
       <aside
-        onMouseEnter={() => {
-          if (!open) setPreviewOpen(true);
-        }}
         className={cn(
-          "sticky top-0 z-30 hidden h-svh shrink-0 flex-col border-e border-admin-sidebar-border bg-admin-sidebar text-admin-sidebar-foreground transition-[width] duration-200 lg:flex print:hidden",
-          open ? "w-64" : "w-12"
+          "sticky top-0 z-30 h-svh shrink-0 flex-col border-s border-admin-sidebar-border bg-admin-sidebar text-admin-sidebar-foreground transition-[width] duration-200 lg:flex print:hidden",
+          open ? "w-64" : "w-14",
+          "fixed inset-y-0 right-0 z-10 md:static md:inset-y-auto md:right-auto",
+          variant === "floating" ? "rounded-lg shadow-sm ring-1 ring-admin-sidebar-border p-2 m-4" : "",
+          variant === "inset" ? "m-4 rounded-xl shadow-sm ring-1 ring-admin-sidebar-border" : ""
         )}
       >
-        <div
-          className={cn(
-            "flex h-14 shrink-0 items-center border-b border-admin-sidebar-border ps-2 pe-2",
-            open ? "justify-between" : "justify-center"
-          )}
-        >
+        <div className="flex h-14 shrink-0 items-center border-b border-admin-sidebar-border ps-2 pe-2 justify-between">
           <AdminLogo collapsed={!open} />
           {open && (
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                v1.0
-              </Badge>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={toggle}
-                aria-label={ar.nav.collapseSidebar}
-                title={ar.nav.collapseSidebar}
-              >
-                <PanelRightClose className="size-4" />
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={toggle}
+              aria-label={ar.nav.collapseSidebar}
+              title={ar.nav.collapseSidebar}
+            >
+              <PanelRightClose className="size-4" />
+            </Button>
           )}
         </div>
         <SidebarContent collapsed={!open} email={email} />
-
-        {!open && previewOpen && (
-          <div
-            onMouseLeave={() => setPreviewOpen(false)}
-            className="fixed inset-y-0 start-0 z-50 hidden w-64 flex-col border-e border-admin-sidebar-border bg-admin-sidebar text-admin-sidebar-foreground shadow-xl lg:flex print:hidden"
-          >
-            <div className="flex h-14 shrink-0 items-center justify-between border-b border-admin-sidebar-border ps-2 pe-2">
-              <AdminLogo />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setPreviewOpen(false)}
-                aria-label={ar.nav.collapseSidebar}
-                title={ar.nav.collapseSidebar}
-              >
-                <PanelRightClose className="size-4" />
-              </Button>
-            </div>
-            <SidebarContent
-              collapsed={false}
-              email={email}
-              onNavigate={() => setPreviewOpen(false)}
-            />
-          </div>
-        )}
 
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent
@@ -180,7 +212,7 @@ export function AdminSidebar({ email }: { email: string }) {
             showCloseButton={false}
             className="w-[18rem] gap-0 p-0 sm:max-w-[18rem]"
           >
-            <SheetTitle className="sr-only">القائمة</SheetTitle>
+            <SheetTitle className="sr-only">{ar.nav.dashboard}</SheetTitle>
             <SheetDescription className="sr-only">
               التنقل بين أقسام لوحة التحكم
             </SheetDescription>
@@ -198,11 +230,7 @@ export function AdminSidebar({ email }: { email: string }) {
               </Button>
             </div>
             <div className="flex min-h-0 flex-1 flex-col bg-admin-sidebar">
-              <SidebarContent
-                collapsed={false}
-                email={email}
-                onNavigate={() => setMobileOpen(false)}
-              />
+              <SidebarContent collapsed={false} email={email} />
             </div>
           </SheetContent>
         </Sheet>

@@ -81,41 +81,43 @@ export function PreferencesPopover() {
               <Label className="text-xs font-medium text-admin-foreground">
                 {ar.preferences.themePreset}
               </Label>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full justify-between text-xs">
-                  <span>
-                    {isPresetActive(themePreset, values)
-                      ? presetLabel(themePreset)
-                      : ar.preferences.preset}
-                  </span>
-                  <ChevronDown className="size-3 shrink-0 text-admin-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {THEME_PRESET_OPTIONS.map((preset) => (
-                  <DropdownMenuItem
-                    key={preset.value}
-                    className={cn(
-                      "text-xs",
-                      themePreset === preset.value
-                        ? "bg-admin-accent text-admin-accent-foreground"
-                        : ""
-                    )}
-                    onClick={() => setPref("theme_preset", preset.value)}
-                  >
-                    <span
-                      className="size-2.5 rounded-full mr-2"
-                      style={{
-                        backgroundColor:
-                          resolvedThemeMode === "dark"
-                            ? preset.primary.dark
-                            : preset.primary.light,
-                      }}
-                    />
-                    {preset.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full justify-between text-xs">
+                    <span>
+                      {isPresetActive(themePreset, values)
+                        ? presetLabel(themePreset)
+                        : ar.preferences.preset}
+                    </span>
+                    <ChevronDown className="size-3 shrink-0 text-admin-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {THEME_PRESET_OPTIONS.map((preset) => (
+                    <DropdownMenuItem
+                      key={preset.value}
+                      className={cn(
+                        "text-xs",
+                        themePreset === preset.value
+                          ? "bg-admin-accent text-admin-accent-foreground"
+                          : ""
+                      )}
+                      onClick={() => setPref("theme_preset", preset.value)}
+                    >
+                      <span
+                        className="size-2.5 rounded-full mr-2"
+                        style={{
+                          backgroundColor:
+                            resolvedThemeMode === "dark"
+                              ? preset.primary.dark
+                              : preset.primary.light,
+                        }}
+                      />
+                      {preset.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <div className="space-y-1">

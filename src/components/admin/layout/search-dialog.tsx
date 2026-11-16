@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/admin/ui/dialog";
 import { ar } from "@/lib/admin/i18n-ar";
 
@@ -31,21 +30,19 @@ export function SearchDialog() {
 
   return (
     <>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => setOpen(true)}
-          aria-label={ar.header.search}
-          title={ar.header.search}
-        >
-          <Search className="size-4" />
-          <kbd className="ml-1 hidden sm:inline-flex size-5 items-center gap-1 rounded border border-admin-border px-1.5 text-[10px] font-medium text-admin-muted-foreground">
-            <span className="text-xs">⌃</span>K
-          </kbd>
-        </Button>
-      </DialogTrigger>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => setOpen(true)}
+        aria-label={ar.header.search}
+        title={ar.header.search}
+      >
+        <Search className="size-4" />
+        <kbd className="ml-1 hidden sm:inline-flex size-5 items-center gap-1 rounded border border-admin-border px-1.5 text-[10px] font-medium text-admin-muted-foreground">
+          <span className="text-xs">⌃</span>K
+        </kbd>
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm sm:max-w-md">

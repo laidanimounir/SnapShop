@@ -10,7 +10,7 @@ export function DashboardCard({
   return (
     <Card
       className={cn(
-        "h-full rounded-xl border border-admin-border bg-admin-card ring-1 ring-admin-foreground/10 shadow-sm overflow-hidden",
+        "h-full rounded-xl border border-admin-border bg-admin-card shadow-sm overflow-hidden",
         className
       )}
       {...props}

@@ -46,8 +46,8 @@ export function AdminHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-20 h-12 shrink-0 items-center gap-2 border-b border-admin-border bg-admin-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-admin-background/80 print:hidden",
-        theme === "dark" ? "bg-admin-background/90" : ""
+        "sticky top-0 z-40 h-14 shrink-0 items-center gap-2 border-b border-admin-border bg-admin-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-admin-background/80 print:hidden",
+        theme === "dark" ? "bg-admin-background/95" : ""
       )}
     >
       <SearchDialog />
@@ -57,7 +57,7 @@ export function AdminHeader({
           type="button"
           variant="ghost"
           size="icon"
-          className="lg:hidden"
+          className="md:hidden"
           onClick={() => setMobileOpen(true)}
           aria-label="فتح القائمة"
           title="فتح القائمة"
@@ -83,7 +83,7 @@ export function AdminHeader({
           type="button"
           variant="ghost"
           size="icon"
-          className="hidden lg:inline-flex -rotate-180"
+          className="hidden md:flex -rotate-180"
           onClick={toggle}
           aria-label={ar.nav.collapseSidebar}
           title={ar.nav.collapseSidebar}
@@ -107,7 +107,7 @@ export function AdminHeader({
 
         <Separator
           orientation="vertical"
-          className="mx-1 hidden h-4 self-center lg:block"
+          className="mx-1 hidden h-4 self-center md:block"
         />
 
         <PreferencesPopover />
@@ -135,7 +135,7 @@ export function AdminHeader({
           <Link
             href="/admin"
             className={cn(
-              "hidden lg:block flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors",
+              "hidden md:block flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors",
               pathname === "/admin"
                 ? "bg-admin-muted text-admin-foreground"
                 : ""

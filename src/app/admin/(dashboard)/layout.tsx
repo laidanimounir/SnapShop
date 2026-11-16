@@ -39,13 +39,13 @@ export default async function AdminLayout({
 
   const cookieStore = cookies();
   const theme: AdminTheme =
-    cookieStore.get("admin_theme")?.value === "dark" ? "dark" : "light";
+    cookieStore.get("admin_theme")?.value === "light" ? "light" : "dark";
 
   const initialValues = {
     theme_mode: (readPreferenceCookie("theme_mode") as
       | "light"
       | "dark"
-      | "system") || "light",
+      | "system") || "dark",
     theme_preset: (readPreferenceCookie("theme_preset") as
       | "default"
       | "brutalist"
@@ -93,7 +93,7 @@ export default async function AdminLayout({
       <PreferencesProvider initialValues={initialValues}>
         <AdminShell defaultOpen={sidebarDefaultOpen}>
           <AdminSidebar email={email} />
-          <div className="flex min-w-0 flex-1 flex-col print:block">
+          <div className="flex min-w-0 flex-1 flex-col print:block md:pr-64">
             <AdminHeader email={email} theme={theme} />
             <main className="min-w-0 flex-1 overflow-x-hidden px-4 lg:px-6 gap-4 md:gap-6 print:p-0">
               {children}

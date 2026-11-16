@@ -27,8 +27,9 @@ export function PreferencesProvider({
 
     const updateResolvedTheme = () => {
       const mode = store.getState().values.theme_mode;
-      let resolved: "light" | "dark" = "light";
-      if (mode === "dark") resolved = "dark";
+      let resolved: "light" | "dark" = "dark";
+      if (mode === "light") resolved = "light";
+      else if (mode === "dark") resolved = "dark";
       else if (mode === "system") {
         resolved = window.matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"

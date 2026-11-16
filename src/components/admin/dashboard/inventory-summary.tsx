@@ -41,7 +41,7 @@ export function InventorySummary({
 
   return (
     <Card className="h-full overflow-hidden">
-      <CardHeader className="border-b border-admin-border pb-3">
+      <CardHeader className="border-b border-white/[0.08] pb-3">
         <CardTitle className="flex items-center gap-2">
           <Box className="size-4 text-admin-muted-foreground" />
           {ar.dashboard.inventory}

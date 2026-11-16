@@ -46,18 +46,20 @@ export function AdminHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 h-14 shrink-0 items-center gap-2 border-b border-admin-border bg-admin-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-admin-background/80 print:hidden",
-        theme === "dark" ? "bg-admin-background/95" : ""
+        "sticky top-0 z-40 shrink-0 items-center justify-between border-b border-white/[0.08] bg-admin-background/80 backdrop-blur-md px-4 lg:px-6 print:hidden",
+        theme === "dark" ? "bg-admin-background/90" : "",
+        "h-[4.5rem] min-h-[4.5rem]"
       )}
     >
-      <SearchDialog />
 
-      <div className="flex min-w-0 items-center gap-2">
+      {/* Left: mobile menu + sidebar toggle + search + theme */}
+      <div className="flex shrink-0 items-center gap-2">
+        <SearchDialog />
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="md:hidden"
+          className="md:hidden shrink-0"
           onClick={() => setMobileOpen(true)}
           aria-label="فتح القائمة"
           title="فتح القائمة"
@@ -83,7 +85,7 @@ export function AdminHeader({
           type="button"
           variant="ghost"
           size="icon"
-          className="hidden md:flex -rotate-180"
+          className="hidden md:flex shrink-0 -rotate-180"
           onClick={toggle}
           aria-label={ar.nav.collapseSidebar}
           title={ar.nav.collapseSidebar}
@@ -107,7 +109,7 @@ export function AdminHeader({
 
         <Separator
           orientation="vertical"
-          className="mx-1 hidden h-4 self-center md:block"
+          className="mx-1 shrink-0 hidden h-4 self-center md:block"
         />
 
         <PreferencesPopover />
@@ -116,6 +118,7 @@ export function AdminHeader({
           type="button"
           variant="ghost"
           size="icon"
+          className="shrink-0"
           onClick={cycleTheme}
           aria-label={themeMode === "light" ? "التبديل للوضع الداكن" : themeMode === "dark" ? "التبديل للنظام" : "التبديل للوضع الفاتح"}
           title={themeMode === "light" ? "الوضع الداكن" : themeMode === "dark" ? "النظام" : "الوضع الفاتح"}
@@ -130,7 +133,8 @@ export function AdminHeader({
         </Button>
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+      {/* Center: breadcrumb */}
+      <div className="flex shrink-0 items-center justify-center gap-2">
         {currentLabel && (
           <Link
             href="/admin"
@@ -141,41 +145,39 @@ export function AdminHeader({
                 : ""
             )}
           >
-            <span className="text-[10px] text-admin-muted-foreground">
-              لوحة التحكم
-            </span>
             <span className="text-admin-foreground">{currentLabel}</span>
           </Link>
         )}
+      </div>
 
-        <div className="flex items-center gap-1 ms-auto">
-          <Link
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors"
-            )}
+      {/* Right: view store + user */}
+      <div className="flex shrink-0 items-center justify-end gap-1 ms-auto">
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors"
+          )}
+        >
+          <svg
+            className="size-3.5 text-admin-muted-foreground"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <svg
-              className="size-3.5 text-admin-muted-foreground"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3v2h18V3H3v20h18v-2H3z"
-              />
-            </svg>
-            <span>{ar.header.viewStore}</span>
-          </Link>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 3v2h18V3H3v20h18v-2H3z"
+            />
+          </svg>
+          <span>{ar.header.viewStore}</span>
+        </Link>
 
-          <NavUser email={email} compact />
-        </div>
+        <NavUser email={email} compact />
       </div>
     </header>
   );

@@ -33,7 +33,7 @@ export function NavUser({
         <button
           type="button"
           className={cn(
-            "flex items-center gap-2 rounded-none text-start outline-none transition-colors hover:bg-admin-sidebar-accent focus-visible:ring-1 focus-visible:ring-admin-ring",
+            "flex items-center gap-2 rounded-none text-start outline-none transition-colors hover:bg-white/[0.03] focus-visible:ring-1 focus-visible:ring-white/[0.12]",
             compact
               ? "size-9 justify-center"
               : "w-full px-2 py-1.5"

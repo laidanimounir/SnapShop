@@ -49,7 +49,7 @@ export function ChartContainer({
         data-chart={uniqueId}
         style={style}
         className={cn(
-          "flex aspect-video overflow-hidden rounded-xl border border-admin-border bg-admin-card shadow-xs justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-admin-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-admin-border [&_.recharts-curve.recharts-tooltip-cursor]:stroke-admin-border",
+          "flex aspect-video overflow-hidden rounded-xl border border-white/[0.06] bg-admin-card shadow-xs justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-admin-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-white/[0.08] [&_.recharts-curve.recharts-tooltip-cursor]:stroke-white/[0.12]",
           className
         )}
         {...props}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowRight, Clock, ShoppingBag } from "lucide-react";
 
 import { Card } from "@/components/admin/ui/card";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -10,6 +10,7 @@ import {
 } from "@/components/admin/ui/card";
 import type { DashboardRecentOrder } from "@/lib/api/admin-dashboard";
 import { ar } from "@/lib/admin/i18n-ar";
+import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/pricing";
 
 export function RecentOrders({
@@ -19,7 +20,7 @@ export function RecentOrders({
 }) {
   return (
     <Card className="h-full overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-admin-border pb-3">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-white/[0.08] pb-3">
         <CardTitle className="flex items-center gap-2">
           <ShoppingBag className="size-4 text-admin-muted-foreground" />
           {ar.dashboard.recentOrders}
@@ -36,7 +37,7 @@ export function RecentOrders({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-right text-sm">
-            <thead className="border-b border-admin-border text-xs text-admin-muted-foreground">
+            <thead className="border-b border-white/[0.08] text-xs font-medium text-admin-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-normal">
                   {ar.orders.order}
@@ -59,19 +60,24 @@ export function RecentOrders({
               {orders.map((order) => (
                 <tr
                   key={order.id}
-                  className="border-b border-admin-border/60 last:border-0 hover:bg-admin-muted/40"
+                  className="border-b border-white/[0.06] last:border-0 transition-colors hover:bg-white/[0.02]"
                 >
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="font-mono text-xs underline underline-offset-2"
-                    >
-                      {order.id.slice(0, 8)}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <div className="size-2 shrink-0 rounded-full bg-admin-muted" />
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="font-mono text-xs underline underline-offset-2 text-admin-foreground"
+                      >
+                        {order.id.slice(0, 8)}
+                      </Link>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col leading-5">
-                      <span className="font-medium">{order.guest_name}</span>
+                      <span className="font-medium text-admin-foreground">
+                        {order.guest_name}
+                      </span>
                       <span className="text-xs text-admin-muted-foreground">
                         {order.guest_phone}
                       </span>
@@ -80,7 +86,7 @@ export function RecentOrders({
                   <td className="px-4 py-3">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="px-4 py-3 tabular-nums">
+                  <td className="px-4 py-3 tabular-nums text-admin-foreground">
                     {formatPrice(order.total)}
                   </td>
                   <td className="px-4 py-3 text-admin-muted-foreground">

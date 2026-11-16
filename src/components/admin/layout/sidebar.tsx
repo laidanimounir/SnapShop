@@ -93,7 +93,7 @@ function SidebarContent({
               {collapsed ? "..." : ar.nav.orders}
             </Link>
           </div>
-          <div className="h-px bg-admin-sidebar-border mx-2 my-2"></div>
+          <div className="h-[1px] bg-admin-sidebar-border/50 mx-3 my-3"></div>
 
           {adminNavGroups.map((group) => (
             <div key={group.label} className="mb-2 last:mb-0">
@@ -114,11 +114,11 @@ function SidebarContent({
                               onClick={onNavigate}
                               aria-current={active ? "page" : undefined}
                               className={cn(
-                                "group/menu-item flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors",
-                                "my-0 ps-2 pe-2 py-1.5",
+                                "group/menu-item flex items-center gap-2.5 rounded-lg text-sm font-medium transition-colors",
+                                "my-0 ps-2.5 pe-2.5 py-1.5",
                                 active
-                                  ? "bg-admin-sidebar-accent text-admin-sidebar-accent-foreground font-medium"
-                                  : "text-admin-sidebar-foreground hover:bg-admin-sidebar-accent hover:text-admin-sidebar-accent-foreground",
+                                  ? "bg-admin-primary/10 border border-admin-primary/20 text-admin-primary font-medium"
+                                  : "text-admin-sidebar-foreground hover:bg-white/[0.03] hover:text-admin-sidebar-foreground",
                                 collapsed
                                   ? "justify-center"
                                   : ""
@@ -139,11 +139,11 @@ function SidebarContent({
                           onClick={onNavigate}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "group/menu-item flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors",
-                            "my-0 ps-2 pe-2 py-1.5",
+                            "group/menu-item flex items-center gap-2.5 rounded-lg text-sm font-medium transition-colors",
+                            "my-0 ps-2.5 pe-2.5 py-1.5",
                             active
-                              ? "bg-admin-sidebar-accent text-admin-sidebar-accent-foreground font-medium"
-                              : "text-admin-sidebar-foreground hover:bg-admin-sidebar-accent hover:text-admin-sidebar-accent-foreground",
+                              ? "bg-admin-primary/10 border border-admin-primary/20 text-admin-primary font-medium"
+                              : "text-admin-sidebar-foreground hover:bg-white/[0.03] hover:text-admin-sidebar-foreground",
                             collapsed
                               ? "justify-center"
                               : ""
@@ -163,7 +163,7 @@ function SidebarContent({
           ))}
         </div>
       </nav>
-      <div className="border-s border-admin-sidebar-border p-2">
+      <div className="border-s border-admin-sidebar-border/50 p-3">
         <NavUser email={email} compact={collapsed} />
       </div>
     </div>

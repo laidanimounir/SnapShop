@@ -30,19 +30,18 @@ export function SearchDialog() {
 
   return (
     <>
-      <Button
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
+        className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 text-xs text-zinc-400 shrink-0"
         onClick={() => setOpen(true)}
         aria-label={ar.header.search}
         title={ar.header.search}
       >
         <Search className="size-4" />
-        <kbd className="ml-1 hidden sm:inline-flex size-5 items-center gap-1 rounded border border-admin-border px-1.5 text-[10px] font-medium text-admin-muted-foreground">
+        <kbd className="ml-1 hidden sm:inline-flex size-5 items-center gap-1 rounded border border-white/[0.12] px-1.5 text-[10px] font-medium text-zinc-400">
           <span className="text-xs">⌃</span>K
         </kbd>
-      </Button>
+      </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm sm:max-w-md">

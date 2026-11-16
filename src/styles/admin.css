@@ -69,39 +69,45 @@
   --admin-sidebar-ring: 0 0% 64%;
   /* Template radius: 0.625rem */
   --admin-radius: 0.625rem;
-  /* Chart colors (grayscale from template) */
-  --admin-chart-1: 0 0% 87%;
-  --admin-chart-2: 0 0% 56%;
-  --admin-chart-3: 0 0% 44%;
-  --admin-chart-4: 0 0% 37%;
-  --admin-chart-5: 0 0% 27%;
+  /* AdminCN vibrant chart colors (light theme) */
+  --admin-chart-1: 160 84% 39%;
+  --admin-chart-2: 217 91% 60%;
+  --admin-chart-3: 258 90% 66%;
+  --admin-chart-4: 38 92% 50%;
+  --admin-chart-5: 350 89% 60%;
 }
 
 .admin-root[data-theme="dark"] {
-  /* Template dark palette (oklch → hsl) */
-  --admin-background: 0 0% 14%;
+  /* Slate/zinc layered dark surfaces with soft borders (AdminCN-inspired) */
+  --admin-background: 240 10% 3.9%;
   --admin-foreground: 0 0% 98%;
-  --admin-card: 0 0% 20%;
+  --admin-card: 240 6% 8%;
   --admin-card-foreground: 0 0% 98%;
-  --admin-popover: 0 0% 20%;
+  --admin-popover: 240 6% 8%;
   --admin-popover-foreground: 0 0% 98%;
-  --admin-primary: 0 0% 92%;
-  --admin-primary-foreground: 0 0% 20%;
-  --admin-secondary: 0 0% 27%;
+  --admin-primary: 160 84% 39%;
+  --admin-primary-foreground: 240 10% 3.9%;
+  --admin-secondary: 240 5% 13%;
   --admin-secondary-foreground: 0 0% 98%;
-  --admin-muted: 0 0% 27%;
+  --admin-muted: 240 5% 13%;
   --admin-muted-foreground: 0 0% 64%;
-  --admin-accent: 0 0% 27%;
-  --admin-accent-foreground: 0 0% 98%;
-  --admin-destructive: 22 60% 60%;
+  --admin-accent: 160 84% 39%;
+  --admin-accent-foreground: 240 10% 3.9%;
+  --admin-destructive: 350 89% 60%;
   --admin-destructive-foreground: 0 0% 98%;
-  --admin-border: 0 0% 100% / 0.1;
-  --admin-input: 0 0% 100% / 0.15;
-  --admin-ring: 0 0% 56%;
-  --admin-sidebar: 0 0% 20%;
+  --admin-border: 240 4% 16%;
+  --admin-input: 240 4% 16%;
+  --admin-ring: 160 84% 39%;
+  --admin-sidebar: 240 6% 8%;
   --admin-sidebar-foreground: 0 0% 98%;
-  --admin-sidebar-accent: 0 0% 15%;
+  --admin-sidebar-accent: 240 5% 13%;
   --admin-sidebar-accent-foreground: 0 0% 98%;
-  --admin-sidebar-border: 0 0% 15%;
-  --admin-sidebar-ring: 0 0% 83%;
+  --admin-sidebar-border: 240 4% 16%;
+  --admin-sidebar-ring: 160 84% 39%;
+  /* AdminCN vibrant chart colors (dark theme) */
+  --admin-chart-1: 160 84% 39%;
+  --admin-chart-2: 217 91% 60%;
+  --admin-chart-3: 258 90% 66%;
+  --admin-chart-4: 38 92% 50%;
+  --admin-chart-5: 350 89% 60%;
 }

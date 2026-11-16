@@ -1,13 +1,4 @@
-import {
-  Clock,
-  Package,
-  ShoppingBag,
-  Star,
-  Wallet,
-} from "lucide-react";
-
 import { InventorySummary } from "@/components/admin/dashboard/inventory-summary";
-import { OverviewBanner } from "@/components/admin/dashboard/overview-banner";
 import { RecentOrders } from "@/components/admin/dashboard/recent-orders";
 import { SalesChart } from "@/components/admin/dashboard/sales-chart";
 import { StatCard } from "@/components/admin/dashboard/stat-card";
@@ -21,6 +12,8 @@ export const dynamic = "force-dynamic";
 export default async function AdminHome() {
   const overview = await getDashboardOverview();
 
+  const dailySales = overview.dailySales;
+
   const kpis = [
     {
       label: ar.dashboard.totalSales,
@@ -28,33 +21,41 @@ export default async function AdminHome() {
       hint: `${ar.dashboard.averageOrderValue}: ${formatPrice(
         overview.averageOrderValue
       )}`,
-      icon: Wallet,
+      iconName: "wallet",
       href: "/admin/orders",
+      iconClassName: "bg-emerald-500/10 text-emerald-400",
+      sparklineData: dailySales.map((d) => ({ label: d.label, value: d.revenue })),
+      sparklineColor: "hsl(var(--admin-chart-1))",
     },
     {
       label: ar.dashboard.totalOrders,
       value: overview.totalOrders.toLocaleString("en-US"),
       hint: `${overview.pendingOrders} ${ar.dashboard.pendingOrders}`,
-      icon: ShoppingBag,
+      iconName: "shopping-bag",
       href: "/admin/orders",
-    },
-    {
-      label: ar.dashboard.pendingOrders,
-      value: overview.pendingOrders.toLocaleString("en-US"),
-      icon: Clock,
-      href: "/admin/orders?status=pending",
+      iconClassName: "bg-blue-500/10 text-blue-400",
+      sparklineData: dailySales.map((d) => ({ label: d.label, value: d.orders })),
+      sparklineColor: "hsl(var(--admin-chart-2))",
+      trend: `${overview.pendingOrders} ${ar.dashboard.pendingOrders}`,
+      trendVariant: "warning" as const,
     },
     {
       label: ar.dashboard.totalProducts,
       value: overview.totalProducts.toLocaleString("en-US"),
-      icon: Package,
+      iconName: "package",
       href: "/admin/products",
+      iconClassName: "bg-admin-card/50 text-admin-foreground",
+      trend: `${overview.inventory.skuCount} SKU`,
+      trendVariant: "default" as const,
     },
     {
       label: ar.dashboard.pendingReviews,
       value: overview.pendingReviews.toLocaleString("en-US"),
-      icon: Star,
+      iconName: "star",
       href: "/admin/reviews?filter=pending",
+      iconClassName: "bg-amber-500/10 text-amber-400",
+      trend: ar.dashboard.pendingReviews,
+      trendVariant: "warning" as const,
     },
   ];
 
@@ -69,7 +70,7 @@ export default async function AdminHome() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {kpis.map((kpi) => (
           <StatCard key={kpi.label} {...kpi} />
         ))}

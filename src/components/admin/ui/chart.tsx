@@ -49,7 +49,7 @@ export function ChartContainer({
         data-chart={uniqueId}
         style={style}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-admin-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-admin-border [&_.recharts-curve.recharts-tooltip-cursor]:stroke-admin-border",
+          "flex aspect-video overflow-hidden rounded-xl border border-admin-border bg-admin-card shadow-xs justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-admin-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-admin-border [&_.recharts-curve.recharts-tooltip-cursor]:stroke-admin-border",
           className
         )}
         {...props}
@@ -99,7 +99,7 @@ export function ChartTooltipContent({
               <span className="text-admin-muted-foreground">
                 {config[key]?.label ?? item.name ?? key}
               </span>
-              <span className="ml-auto font-mono font-medium tabular-nums text-admin-foreground">
+              <span className="me-auto font-mono font-medium tabular-nums text-admin-foreground">
                 {valueFormatter ? valueFormatter(value, key) : value}
               </span>
             </div>

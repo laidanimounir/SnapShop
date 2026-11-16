@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { DashboardCard } from "@/components/admin/dashboard/dashboard-card";
+import { Card } from "@/components/admin/ui/card";
 import {
   CardContent,
   CardHeader,
@@ -28,7 +28,7 @@ import { formatPrice } from "@/lib/pricing";
 const chartConfig = {
   revenue: {
     label: ar.dashboard.totalSales,
-    color: "hsl(var(--admin-primary))",
+    color: "hsl(var(--admin-chart-1))",
   },
 } satisfies ChartConfig;
 
@@ -56,7 +56,7 @@ export function SalesChart({
   const hasData = data.some((point) => point.revenue > 0 || point.orders > 0);
 
   return (
-    <DashboardCard className="flex flex-col">
+    <Card className="h-full overflow-hidden">
       <CardHeader className="border-b border-admin-border pb-3">
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="size-4 text-admin-muted-foreground" />
@@ -67,7 +67,7 @@ export function SalesChart({
       <CardContent className="flex flex-1 flex-col gap-5 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-sm text-admin-muted-foreground">
+            <span className="text-xs font-medium text-admin-muted-foreground">
               {ar.dashboard.totalSales}
             </span>
             <span className="text-2xl font-semibold tracking-tight tabular-nums">
@@ -83,8 +83,8 @@ export function SalesChart({
         </div>
 
         {hasData ? (
-          <div dir="ltr">
-            <ChartContainer config={chartConfig} className="h-[240px] w-full">
+          <div dir="ltr" className="h-[240px] w-full">
+            <ChartContainer config={chartConfig} className="h-full w-full">
               <AreaChart
                 data={data}
                 margin={{ top: 8, right: 8, bottom: 0, left: -12 }}
@@ -93,12 +93,12 @@ export function SalesChart({
                   <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="5%"
-                      stopColor="hsl(var(--admin-primary))"
+                      stopColor="hsl(var(--admin-chart-1))"
                       stopOpacity={0.18}
                     />
                     <stop
                       offset="95%"
-                      stopColor="hsl(var(--admin-primary))"
+                      stopColor="hsl(var(--admin-chart-1))"
                       stopOpacity={0}
                     />
                   </linearGradient>
@@ -107,6 +107,7 @@ export function SalesChart({
                   vertical={false}
                   stroke="hsl(var(--admin-border))"
                   strokeDasharray="4 4"
+                  strokeOpacity={0.5}
                 />
                 <XAxis
                   dataKey="label"
@@ -139,7 +140,7 @@ export function SalesChart({
                 <Area
                   dataKey="revenue"
                   type="monotone"
-                  stroke="hsl(var(--admin-primary))"
+                  stroke="hsl(var(--admin-chart-1))"
                   strokeWidth={1.5}
                   fill="url(#salesFill)"
                   activeDot={{ r: 4, strokeWidth: 0 }}
@@ -157,6 +158,6 @@ export function SalesChart({
           </div>
         )}
       </CardContent>
-    </DashboardCard>
+    </Card>
   );
 }

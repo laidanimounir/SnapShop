@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Plus, Sun, Moon } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 
 import { Button } from "@/components/admin/ui/button";
 import { ar } from "@/lib/admin/i18n-ar";
@@ -23,14 +23,12 @@ export function OverviewBanner() {
   const greeting = isMorning
     ? ar.dashboard.greetingMorning
     : ar.dashboard.greetingEvening;
-  const GreetingIcon = isMorning ? Sun : Moon;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-1">
         <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
           {greeting}
-          <GreetingIcon className="size-5 text-admin-muted-foreground" />
         </h1>
         <p className="text-sm text-admin-muted-foreground">
           {ar.dashboard.welcomeSubtitle}
@@ -42,12 +40,12 @@ export function OverviewBanner() {
         <Button variant="outline" asChild>
           <Link href="/admin/orders">
             {ar.dashboard.viewOrders}
-            <ArrowLeft />
+            <ArrowLeft className="size-4" />
           </Link>
         </Button>
         <Button asChild>
           <Link href="/admin/products/new">
-            <Plus />
+            <Plus className="size-4" />
             {ar.dashboard.addProduct}
           </Link>
         </Button>

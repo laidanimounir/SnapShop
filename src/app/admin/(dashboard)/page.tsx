@@ -59,24 +59,31 @@ export default async function AdminHome() {
   ];
 
   return (
-    <div className="space-y-4">
-      <OverviewBanner />
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-admin-foreground">
+          {ar.dashboard.title}
+        </h1>
+        <p className="text-sm text-admin-muted-foreground">
+          {ar.dashboard.welcomeSubtitle}
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
         {kpis.map((kpi) => (
           <StatCard key={kpi.label} {...kpi} />
         ))}
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 xl:col-span-7">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+        <div className="col-span-1 lg:col-span-7">
           <SalesChart
             data={overview.dailySales}
             totalSales={overview.totalSales}
             averageOrderValue={overview.averageOrderValue}
           />
         </div>
-        <div className="col-span-12 xl:col-span-5">
+        <div className="col-span-1 lg:col-span-5">
           <InventorySummary inventory={overview.inventory} />
         </div>
       </div>

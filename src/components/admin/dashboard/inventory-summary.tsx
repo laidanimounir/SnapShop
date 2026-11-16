@@ -1,6 +1,6 @@
 import { Box, PackageX, Layers, Wallet } from "lucide-react";
 
-import { DashboardCard } from "@/components/admin/dashboard/dashboard-card";
+import { Card } from "@/components/admin/ui/card";
 import {
   CardContent,
   CardHeader,
@@ -40,7 +40,7 @@ export function InventorySummary({
   ];
 
   return (
-    <DashboardCard className="flex flex-col">
+    <Card className="h-full overflow-hidden">
       <CardHeader className="border-b border-admin-border pb-3">
         <CardTitle className="flex items-center gap-2">
           <Box className="size-4 text-admin-muted-foreground" />
@@ -78,6 +78,6 @@ export function InventorySummary({
           })}
         </div>
       </CardContent>
-    </DashboardCard>
+    </Card>
   );
 }

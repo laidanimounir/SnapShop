@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, Settings } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/components/admin/ui/button";
 import { Label } from "@/components/admin/ui/label";
@@ -25,12 +26,14 @@ import { ar } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
 
 function usePreferences() {
-  return useAdminPreferencesStore((state) => ({
-    values: state.values,
-    resolvedThemeMode: state.resolvedThemeMode,
-    setPreference: state.setPreference,
-    resetPreferences: state.resetPreferences,
-  }));
+  return useAdminPreferencesStore(
+    useShallow((state) => ({
+      values: state.values,
+      resolvedThemeMode: state.resolvedThemeMode,
+      setPreference: state.setPreference,
+      resetPreferences: state.resetPreferences,
+    })),
+  );
 }
 
 function isPresetActive(preset: string, values: any) {

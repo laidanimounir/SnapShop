@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelRightClose } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
+import { Fragment } from "react";
 
 import { ar } from "@/lib/admin/i18n-ar";
 import { cn } from "@/lib/utils";
@@ -36,7 +38,7 @@ function SidebarContent({
 }) {
   const pathname = usePathname();
   const { collapsible } = useAdminPreferencesStore(
-    (state) => ({ collapsible: state.values.sidebar_collapsible }),
+    useShallow((state) => ({ collapsible: state.values.sidebar_collapsible })),
   );
 
   const showTooltips = collapsible === "icon";
@@ -103,7 +105,7 @@ function SidebarContent({
                   const active = isAdminNavItemActive(pathname, item);
                   const Icon = item.icon;
                   return (
-                    <>
+                    <Fragment key={item.href}>
                       {showTooltips ? (
                         <Tooltip key={item.href}>
                           <TooltipTrigger asChild>
@@ -153,7 +155,7 @@ function SidebarContent({
                           )}
                         </Link>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </div>
@@ -171,10 +173,12 @@ function SidebarContent({
 export function AdminSidebar({ email }: { email: string }) {
   const { open, toggle, mobileOpen, setMobileOpen } = useAdminShell();
   const { variant, collapsible } =
-    useAdminPreferencesStore((state) => ({
-      variant: state.values.sidebar_variant,
-      collapsible: state.values.sidebar_collapsible,
-    }));
+    useAdminPreferencesStore(
+      useShallow((state) => ({
+        variant: state.values.sidebar_variant,
+        collapsible: state.values.sidebar_collapsible,
+      })),
+    );
 
   const isRight = true; // RTL: sidebar on the right
 

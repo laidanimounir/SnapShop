@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon, Monitor, Sun } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/components/admin/ui/button";
 import { Separator } from "@/components/admin/ui/separator";
@@ -24,10 +25,10 @@ export function AdminHeader({
 }) {
   const { toggle, setMobileOpen } = useAdminShell();
   const { theme_mode: themeMode, setPreference } = useAdminPreferencesStore(
-    (state) => ({
+    useShallow((state) => ({
       theme_mode: state.values.theme_mode,
       setPreference: state.setPreference,
-    }),
+    })),
   );
   const pathname = usePathname();
 

@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Locally served Arabic fonts (no Google Fonts network requests). Provided
+   by @fontsource packages; class names match the registry exports so callers
+   keep working. If any font file is unavailable, the stack falls back to a
+   system font instead of crashing the build. */
+@import "@fontsource/cairo";
+@import "@fontsource/tajawal";
+@import "@fontsource/almarai";
+
+.font-cairo {
+  font-family: var(--font-cairo), "Cairo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+.font-tajawal {
+  font-family: var(--font-tajawal), "Tajawal", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+.font-almarai {
+  font-family: var(--font-almarai), "Almarai", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

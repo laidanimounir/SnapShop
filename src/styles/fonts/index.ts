@@ -1,6 +1,6 @@
 import localFont from "next/font/local";
-import { Cairo, Tajawal, Almarai } from "next/font/google";
 
+// Local font files already vendored in src/styles/fonts/
 const integralCF = localFont({
   src: [
     {
@@ -35,25 +35,12 @@ const satoshi = localFont({
   variable: "--font-satoshi",
 });
 
-const cairo = Cairo({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "600", "700"],
-  display: "swap",
-  variable: "--font-cairo",
-});
+// Arabic-capable fonts served locally via @fontsource (no network requests).
+// Kept next/font/google-style names/variables so callers (e.g. layout.tsx)
+// keep working unchanged. The actual @font-face rules are imported in
+// src/styles/globals.css.
+export const cairo = { className: "font-cairo", variable: "--font-cairo" };
+export const tajawal = { className: "font-tajawal", variable: "--font-tajawal" };
+export const almarai = { className: "font-almarai", variable: "--font-almarai" };
 
-const tajawal = Tajawal({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-tajawal",
-});
-
-const almarai = Almarai({
-  subsets: ["arabic"],
-  weight: ["400", "700"],
-  display: "swap",
-  variable: "--font-almarai",
-});
-
-export { integralCF, satoshi, cairo, tajawal, almarai };
+export { integralCF, satoshi };

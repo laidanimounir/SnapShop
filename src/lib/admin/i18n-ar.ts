@@ -16,6 +16,11 @@ export const ar = {
     collapseSidebar: "طيّ القائمة",
     expandSidebar: "توسيع القائمة",
   },
+  header: {
+    search: "البحث",
+    searchPlaceholder: "البحث في الطلبات…",
+    viewStore: "عرض المتجر",
+  },
   statuses: {
     pending: "جديد",
     confirmed: "مؤكد",

@@ -3,6 +3,42 @@
    Everything is scoped to .admin-root so the storefront keeps its existing
    palette, typography, and dark-mode rules. */
 
+/* Scoped default border/outline for everything inside the admin root,
+   mirroring the template's `* { border-border outline-ring/50 }`. */
+.admin-root *,
+.admin-root ::before,
+.admin-root ::after {
+  border-color: hsl(var(--admin-border));
+  outline-color: hsl(var(--admin-ring) / 0.5);
+}
+
+.admin-root {
+  min-height: 100vh;
+  background-color: hsl(var(--admin-background));
+  color: hsl(var(--admin-foreground));
+  color-scheme: light;
+  border-radius: var(--admin-radius);
+}
+
+.admin-root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+.admin-root ::selection {
+  background-color: hsl(var(--admin-primary) / 0.9);
+  color: hsl(var(--admin-primary-foreground));
+}
+
+.admin-root input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+@media print {
+  .admin-root {
+    background: #fff;
+  }
+}
+
 :root {
   /* Template light palette (oklch → hsl) */
   --admin-background: 0 0% 100%;

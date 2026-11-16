@@ -51,13 +51,13 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 export const STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  no_answer: "bg-orange-100 text-orange-800",
-  shipped: "bg-indigo-100 text-indigo-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-  returned: "bg-purple-100 text-purple-800",
+  pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400",
+  confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+  no_answer: "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400",
+  shipped: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400",
+  delivered: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
+  cancelled: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
+  returned: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
 };
 
 export function isOrderStatus(value: unknown): value is OrderStatus {

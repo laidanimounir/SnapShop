@@ -21,9 +21,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // requireAdmin() verifies the session AND admin_users membership
-  // server-side. A signed-in non-admin is redirected to the login page,
-  // which keeps signed-in non-admins on the login screen without looping.
   let email = "";
   try {
     const session = await requireAdmin();
@@ -48,15 +45,13 @@ export default async function AdminLayout({
       <AdminShell defaultOpen={sidebarDefaultOpen}>
         <AdminSidebar email={email} />
         <div className="flex min-w-0 flex-1 flex-col print:block">
-          <div className="m-2 flex min-h-0 min-w-0 flex-1 flex-col border border-admin-border bg-admin-background print:m-0 print:border-0">
-            <AdminHeader email={email} theme={theme} />
-            <main className="min-w-0 flex-1 overflow-x-hidden p-4 print:p-0 md:p-6">
-              <div className="mx-auto w-full max-w-[1367px]">{children}</div>
-            </main>
-            <footer className="border-t border-admin-border px-4 py-4 text-center text-[10px] text-admin-muted-foreground print:hidden md:px-6">
-              © {new Date().getFullYear()} {BRAND_NAME}
-            </footer>
-          </div>
+          <AdminHeader email={email} theme={theme} />
+          <main className="min-w-0 flex-1 overflow-x-hidden p-4 print:p-0 md:p-6">
+            {children}
+          </main>
+          <footer className="border-t border-admin-border px-4 py-4 text-center text-[10px] text-admin-muted-foreground print:hidden md:px-6">
+            © {new Date().getFullYear()} {BRAND_NAME}
+          </footer>
         </div>
       </AdminShell>
     </div>

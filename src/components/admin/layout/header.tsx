@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, PanelLeft, Search } from "lucide-react";
 
 import { Button } from "@/components/admin/ui/button";
@@ -9,6 +11,9 @@ import { AdminLogo } from "./admin-logo";
 import { NavUser } from "./nav-user";
 import { ThemeToggle, type AdminTheme } from "./theme-toggle";
 import { useAdminShell } from "./admin-shell";
+import { ar } from "@/lib/admin/i18n-ar";
+import { cn } from "@/lib/utils";
+import { adminNavGroups } from "./nav-config";
 
 export function AdminHeader({
   email,
@@ -18,6 +23,12 @@ export function AdminHeader({
   theme: AdminTheme;
 }) {
   const { toggle, setMobileOpen } = useAdminShell();
+  const pathname = usePathname();
+
+  const currentLabel = adminNavGroups
+    .flatMap((group) => group.items)
+    .find((item) => item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`))
+    ?.label;
 
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-admin-border bg-admin-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-admin-background/80 print:hidden">
@@ -37,7 +48,7 @@ export function AdminHeader({
         type="button"
         variant="ghost"
         size="icon"
-        className="hidden lg:inline-flex"
+        className="hidden lg:inline-flex -rotate-180"
         onClick={toggle}
         aria-label="تبديل الشريط الجانبي"
         title="تبديل الشريط الجانبي"
@@ -45,22 +56,17 @@ export function AdminHeader({
         <PanelLeft className="size-5" />
       </Button>
 
-      <Separator
-        orientation="vertical"
-        className="mx-1 hidden h-4 self-center lg:block"
-      />
-
-      <div className="lg:hidden">
-        <AdminLogo />
-      </div>
+      <Separator orientation="vertical" className="mx-1 hidden h-4 self-center lg:block" />
 
       <form
         action="/admin/orders"
         method="get"
         role="search"
-        className="relative ms-1 hidden sm:block"
+        className="relative hidden sm:flex items-center"
       >
-        <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-admin-muted-foreground" />
+        <Search
+          className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-admin-muted-foreground"
+        />
         <Input
           type="search"
           name="q"
@@ -70,7 +76,20 @@ export function AdminHeader({
         />
       </form>
 
-      <div className="ms-auto flex items-center gap-1">
+      {currentLabel && (
+        <Link
+          href="/admin"
+          className={cn(
+            "hidden lg:block flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-admin-muted-foreground hover:bg-admin-muted hover:text-admin-foreground transition-colors",
+            pathname === "/admin" ? "bg-admin-muted text-admin-foreground" : ""
+          )}
+        >
+          <span className="text-[10px] text-admin-muted-foreground">لوحة التحكم</span>
+          <span className="text-admin-foreground">{currentLabel}</span>
+        </Link>
+      )}
+
+      <div className="flex items-center gap-1 ms-auto">
         <ThemeToggle initialTheme={theme} />
         <NavUser email={email} compact />
       </div>

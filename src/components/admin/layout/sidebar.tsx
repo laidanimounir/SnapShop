@@ -41,14 +41,14 @@ function SidebarContent({
     <div className="flex min-h-0 flex-1 flex-col">
       <nav
         aria-label="التنقل الرئيسي"
-        className="flex-1 overflow-x-hidden overflow-y-auto px-3 py-4"
+        className="flex-1 overflow-x-hidden overflow-y-auto ps-3 pe-3 py-4"
       >
         {adminNavGroups.map((group) => (
           <div key={group.label} className="mb-4 last:mb-0">
             <span
               className={cn(
                 "mb-2 block text-xs font-semibold uppercase text-admin-muted-foreground",
-                collapsed && "text-center"
+                collapsed && "text-start"
               )}
             >
               {collapsed ? "..." : group.label}
@@ -72,13 +72,13 @@ function SidebarContent({
                             ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary"
                             : "text-admin-sidebar-foreground",
                           collapsed
-                            ? "justify-center px-2.5 py-2"
-                            : "px-3 py-2"
+                            ? "justify-center ps-2.5 pe-2.5 py-2"
+                            : "ps-3 pe-3 py-2"
                         )}
                       >
                         <Icon className="size-4 shrink-0" />
                         {!collapsed && (
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate text-start">{item.label}</span>
                         )}
                       </Link>
                     </TooltipTrigger>
@@ -92,7 +92,7 @@ function SidebarContent({
           </div>
         ))}
       </nav>
-      <div className="border-t border-admin-sidebar-border p-2">
+      <div className="border-s border-admin-sidebar-border p-2">
         <NavUser email={email} compact={collapsed} />
       </div>
     </div>
@@ -123,7 +123,7 @@ export function AdminSidebar({ email }: { email: string }) {
       >
         <div
           className={cn(
-            "flex h-14 shrink-0 items-center border-b border-admin-sidebar-border px-2",
+            "flex h-14 shrink-0 items-center border-b border-admin-sidebar-border ps-2 pe-2",
             open ? "justify-between" : "justify-center"
           )}
         >
@@ -147,66 +147,66 @@ export function AdminSidebar({ email }: { email: string }) {
           )}
         </div>
         <SidebarContent collapsed={!open} email={email} />
-      </aside>
 
-      {!open && previewOpen && (
-        <div
-          onMouseLeave={() => setPreviewOpen(false)}
-          className="fixed inset-y-0 right-0 z-50 hidden w-64 flex-col border-e border-admin-sidebar-border bg-admin-sidebar text-admin-sidebar-foreground shadow-xl lg:flex print:hidden"
-        >
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-admin-sidebar-border px-2">
-            <AdminLogo />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setPreviewOpen(false)}
-              aria-label={ar.nav.collapseSidebar}
-              title={ar.nav.collapseSidebar}
-            >
-              <PanelRightClose className="size-4" />
-            </Button>
-          </div>
-          <SidebarContent
-            collapsed={false}
-            email={email}
-            onNavigate={() => setPreviewOpen(false)}
-          />
-        </div>
-      )}
-
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent
-          side="right"
-          showCloseButton={false}
-          className="w-[18rem] gap-0 p-0 sm:max-w-[18rem]"
-        >
-          <SheetTitle className="sr-only">القائمة</SheetTitle>
-          <SheetDescription className="sr-only">
-            التنقل بين أقسام لوحة التحكم
-          </SheetDescription>
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-admin-sidebar-border bg-admin-sidebar px-3">
-            <AdminLogo />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setMobileOpen(false)}
-              aria-label="إغلاق القائمة"
-              title="إغلاق القائمة"
-            >
-              <PanelRightClose className="size-4" />
-            </Button>
-          </div>
-          <div className="flex min-h-0 flex-1 flex-col bg-admin-sidebar">
+        {!open && previewOpen && (
+          <div
+            onMouseLeave={() => setPreviewOpen(false)}
+            className="fixed inset-y-0 start-0 z-50 hidden w-64 flex-col border-e border-admin-sidebar-border bg-admin-sidebar text-admin-sidebar-foreground shadow-xl lg:flex print:hidden"
+          >
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-admin-sidebar-border ps-2 pe-2">
+              <AdminLogo />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setPreviewOpen(false)}
+                aria-label={ar.nav.collapseSidebar}
+                title={ar.nav.collapseSidebar}
+              >
+                <PanelRightClose className="size-4" />
+              </Button>
+            </div>
             <SidebarContent
               collapsed={false}
               email={email}
-              onNavigate={() => setMobileOpen(false)}
+              onNavigate={() => setPreviewOpen(false)}
             />
           </div>
-        </SheetContent>
-      </Sheet>
+        )}
+
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent
+            side="right"
+            showCloseButton={false}
+            className="w-[18rem] gap-0 p-0 sm:max-w-[18rem]"
+          >
+            <SheetTitle className="sr-only">القائمة</SheetTitle>
+            <SheetDescription className="sr-only">
+              التنقل بين أقسام لوحة التحكم
+            </SheetDescription>
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-admin-sidebar-border bg-admin-sidebar ps-3 pe-3">
+              <AdminLogo />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setMobileOpen(false)}
+                aria-label="إغلاق القائمة"
+                title="إغلاق القائمة"
+              >
+                <PanelRightClose className="size-4" />
+              </Button>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col bg-admin-sidebar">
+              <SidebarContent
+                collapsed={false}
+                email={email}
+                onNavigate={() => setMobileOpen(false)}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </aside>
     </TooltipProvider>
   );
 }
